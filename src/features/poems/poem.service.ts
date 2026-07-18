@@ -4,6 +4,7 @@ import type { Poem } from './types'
 
 export interface PoemListParams {
   keyword?: string
+  author?: string
   genreId?: number | null
   page?: number
   size?: number
@@ -15,9 +16,10 @@ class PoemService extends OplearnBaseService<Poem> {
   }
 
   /** Bọc list() của service cha để map tên param theo API (genre_id snake_case). */
-  search({ keyword, genreId, page = 0, size = POEM_PAGE_SIZE }: PoemListParams = {}) {
+  search({ keyword, author, genreId, page = 0, size = POEM_PAGE_SIZE }: PoemListParams = {}) {
     return this.list({
       keyword: keyword || undefined,
+      author: author || undefined,
       genre_id: genreId ?? undefined,
       page,
       size,

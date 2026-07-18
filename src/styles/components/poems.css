@@ -13,6 +13,15 @@
   font-size: 14px;
 }
 
+.filters-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.filters-row .search-box {
+  flex: 1 1 240px;
+}
+
 .search-box {
   position: relative;
   max-width: 480px;
@@ -76,6 +85,15 @@
 .poem-card__title a:hover {
   color: var(--c-brand);
 }
+.poem-card__author {
+  color: inherit;
+  font-weight: 600;
+}
+.poem-card__author:hover {
+  color: var(--c-brand);
+  text-decoration: underline;
+}
+
 .poem-card__excerpt {
   white-space: pre-line;
   font-size: 14px;
@@ -152,6 +170,14 @@
 }
 .poem-detail__meta strong {
   color: var(--c-ink-2);
+}
+.poem-detail__author {
+  color: var(--c-ink-2);
+  font-weight: 700;
+}
+.poem-detail__author:hover {
+  color: var(--c-brand);
+  text-decoration: underline;
 }
 /* Nội dung đọc: serif + giãn dòng rộng, khối hẹp cho dễ đọc */
 .poem-detail__content {

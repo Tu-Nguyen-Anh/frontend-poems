@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { toPoemDetail } from '@/routes/paths'
+import { PATHS, toPoemDetail } from '@/routes/paths'
 import type { Poem } from '../types'
 
 export function PoemCard({ poem }: { poem: Poem }) {
@@ -20,7 +20,14 @@ export function PoemCard({ poem }: { poem: Poem }) {
         <span className="badge">{poem.genre_name}</span>
       </div>
       <p className="card__meta">
-        {poem.author_name} · {poem.period}
+        <Link
+          className="poem-card__author"
+          title={`Lọc bài viết của ${poem.author_name}`}
+          to={`${PATHS.POEMS}?author=${encodeURIComponent(poem.author_name)}`}
+        >
+          {poem.author_name}
+        </Link>{' '}
+        · {poem.period}
       </p>
       <p className="poem-card__excerpt">{poem.content}</p>
       <Link className="poem-card__more" to={detailPath} state={linkState}>

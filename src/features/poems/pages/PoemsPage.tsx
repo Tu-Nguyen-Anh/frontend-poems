@@ -8,16 +8,19 @@ import { PoemCard, PoemCardSkeleton } from '../components/PoemCard'
 import { POEM_PAGE_SIZE } from '../constants'
 import { usePoems } from '../hooks/usePoems'
 
-/** Bộ lọc nằm trên URL (?q=&genre=&page=) → share link / back-forward giữ nguyên trạng thái. */
+/** Bộ lọc nằm trên URL (?q=&author=&genre=&page=) → share link / back-forward giữ nguyên trạng thái. */
 export default function PoemsPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const keyword = searchParams.get('q') ?? ''
+  const author = searchParams.get('author') ?? ''
   const genreParam = searchParams.get('genre')
   const genreId = genreParam ? Number(genreParam) : null
   const page = Math.max(0, Number(searchParams.get('page')) || 0)
 
   const [input, setInput] = useState(keyword)
+  const [authorInput, setAuthorInput] = useState(author)
   const debouncedInput = useDebounce(input)
+  const debouncedAuthor = useDebounce(authorInput)
 
   const updateParams = (patch: Record<string, string | null>) => {
     const next = new URLSearchParams(searchParams)
@@ -28,22 +31,37 @@ export default function PoemsPage() {
     setSearchParams(next, { replace: true })
   }
 
-  // Gõ xong (debounce) mới đẩy keyword lên URL, đồng thời reset về trang đầu.
+  // Gõ xong (debounce) mới đẩy lên URL, đồng thời reset về trang đầu.
   useEffect(() => {
     if (debouncedInput === keyword) return
     updateParams({ q: debouncedInput, page: null })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedInput])
 
-  const { data, loading, error, refetch } = usePoems({ keyword, genreId, page })
+  useEffect(() => {
+    if (debouncedAuthor === author) return
+    updateParams({ author: debouncedAuthor, page: null })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedAuthor])
+
+  // URL đổi từ bên ngoài (click tên tác giả trên card) → đồng bộ lại ô input.
+  useEffect(() => {
+    setInput(keyword)
+  }, [keyword])
+  useEffect(() => {
+    setAuthorInput(author)
+  }, [author])
+
+  const { data, loading, error, refetch } = usePoems({ keyword, author, genreId, page })
 
   const poems = data?.content ?? []
   const totalPages = Math.ceil((data?.amount ?? 0) / POEM_PAGE_SIZE)
-  const hasFilter = keyword !== '' || genreId !== null
+  const hasFilter = keyword !== '' || author !== '' || genreId !== null
 
   const clearFilters = () => {
     setInput('')
-    updateParams({ q: null, genre: null, page: null })
+    setAuthorInput('')
+    updateParams({ q: null, author: null, genre: null, page: null })
   }
 
   return (
@@ -55,19 +73,39 @@ export default function PoemsPage() {
         )}
       </header>
 
-      <div className="search-box">
-        <IconSearch />
-        <input
-          className="input search-box__input"
-          placeholder="Tìm bài viết theo tiêu đề…"
-          value={input}
-          onChange={(event) => setInput(event.target.value)}
-        />
-        {input && (
-          <button className="search-box__clear" aria-label="Xóa tìm kiếm" onClick={() => setInput('')}>
-            ✕
-          </button>
-        )}
+      <div className="filters-row">
+        <div className="search-box">
+          <IconSearch />
+          <input
+            className="input search-box__input"
+            placeholder="Tìm theo tiêu đề…"
+            value={input}
+            onChange={(event) => setInput(event.target.value)}
+          />
+          {input && (
+            <button className="search-box__clear" aria-label="Xóa tìm kiếm" onClick={() => setInput('')}>
+              ✕
+            </button>
+          )}
+        </div>
+        <div className="search-box">
+          <IconSearch />
+          <input
+            className="input search-box__input"
+            placeholder="Lọc theo tác giả…"
+            value={authorInput}
+            onChange={(event) => setAuthorInput(event.target.value)}
+          />
+          {authorInput && (
+            <button
+              className="search-box__clear"
+              aria-label="Xóa lọc tác giả"
+              onClick={() => setAuthorInput('')}
+            >
+              ✕
+            </button>
+          )}
+        </div>
       </div>
 
       <GenreFilter

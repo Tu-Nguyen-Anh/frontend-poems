@@ -42,7 +42,13 @@ export default function PoemDetailPage() {
           <header className="poem-detail__header">
             <h1>{poem.title}</h1>
             <p className="poem-detail__meta">
-              <strong>{poem.author_name}</strong>
+              <Link
+                className="poem-detail__author"
+                title={`Xem các bài viết của ${poem.author_name}`}
+                to={`${PATHS.POEMS}?author=${encodeURIComponent(poem.author_name)}`}
+              >
+                {poem.author_name}
+              </Link>
               <span aria-hidden="true">·</span>
               <span>{poem.period}</span>
               <span aria-hidden="true">·</span>
