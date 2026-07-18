@@ -39,6 +39,16 @@
   color: var(--c-primary);
 }
 
+/* === Phân trang: nút active xanh đồng bộ === */
+[data-theme='dark'] .page-btn--active {
+  background: linear-gradient(135deg, #4f8ef7, #2f6fe0);
+  box-shadow: 0 2px 8px rgba(47, 111, 224, 0.35);
+}
+[data-theme='dark'] .page-btn:hover:not(:disabled):not(.page-btn--active) {
+  background: rgba(96, 165, 250, 0.12);
+  color: var(--c-primary);
+}
+
 /* === Hero: gradient chữ gold trên navy === */
 [data-theme='dark'] .hero__title {
   background: linear-gradient(135deg, #fbbf24 0%, #fcd34d 100%);

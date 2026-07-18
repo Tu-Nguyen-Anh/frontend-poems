@@ -1,47 +1,81 @@
-import { useState } from 'react'
-import { Button, Input, Pagination, Spinner } from '@/components/ui'
+import { useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
+import { Button, Pagination } from '@/components/ui'
+import { IconSearch } from '@/components/ui/icons'
 import { useDebounce } from '@/hooks'
 import { GenreFilter } from '../components/GenreFilter'
-import { PoemCard } from '../components/PoemCard'
+import { PoemCard, PoemCardSkeleton } from '../components/PoemCard'
 import { POEM_PAGE_SIZE } from '../constants'
 import { usePoems } from '../hooks/usePoems'
 
+/** Bộ lọc nằm trên URL (?q=&genre=&page=) → share link / back-forward giữ nguyên trạng thái. */
 export default function PoemsPage() {
-  const [keyword, setKeyword] = useState('')
-  const [genreId, setGenreId] = useState<number | null>(null)
-  const [page, setPage] = useState(0)
-  const debouncedKeyword = useDebounce(keyword)
+  const [searchParams, setSearchParams] = useSearchParams()
+  const keyword = searchParams.get('q') ?? ''
+  const genreParam = searchParams.get('genre')
+  const genreId = genreParam ? Number(genreParam) : null
+  const page = Math.max(0, Number(searchParams.get('page')) || 0)
 
-  const { data, loading, error, refetch } = usePoems({
-    keyword: debouncedKeyword,
-    genreId,
-    page,
-  })
+  const [input, setInput] = useState(keyword)
+  const debouncedInput = useDebounce(input)
 
-  const handleGenreChange = (nextGenreId: number | null) => {
-    setGenreId(nextGenreId)
-    setPage(0)
+  const updateParams = (patch: Record<string, string | null>) => {
+    const next = new URLSearchParams(searchParams)
+    for (const [key, value] of Object.entries(patch)) {
+      if (value === null || value === '') next.delete(key)
+      else next.set(key, value)
+    }
+    setSearchParams(next, { replace: true })
   }
 
-  const handleKeywordChange = (nextKeyword: string) => {
-    setKeyword(nextKeyword)
-    setPage(0)
-  }
+  // Gõ xong (debounce) mới đẩy keyword lên URL, đồng thời reset về trang đầu.
+  useEffect(() => {
+    if (debouncedInput === keyword) return
+    updateParams({ q: debouncedInput, page: null })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedInput])
+
+  const { data, loading, error, refetch } = usePoems({ keyword, genreId, page })
 
   const poems = data?.content ?? []
   const totalPages = Math.ceil((data?.amount ?? 0) / POEM_PAGE_SIZE)
+  const hasFilter = keyword !== '' || genreId !== null
+
+  const clearFilters = () => {
+    setInput('')
+    updateParams({ q: null, genre: null, page: null })
+  }
 
   return (
     <div className="page">
-      <h1>Bài viết theo chủ đề</h1>
-      <Input
-        placeholder="Tìm theo tiêu đề…"
-        value={keyword}
-        onChange={(event) => handleKeywordChange(event.target.value)}
-      />
-      <GenreFilter value={genreId} onChange={handleGenreChange} />
+      <header className="poems-header">
+        <h1>Bài viết</h1>
+        {data && !loading && (
+          <span className="poems-count">{data.amount.toLocaleString('vi-VN')} bài</span>
+        )}
+      </header>
 
-      {loading && <Spinner />}
+      <div className="search-box">
+        <IconSearch />
+        <input
+          className="input search-box__input"
+          placeholder="Tìm bài viết theo tiêu đề…"
+          value={input}
+          onChange={(event) => setInput(event.target.value)}
+        />
+        {input && (
+          <button className="search-box__clear" aria-label="Xóa tìm kiếm" onClick={() => setInput('')}>
+            ✕
+          </button>
+        )}
+      </div>
+
+      <GenreFilter
+        value={genreId}
+        onChange={(nextGenreId) =>
+          updateParams({ genre: nextGenreId === null ? null : String(nextGenreId), page: null })
+        }
+      />
 
       {error && (
         <div className="page page--center">
@@ -50,15 +84,38 @@ export default function PoemsPage() {
         </div>
       )}
 
-      {!loading && !error && (
+      {!error && loading && (
+        <div className="card-grid">
+          {Array.from({ length: POEM_PAGE_SIZE }, (_, i) => (
+            <PoemCardSkeleton key={i} />
+          ))}
+        </div>
+      )}
+
+      {!error && !loading && poems.length === 0 && (
+        <div className="empty-state">
+          <span className="empty-state__icon">📭</span>
+          <p>Không tìm thấy bài viết nào{hasFilter ? ' khớp bộ lọc' : ''}.</p>
+          {hasFilter && (
+            <Button variant="secondary" onClick={clearFilters}>
+              Xóa bộ lọc
+            </Button>
+          )}
+        </div>
+      )}
+
+      {!error && !loading && poems.length > 0 && (
         <>
           <div className="card-grid">
             {poems.map((poem) => (
               <PoemCard key={poem.id} poem={poem} />
             ))}
           </div>
-          {poems.length === 0 && <p>Không có bài viết nào.</p>}
-          <Pagination page={page} totalPages={totalPages} onChange={setPage} />
+          <Pagination
+            page={page}
+            totalPages={totalPages}
+            onChange={(nextPage) => updateParams({ page: nextPage > 0 ? String(nextPage) : null })}
+          />
         </>
       )}
     </div>

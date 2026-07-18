@@ -8,6 +8,7 @@ import { PATHS } from './paths'
 const HomePage = lazy(() => import('@/features/home/pages/HomePage'))
 const UsersPage = lazy(() => import('@/features/users/pages/UsersPage'))
 const PoemsPage = lazy(() => import('@/features/poems/pages/PoemsPage'))
+const PoemDetailPage = lazy(() => import('@/features/poems/pages/PoemDetailPage'))
 const LoginPage = lazy(() => import('@/features/auth/pages/LoginPage'))
 const ProfilePage = lazy(() => import('@/features/auth/pages/ProfilePage'))
 const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'))
@@ -24,6 +25,14 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <PoemsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: PATHS.POEM_DETAIL,
+        element: (
+          <ProtectedRoute>
+            <PoemDetailPage />
           </ProtectedRoute>
         ),
       },
