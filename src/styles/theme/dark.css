@@ -1,0 +1,55 @@
+/* DARK MODE — phủ phần còn hardcode của vỏ ngoài. Token var(--c-*) đã tự đổi
+   ở variables.css; file này import CUỐI cascade để override. */
+
+[data-theme='dark'] body {
+  background: linear-gradient(180deg, #0b0f1a 0%, #0d1322 55%, #0f1830 100%);
+  background-attachment: fixed;
+}
+
+/* === Thanh điều hướng === */
+[data-theme='dark'] .topnav {
+  background: #0e1524;
+}
+[data-theme='dark'] .topnav-brand {
+  color: var(--c-text);
+}
+[data-theme='dark'] .topnav-link {
+  color: var(--c-ink-2);
+}
+[data-theme='dark'] .topnav-link:hover {
+  background: rgba(96, 165, 250, 0.12);
+  color: var(--c-primary);
+}
+/* Active pill: đỏ brand → xanh cho đồng bộ tông navy. */
+[data-theme='dark'] .topnav-link.active,
+[data-theme='dark'] .topnav-link.active:hover {
+  background: linear-gradient(135deg, #4f8ef7, #2f6fe0);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(47, 111, 224, 0.35);
+}
+
+/* === Chip active: đồng bộ xanh navy như nav === */
+[data-theme='dark'] .chip--active,
+[data-theme='dark'] .chip--active:hover {
+  background: linear-gradient(135deg, #4f8ef7, #2f6fe0);
+  box-shadow: 0 2px 8px rgba(47, 111, 224, 0.35);
+}
+[data-theme='dark'] .chip:hover {
+  background: rgba(96, 165, 250, 0.12);
+  color: var(--c-primary);
+}
+
+/* === Hero: gradient chữ gold trên navy === */
+[data-theme='dark'] .hero__title {
+  background: linear-gradient(135deg, #fbbf24 0%, #fcd34d 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+[data-theme='dark'] .badge {
+  background: rgba(251, 191, 36, 0.14);
+}
+
+[data-theme='dark'] .footer {
+  background: var(--c-bg-soft);
+}

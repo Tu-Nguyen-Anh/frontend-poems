@@ -1,0 +1,10 @@
+/* Body gradient — fixed để khi scroll gradient không trượt (theo tu-vi-v1). */
+body {
+  background: linear-gradient(180deg, #ffffff 0%, #faf6ee 60%, #f4ecd8 100%);
+  background-attachment: fixed;
+}
+
+#root {
+  position: relative;
+  z-index: 2;
+}

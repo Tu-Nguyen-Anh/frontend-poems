@@ -1,0 +1,113 @@
+/* Top navigation — theo components/nav.css của tu-vi-v1: sticky, nền kem,
+   dải gradient đỏ-vàng trên cùng, link dạng pill, active = gradient đỏ. */
+
+.topnav {
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  background: #fcfaf5;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.04), 0 2px 8px rgba(0, 0, 0, 0.04);
+  -webkit-backdrop-filter: saturate(140%) blur(10px);
+  backdrop-filter: saturate(140%) blur(10px);
+}
+.topnav::before {
+  content: '';
+  display: block;
+  height: 3px;
+  background: linear-gradient(90deg, #b54545 0%, #b8860b 50%, #b54545 100%);
+}
+
+.topnav-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.topnav-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--c-heading);
+  font-weight: 800;
+  font-size: 1rem;
+  letter-spacing: -0.02em;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.topnav-brand:hover {
+  color: var(--c-text);
+}
+
+.topnav-logo {
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #b54545 0%, #b8860b 100%);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 800;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.topnav-links {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.topnav-link {
+  display: inline-flex;
+  align-items: center;
+  line-height: 1.4;
+  white-space: nowrap;
+  padding: 7px 14px;
+  border-radius: 999px;
+  color: var(--c-ink-3);
+  font-weight: 500;
+  font-size: 0.95rem;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.topnav-link:hover {
+  background: rgba(181, 69, 69, 0.1);
+  color: var(--c-brand);
+  font-weight: 600;
+}
+.topnav-link.active,
+.topnav-link.active:hover {
+  background: linear-gradient(135deg, #b54545, #d97373);
+  color: #fff;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(181, 69, 69, 0.3);
+}
+
+.topnav-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.topnav-theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--c-muted);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.topnav-theme-toggle:hover {
+  background: var(--c-surface-3);
+  color: var(--c-gold);
+}

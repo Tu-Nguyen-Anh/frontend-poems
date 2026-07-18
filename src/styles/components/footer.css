@@ -1,0 +1,13 @@
+.footer {
+  border-top: 1px solid var(--c-divider);
+  background: var(--c-surface);
+  padding: 18px 16px;
+  text-align: center;
+  font-size: 13.5px;
+  color: var(--c-muted);
+}
+
+.footer strong {
+  color: var(--c-brand);
+  font-weight: 700;
+}

@@ -1,0 +1,103 @@
+/* Button system — theme đỏ-vàng (theo utilities/buttons.css của tu-vi-v1). */
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45em;
+  padding: 9px 18px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  cursor: pointer;
+  text-decoration: none;
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease,
+    border-color 0.12s,
+    color 0.12s;
+}
+
+/* === Primary CTA — gradient đỏ brand === */
+.button.primary {
+  background: linear-gradient(135deg, #b54545 0%, #8b2c2c 100%);
+  color: #fff;
+  box-shadow: 0 2px 6px rgba(181, 69, 69, 0.25), 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+.button.primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #c14d4d 0%, #993131 100%);
+  box-shadow: 0 4px 12px rgba(181, 69, 69, 0.35), 0 2px 4px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
+}
+.button.primary:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 3px rgba(181, 69, 69, 0.25);
+}
+
+/* === Secondary — outline hiện đại (mặc định khi không có variant) === */
+.button.secondary {
+  background: var(--c-surface);
+  color: var(--c-ink-2);
+  border-color: var(--c-border);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+}
+.button.secondary:hover:not(:disabled) {
+  background: var(--c-surface-2);
+  border-color: var(--c-border-strong);
+  color: var(--c-text);
+}
+
+/* === Danger === */
+.button.danger {
+  background: linear-gradient(135deg, #dc2626 0%, #a51d1d 100%);
+  color: #fff;
+  box-shadow: 0 2px 6px rgba(220, 38, 38, 0.25);
+}
+.button.danger:hover:not(:disabled) {
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.35);
+  transform: translateY(-1px);
+}
+
+/* === Ghost === */
+.button.ghost {
+  background: transparent;
+  color: var(--c-brand);
+  padding-inline: 10px;
+}
+.button.ghost:hover:not(:disabled) {
+  background: var(--c-brand-tint);
+}
+
+.button:disabled {
+  background: var(--c-surface-3);
+  color: var(--c-muted-2); /* KHÔNG #fff — nền sáng + chữ trắng = mất chữ */
+  border-color: var(--c-divider);
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+/* === Inline spinner cho trạng thái loading === */
+.btn-spinner {
+  display: inline-block;
+  width: 0.9em;
+  height: 0.9em;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: btn-spin 0.7s linear infinite;
+  opacity: 0.7;
+}
+@keyframes btn-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .btn-spinner {
+    animation-duration: 1.6s;
+  }
+}

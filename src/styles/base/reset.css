@@ -1,0 +1,28 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Roboto', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  color: var(--c-text);
+  line-height: 1.6;
+}
+
+h1,
+h2,
+h3 {
+  color: var(--c-heading);
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+}
+
+a {
+  color: var(--c-primary);
+  text-decoration: none;
+}
+
+button {
+  font-family: inherit;
+}

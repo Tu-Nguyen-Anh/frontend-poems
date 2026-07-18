@@ -1,0 +1,74 @@
+/* Design tokens — theo hệ token của tu-vi-v1: light (mặc định) ấm,
+   dark = navy hiện đại. Đổi theme qua :root[data-theme="dark"]. */
+:root {
+  color-scheme: light;
+  /* Text tiers — emphasis giảm dần */
+  --c-ink-strong: #111827;
+  --c-text: #1f2937;
+  --c-heading: #2c3e50;
+  --c-ink-2: #374151;
+  --c-ink-3: #4b5563;
+  --c-muted: #6b7280;
+  --c-muted-2: #9ca3af;
+  /* Surfaces (elevation) */
+  --c-bg: #ffffff;
+  --c-bg-soft: #f9fafb;
+  --c-surface: #ffffff;
+  --c-surface-2: #f9fafb;
+  --c-surface-3: #f3f4f6;
+  --c-surface-warm: #fffaf2;
+  /* Borders */
+  --c-border: #d1d5db;
+  --c-border-strong: #9ca3af;
+  --c-divider: #e5e7eb;
+  --c-border-warm: #f3e8d9;
+  /* Brand đỏ-vàng + trạng thái */
+  --c-brand: #b54545;
+  --c-brand-2: #c1502e;
+  --c-gold: #b45309;
+  --c-primary: #2185d0;
+  --c-danger: #dc2626;
+  --c-success: #16a34a;
+  --c-warning: #d97706;
+  --c-danger-bg: #fef2f2;
+  --c-brand-tint: rgba(181, 69, 69, 0.06);
+  --c-brand-tint-border: rgba(181, 69, 69, 0.28);
+  /* Hình khối */
+  --radius: 14px;
+  --radius-sm: 10px;
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04), 0 4px 14px rgba(0, 0, 0, 0.05);
+}
+
+/* DARK — navy/blue: nền L0 navy-đen, lớp chồng sáng dần, chữ xanh nhạt
+   (không #fff tinh), accent xanh + gold. */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --c-ink-strong: #e8f1ff;
+  --c-text: #bfdbfe;
+  --c-heading: #dbe9ff;
+  --c-ink-2: #a8c5ea;
+  --c-ink-3: #93b2da;
+  --c-muted: #7d97bd;
+  --c-muted-2: #5e789b;
+  --c-bg: #0b0f1a;
+  --c-bg-soft: #0f1626;
+  --c-surface: #141c30;
+  --c-surface-2: #1c2740;
+  --c-surface-3: #263352;
+  --c-surface-warm: #141c30;
+  --c-border: #28344f;
+  --c-border-strong: #3a4a6e;
+  --c-divider: #1d2840;
+  --c-border-warm: #28344f;
+  --c-brand: #fbbf24;
+  --c-brand-2: #fcd34d;
+  --c-gold: #fbbf24;
+  --c-primary: #60a5fa;
+  --c-danger: #f87171;
+  --c-success: #4ade80;
+  --c-warning: #fbbf24;
+  --c-danger-bg: #2a1922;
+  --c-brand-tint: rgba(96, 165, 250, 0.1);
+  --c-brand-tint-border: rgba(96, 165, 250, 0.32);
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.35), 0 4px 14px rgba(0, 0, 0, 0.35);
+}

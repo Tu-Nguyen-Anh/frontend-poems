@@ -1,0 +1,13 @@
+.poem-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: var(--c-surface-warm);
+  border-color: var(--c-border-warm);
+}
+
+.poem-card__content {
+  white-space: pre-line;
+  font-size: 14px;
+  color: var(--c-ink-3);
+}
