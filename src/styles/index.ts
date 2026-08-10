@@ -1,14 +1,3 @@
-/**
- * Style manifest — entry point cho toàn bộ CSS (theo pattern của tu-vi-v1).
- * `main.tsx` chỉ cần `import '@/styles'`.
- *
- * Cấu trúc:
- *   base/       — token, reset, layout primitives
- *   utilities/  — class dùng chung (button, card, spinner…)
- *   components/ — style theo component/feature
- *   theme/      — body gradient + dark overrides (PHẢI cuối cascade)
- */
-
 // === Base ===
 import './base/variables.css'
 import './base/reset.css'
@@ -26,6 +15,7 @@ import './components/footer.css'
 import './components/home.css'
 import './components/poems.css'
 
-// === Theme (load cuối để đè mọi thứ ở trên) ===
+// === Theme ===
 import './theme/body-gradient.css'
 import './theme/dark.css'
+import './theme/reader-mode.css'

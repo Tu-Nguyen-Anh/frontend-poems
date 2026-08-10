@@ -1,20 +1,14 @@
 import type { PageResponse, ResponseGeneral } from './api.types'
 import { oplearnClient } from './oplearnClient'
 
-/**
- * Service cha cho backend oplearn: CRUD chuẩn REST + tự unwrap ResponseGeneral.
- * Mỗi feature chỉ cần kế thừa và truyền endpoint:
- *
- *   class ProductService extends OplearnBaseService<Product> {
- *     constructor() { super('/products') }
- *     // thêm method riêng của feature tại đây
- *   }
- */
 export class OplearnBaseService<T, TCreate = Partial<T>, TUpdate = Partial<T>> {
   protected readonly endpoint: string
+  protected readonly basePath: string
+  protected readonly client = oplearnClient
 
   constructor(endpoint: string) {
     this.endpoint = endpoint
+    this.basePath = endpoint
   }
 
   async list(params?: Record<string, unknown>): Promise<PageResponse<T>> {

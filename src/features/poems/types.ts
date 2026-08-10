@@ -1,15 +1,10 @@
-export interface Poem {
-  id: number
-  title: string
-  content: string
-  source_url: string
-  period: string
-  specific_genre: string
-  author_name: string
-  genre_name: string
-}
-
-export interface Genre {
-  id: number
-  name: string
-}
+export type {
+  PoemResponse as Poem,
+  AuthorResponse as Author,
+  GenreResponse as Genre,
+  CommentResponse as Comment,
+  PoemRequest as PoemRequestData,
+  AuthorRequest as AuthorRequestData,
+  GenreRequest as GenreRequestData,
+  CommentRequest as CommentRequestData,
+} from '@/types'

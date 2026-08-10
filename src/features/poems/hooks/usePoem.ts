@@ -1,7 +1,9 @@
 import { useFetch } from '@/hooks'
-import { poemService } from '../poem.service'
+import { poemService } from '@/services/poem.service'
 
-/** Chi tiết 1 bài viết theo id (từ URL param). */
-export function usePoem(id: string | undefined) {
-  return useFetch(() => poemService.getById(id!), [id])
+export function usePoem(id: number | string | undefined) {
+  return useFetch(async () => {
+    if (!id) return null
+    return poemService.getPoemById(Number(id))
+  }, [id])
 }

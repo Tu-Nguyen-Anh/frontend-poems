@@ -1,15 +1,22 @@
 import { createContext } from 'react'
+import type { UserResponse } from '@/types'
 
 export interface AuthUser {
+  id?: number
   username: string
-  roles: string[]
+  email?: string
+  phoneNumber?: string
+  role?: string
+  roles?: string[]
 }
 
-export interface AuthContextValue {
+export interface AuthContextType {
   user: AuthUser | null
   isAuthenticated: boolean
-  login: (username: string, password: string) => Promise<void>
+  isAdmin: boolean
+  login: (u: string, p: string) => Promise<void>
+  register: (u: string, e: string, p: string, phone?: string) => Promise<void>
   logout: () => Promise<void>
 }
 
-export const AuthContext = createContext<AuthContextValue | null>(null)
+export const AuthContext = createContext<AuthContextType | null>(null)

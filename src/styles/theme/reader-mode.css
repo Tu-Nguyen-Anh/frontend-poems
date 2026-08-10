@@ -1,0 +1,86 @@
+/* === Reader Modes (Classic Sepia vs Modern Light / Dark) === */
+
+html[data-reader-mode="classic-sepia"] {
+  --bg-primary: #fbf0d9;
+  --bg-secondary: #f4e4c1;
+  --bg-card: #fffdf5;
+  --text-main: #2c221e;
+  --text-muted: #6b574b;
+  --border-color: #e5d2b3;
+  --font-poem: 'Merriweather', 'Georgia', serif;
+  background-color: var(--bg-primary);
+  color: var(--text-main);
+  background-image: radial-gradient(#e5d2b3 0.75px, transparent 0.75px);
+  background-size: 16px 16px;
+}
+
+html[data-reader-mode="classic-sepia"] body {
+  background-color: var(--bg-primary);
+  color: var(--text-main);
+}
+
+html[data-reader-mode="classic-sepia"] .poem-container {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 10px 35px rgba(107, 87, 75, 0.12);
+  font-family: var(--font-poem);
+}
+
+html[data-reader-mode="modern-light"] {
+  --bg-primary: #f8fafc;
+  --bg-secondary: #f1f5f9;
+  --bg-card: #ffffff;
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --border-color: #e2e8f0;
+  --font-poem: 'Inter', system-ui, sans-serif;
+  background-color: var(--bg-primary);
+  color: var(--text-main);
+}
+
+html[data-reader-mode="modern-light"] body {
+  background-color: #f8fafc;
+  color: #0f172a;
+}
+
+html[data-reader-mode="modern-dark"] {
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-card: #1e293b;
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --border-color: #334155;
+  --font-poem: 'Inter', system-ui, sans-serif;
+  background-color: var(--bg-primary);
+  color: var(--text-main);
+}
+
+html[data-reader-mode="modern-dark"] body {
+  background-color: #0f172a;
+  color: #f8fafc;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Glassmorphism */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+html[data-reader-mode="modern-dark"] .glass-panel {
+  background: rgba(30, 41, 59, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}

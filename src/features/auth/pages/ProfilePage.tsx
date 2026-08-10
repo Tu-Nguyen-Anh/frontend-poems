@@ -1,38 +1,203 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { Button } from '@/components/ui'
-import { useAuth } from '@/hooks'
-import { PATHS } from '@/routes/paths'
+import { useState, useEffect } from 'react'
+import { useNavigate, Link } from 'react-router-dom'
+import { useAuth } from '@/hooks/useAuth'
+import { commentService } from '@/services/comment.service'
+import { feedbackService } from '@/services/feedback.service'
+import { userService } from '@/services/user.service'
+import type { CommentResponse, FeedbackResponse, UserResponse } from '@/types'
+import { PATHS, toPoemDetail } from '@/routes/paths'
 
 export default function ProfilePage() {
-  const { user, logout } = useAuth()
+  const { user, isAdmin, logout } = useAuth()
   const navigate = useNavigate()
-  const [loading, setLoading] = useState(false)
+
+  const [userInfo, setUserInfo] = useState<UserResponse | null>(null)
+  const [userComments, setUserComments] = useState<CommentResponse[]>([])
+  const [userFeedbacks, setUserFeedbacks] = useState<FeedbackResponse[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function fetchUserData() {
+      if (!user?.id) return
+      setLoading(true)
+      try {
+        const [commRes, feedRes, userRes] = await Promise.allSettled([
+          commentService.getCommentsByUser(user.id, { size: 10 }),
+          feedbackService.getFeedbacksByUser(user.id, { size: 10 }),
+          userService.getUserById(user.id),
+        ])
+        if (commRes.status === 'fulfilled') setUserComments(commRes.value.content || [])
+        if (feedRes.status === 'fulfilled') setUserFeedbacks(feedRes.value.content || [])
+        if (userRes.status === 'fulfilled') setUserInfo(userRes.value)
+      } catch (err) {
+        console.error(err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchUserData()
+  }, [user?.id])
 
   const handleLogout = async () => {
-    setLoading(true)
-    try {
-      await logout()
-      navigate(PATHS.LOGIN, { replace: true })
-    } finally {
-      setLoading(false)
-    }
+    await logout()
+    navigate(PATHS.HOME, { replace: true })
   }
 
+  const getPhone = (u: any): string => {
+    if (!u || typeof u !== 'object') return ''
+    const val =
+      u.phoneNumber ??
+      u.phone_number ??
+      u.phone ??
+      u.phoneNum ??
+      u.phone_num ??
+      u.phonenumber ??
+      u.phoneNo ??
+      u.phone_no ??
+      u.soDienThoai ??
+      u.so_dien_thoai ??
+      u.sdt ??
+      u.mobile ??
+      u.mobile_number ??
+      u.mobileNumber ??
+      u.telephone ??
+      u.contact ??
+      u.contactNumber ??
+      u.contact_number
+
+    if (val !== undefined && val !== null && String(val).trim() !== '') {
+      return String(val).trim()
+    }
+
+    for (const key of Object.keys(u)) {
+      const lower = key.toLowerCase()
+      if (lower.includes('phone') || lower.includes('sdt') || lower.includes('mobile') || lower.includes('tel')) {
+        const v = u[key]
+        if (v !== undefined && v !== null && String(v).trim() !== '') {
+          return String(v).trim()
+        }
+      }
+    }
+    return ''
+  }
+
+  const email = userInfo?.email || user?.email
+  const phoneNumber = getPhone(userInfo) || getPhone(user)
+
   return (
-    <div className="page page--center">
-      <div className="card card--accent auth-form">
-        <h1>Tài khoản</h1>
-        <p>
-          Tên đăng nhập: <strong>{user?.username}</strong>
-        </p>
-        <p>
-          Vai trò: <strong>{user?.roles.join(', ') || '—'}</strong>
-        </p>
-        <Button variant="danger" loading={loading} onClick={() => void handleLogout()}>
-          Đăng xuất
-        </Button>
+    <div className="max-w-4xl mx-auto py-6 space-y-8">
+      {/* Profile Card */}
+      <div className="p-8 rounded-3xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-md flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+        <div className="flex items-center gap-5">
+          <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-amber-600 to-amber-400 text-white flex items-center justify-center font-bold text-3xl shadow-lg flex-shrink-0">
+            {user?.username.charAt(0).toUpperCase()}
+          </div>
+          <div className="space-y-1">
+            <h1 className="text-2xl font-serif font-bold text-slate-900 dark:text-amber-100">
+              {user?.username}
+            </h1>
+            <p className="text-xs text-slate-400">Thành viên độc giả Thi Đàn</p>
+            {email && (
+              <p className="text-xs text-slate-600 dark:text-slate-300 flex items-center gap-1.5 pt-0.5">
+                <span>✉️</span> <span>{email}</span>
+              </p>
+            )}
+            {phoneNumber && (
+              <p className="text-xs text-amber-600 dark:text-amber-400 font-semibold flex items-center gap-1.5 pt-0.5">
+                <span>📞</span> <span>SĐT: {phoneNumber}</span>
+              </p>
+            )}
+            <div className="flex gap-2 pt-1.5">
+              <span className="px-3 py-0.5 rounded-full text-xs font-bold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300">
+                {user?.role || 'USER'}
+              </span>
+              {isAdmin && (
+                <Link
+                  to={PATHS.ADMIN}
+                  className="px-3 py-0.5 rounded-full text-xs font-bold bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300 hover:underline"
+                >
+                  ⚙️ Admin Dashboard
+                </Link>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <button
+          onClick={handleLogout}
+          className="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-medium text-sm rounded-xl transition shadow"
+        >
+          🚪 Đăng Xuất
+        </button>
       </div>
+
+      {/* History of Comments */}
+      <section className="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
+        <h2 className="text-xl font-serif font-bold text-slate-900 dark:text-amber-100 flex items-center gap-2">
+          💬 Lịch Sử Bình Luận Của Tôi ({userComments.length})
+        </h2>
+
+        {loading ? (
+          <p className="text-xs text-slate-400">Đang tải...</p>
+        ) : userComments.length === 0 ? (
+          <p className="text-xs text-slate-400 italic">Bạn chưa để lại bình luận nào.</p>
+        ) : (
+          <div className="space-y-3">
+            {userComments.map((c) => (
+              <div
+                key={c.id}
+                className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-700/60 text-xs space-y-1"
+              >
+                <div className="flex justify-between text-slate-400">
+                  <Link to={toPoemDetail(c.poemId)} className="text-amber-700 font-bold hover:underline">
+                    Xem bài thơ #{c.poemId} →
+                  </Link>
+                  <span>{new Date(c.createdAt).toLocaleDateString('vi-VN')}</span>
+                </div>
+                <p className="text-slate-800 dark:text-slate-200 text-sm font-serif">{c.content}</p>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* History of Feedbacks */}
+      <section className="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
+        <h2 className="text-xl font-serif font-bold text-slate-900 dark:text-amber-100 flex items-center gap-2">
+          📩 Lịch Sử Góp Ý Của Tôi ({userFeedbacks.length})
+        </h2>
+
+        {loading ? (
+          <p className="text-xs text-slate-400">Đang tải...</p>
+        ) : userFeedbacks.length === 0 ? (
+          <p className="text-xs text-slate-400 italic">Bạn chưa gửi góp ý nào.</p>
+        ) : (
+          <div className="space-y-3">
+            {userFeedbacks.map((f) => (
+              <div
+                key={f.id}
+                className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-700/60 text-xs space-y-1"
+              >
+                <div className="flex justify-between items-center">
+                  <span className="text-amber-700 font-bold">Bài thơ #{f.poemId}</span>
+                  <span
+                    className={`px-2 py-0.5 rounded-full font-bold ${
+                      f.status === 'APPROVED'
+                        ? 'bg-emerald-100 text-emerald-800'
+                        : f.status === 'REJECTED'
+                        ? 'bg-rose-100 text-rose-800'
+                        : 'bg-amber-100 text-amber-800'
+                    }`}
+                  >
+                    {f.status}
+                  </span>
+                </div>
+                <p className="text-slate-700 dark:text-slate-300 text-sm">{f.content}</p>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
     </div>
   )
 }

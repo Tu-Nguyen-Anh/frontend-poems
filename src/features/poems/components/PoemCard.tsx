@@ -1,50 +1,44 @@
 import { Link, useLocation } from 'react-router-dom'
 import { PATHS, toPoemDetail } from '@/routes/paths'
-import type { Poem } from '../types'
+import type { PoemResponse } from '@/types'
 
-export function PoemCard({ poem }: { poem: Poem }) {
+export function PoemCard({ poem }: { poem: PoemResponse }) {
   const location = useLocation()
   const detailPath = toPoemDetail(poem.id)
-  // Mang theo query của danh sách để nút "quay lại" ở trang chi tiết
-  // trả về đúng trang/bộ lọc đang xem.
   const linkState = { listSearch: location.search }
 
+  const poemTitle = poem.name || 'Bài thơ'
+  const authorName = poem.authorName || (poem as any).author_name || 'Khuyết danh'
+  const genreName = poem.genreName || (poem as any).genre_name || 'Thơ'
+
   return (
-    <article className="card card--hover poem-card">
-      <div className="poem-card__head">
-        <h3 className="poem-card__title">
-          <Link to={detailPath} state={linkState}>
-            {poem.title}
+    <article className="p-6 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-xl transition transform hover:-translate-y-1 flex flex-col justify-between">
+      <div>
+        <div className="flex items-center justify-between gap-2 mb-2">
+          <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300">
+            {genreName}
+          </span>
+          {poem.year && <span className="text-xs text-slate-400 font-mono">{poem.year}</span>}
+        </div>
+        <h3 className="text-xl font-serif font-bold text-slate-900 dark:text-amber-100 mb-1">
+          <Link to={detailPath} state={linkState} className="hover:text-amber-600 transition">
+            {poemTitle}
           </Link>
         </h3>
-        <span className="badge">{poem.genre_name}</span>
+        <p className="text-xs font-medium text-amber-700 dark:text-amber-400 mb-3">
+          <Link to={`${PATHS.POEMS}?author=${encodeURIComponent(authorName)}`}>
+            ✍️ {authorName}
+          </Link>
+        </p>
+        <p className="text-slate-600 dark:text-slate-300 text-sm font-serif italic line-clamp-3 leading-relaxed whitespace-pre-line bg-amber-50/40 dark:bg-slate-900/40 p-3 rounded-xl">
+          {poem.content}
+        </p>
       </div>
-      <p className="card__meta">
-        <Link
-          className="poem-card__author"
-          title={`Lọc bài viết của ${poem.author_name}`}
-          to={`${PATHS.POEMS}?author=${encodeURIComponent(poem.author_name)}`}
-        >
-          {poem.author_name}
-        </Link>{' '}
-        · {poem.period}
-      </p>
-      <p className="poem-card__excerpt">{poem.content}</p>
-      <Link className="poem-card__more" to={detailPath} state={linkState}>
-        Đọc bài viết →
-      </Link>
+      <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-700 flex justify-between items-center text-xs text-slate-400">
+        <Link to={detailPath} state={linkState} className="text-amber-600 font-bold hover:underline">
+          Thưởng thức bài thơ →
+        </Link>
+      </div>
     </article>
-  )
-}
-
-/** Placeholder cùng khung với PoemCard khi đang tải danh sách. */
-export function PoemCardSkeleton() {
-  return (
-    <div className="card poem-card">
-      <span className="skeleton" style={{ height: 20, width: '72%' }} />
-      <span className="skeleton" style={{ height: 13, width: '45%' }} />
-      <span className="skeleton" style={{ height: 76 }} />
-      <span className="skeleton" style={{ height: 14, width: 96 }} />
-    </div>
   )
 }

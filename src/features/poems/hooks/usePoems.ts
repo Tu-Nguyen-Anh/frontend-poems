@@ -1,9 +1,15 @@
 import { useFetch } from '@/hooks'
-import { poemService, type PoemListParams } from '../poem.service'
+import { poemService } from '@/services/poem.service'
 
-export function usePoems({ keyword, author, genreId, page }: PoemListParams) {
+export interface PoemListParams {
+  keyword?: string
+  page?: number
+  size?: number
+}
+
+export function usePoems(params?: PoemListParams) {
   return useFetch(
-    () => poemService.search({ keyword, author, genreId, page }),
-    [keyword, author, genreId, page],
+    () => poemService.getPoems(params),
+    [params?.keyword, params?.page, params?.size],
   )
 }

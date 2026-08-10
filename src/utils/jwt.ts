@@ -1,6 +1,9 @@
 export interface JwtClaims {
   sub?: string
+  userId?: number | string
   roles?: string[]
+  role?: string
+  authorities?: string[]
   exp?: number
 }
 

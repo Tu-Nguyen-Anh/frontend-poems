@@ -1,7 +1,9 @@
 import { useFetch } from '@/hooks'
-import { userService } from '../user.service'
+import { userService } from '@/services/user.service'
 
-/** Component chỉ gọi hook này, không gọi service trực tiếp. */
-export function useUsers() {
-  return useFetch(() => userService.getAll())
+export function useUsers(keyword?: string) {
+  return useFetch(async () => {
+    const res = await userService.getUsers({ keyword, isAll: true })
+    return res.content || []
+  }, [keyword])
 }

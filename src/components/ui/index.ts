@@ -1,5 +1,6 @@
 export { Button } from './Button'
 export { Input } from './Input'
+export { Modal } from './Modal'
 export { Pagination } from './Pagination'
 export { Skeleton } from './Skeleton'
 export { Spinner } from './Spinner'

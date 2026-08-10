@@ -1,6 +1,9 @@
-import type { CSSProperties } from 'react'
+import type { HTMLAttributes } from 'react'
 
-/** Khối shimmer placeholder khi đang tải — kích thước truyền qua style. */
-export function Skeleton({ className = '', style }: { className?: string; style?: CSSProperties }) {
-  return <span className={`skeleton ${className}`.trim()} style={style} aria-hidden="true" />
+export interface SkeletonProps extends HTMLAttributes<HTMLSpanElement> {
+  className?: string
+}
+
+export function Skeleton({ className = '', style, ...rest }: SkeletonProps) {
+  return <span className={`skeleton ${className}`.trim()} style={style} aria-hidden="true" {...rest} />
 }

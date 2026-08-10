@@ -1,32 +1,275 @@
-/* Hero trang chủ */
-.hero {
+/* Hero & Home Sections */
+.home-page {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 14px;
+  gap: 40px;
+  padding-bottom: 40px;
+}
+
+.hero-banner {
+  background: radial-gradient(circle at 50% 20%, rgba(181, 69, 69, 0.08), transparent 70%),
+              linear-gradient(180deg, var(--c-surface-warm) 0%, var(--c-bg) 100%);
+  border-radius: var(--radius);
+  padding: 48px 24px;
   text-align: center;
-  padding: 56px 16px 24px;
+  border: 1px solid var(--c-border-warm);
+  box-shadow: var(--shadow-card);
 }
 
-.hero__title {
-  font-size: clamp(1.8rem, 4vw, 2.6rem);
+.hero-banner__tag {
+  display: inline-block;
+  font-size: 0.88rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  color: var(--c-brand);
+  background: var(--c-brand-tint);
+  border: 1px solid var(--c-brand-tint-border);
+  padding: 4px 14px;
+  border-radius: 20px;
+  margin-bottom: 12px;
+}
+
+.hero-banner__title {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: clamp(2.2rem, 5vw, 3.2rem);
   font-weight: 800;
-  background: linear-gradient(135deg, #b54545 0%, #b8860b 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  color: var(--c-ink-strong);
+  margin-bottom: 12px;
+  letter-spacing: -0.5px;
 }
 
-.hero__subtitle {
-  max-width: 560px;
+.hero-banner__subtitle {
+  max-width: 640px;
+  margin: 0 auto 28px;
   color: var(--c-ink-3);
-  font-size: 1.05rem;
+  font-size: 1.1rem;
+  line-height: 1.6;
 }
 
-.hero__actions {
+.hero-search {
+  max-width: 580px;
+  margin: 0 auto;
   display: flex;
-  flex-wrap: wrap;
+  align-items: center;
+  background: var(--c-surface);
+  border: 2px solid var(--c-border);
+  border-radius: 30px;
+  padding: 6px 8px 6px 18px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  transition: all 0.2s ease;
+}
+
+.hero-search:focus-within {
+  border-color: var(--c-brand);
+  box-shadow: 0 4px 24px var(--c-brand-tint);
+}
+
+.hero-search svg {
+  color: var(--c-muted);
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.hero-search__input {
+  border: none;
+  outline: none;
+  background: transparent;
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 1rem;
+  color: var(--c-ink-strong);
+}
+
+.hero-search__button {
+  background: var(--c-brand);
+  color: #fff;
+  border: none;
+  padding: 10px 22px;
+  border-radius: 24px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity 0.2s ease;
+}
+
+.hero-search__button:hover {
+  opacity: 0.9;
+}
+
+.hero-genres {
+  margin-top: 24px;
+  display: flex;
+  align-items: center;
   justify-content: center;
   gap: 12px;
-  margin-top: 8px;
+  flex-wrap: wrap;
+  font-size: 0.9rem;
+  color: var(--c-muted);
+}
+
+.genre-pills {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.genre-pill {
+  background: var(--c-surface-2);
+  color: var(--c-ink-2);
+  padding: 4px 12px;
+  border-radius: 14px;
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 500;
+  border: 1px solid var(--c-border);
+  transition: all 0.2s ease;
+}
+
+.genre-pill:hover {
+  background: var(--c-brand-tint);
+  border-color: var(--c-brand);
+  color: var(--c-brand);
+}
+
+/* Sections */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 20px;
+}
+
+.section-title {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: var(--c-heading);
+}
+
+.section-desc {
+  font-size: 0.92rem;
+  color: var(--c-muted);
+  margin-top: 4px;
+}
+
+.section-link {
+  color: var(--c-brand);
+  font-weight: 600;
+  text-decoration: none;
+  font-size: 0.95rem;
+}
+
+.section-link:hover {
+  text-decoration: underline;
+}
+
+/* Featured Poem Card */
+.featured-poem-card {
+  background: linear-gradient(135deg, var(--c-surface) 0%, var(--c-surface-warm) 100%);
+  border: 1px solid var(--c-border-warm);
+  border-left: 5px solid var(--c-gold);
+  padding: 28px;
+  border-radius: var(--radius);
+
+}
+
+.featured-poem-card__title {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1.8rem;
+  margin: 8px 0 4px;
+}
+
+.featured-poem-card__title a {
+  color: var(--c-ink-strong);
+  text-decoration: none;
+}
+
+.featured-poem-card__title a:hover {
+  color: var(--c-brand);
+}
+
+.featured-poem-card__meta {
+  color: var(--c-muted);
+  font-size: 0.92rem;
+  margin-bottom: 18px;
+}
+
+.featured-poem-card__content {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1.15rem;
+  line-height: 1.8;
+  color: var(--c-ink-strong);
+  white-space: pre-wrap;
+  background: var(--c-bg-soft);
+  padding: 20px;
+  border-radius: var(--radius-sm);
+  border-left: 3px solid var(--c-border-strong);
+  margin-bottom: 20px;
+}
+
+.featured-poem-card__footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* Authors Grid */
+.authors-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.author-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px;
+  text-decoration: none;
+  color: inherit;
+}
+
+.author-card__avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--c-brand) 0%, var(--c-gold) 100%);
+  color: #fff;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1.4rem;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.author-card__info {
+  flex: 1;
+  min-width: 0;
+}
+
+.author-card__name {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--c-heading);
+  margin-bottom: 2px;
+}
+
+.author-card__meta, .author-card__hometown {
+  font-size: 0.85rem;
+  color: var(--c-muted);
+}
+
+.author-card__achievement {
+  font-size: 0.82rem;
+  color: var(--c-ink-3);
+  margin-top: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.author-card__actions {
+  margin-top: 10px;
 }
