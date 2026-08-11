@@ -42,9 +42,9 @@ export function FeedbackForm({ poemId }: FeedbackFormProps) {
   }
 
   return (
-    <section className="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
+    <section className="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
       <h3 className="text-xl font-serif font-bold text-slate-900 dark:text-amber-100 flex items-center gap-2">
-        📩 Góp Ý / Sửa Lỗi Bài Thơ
+        Góp ý / sửa lỗi bài thơ
       </h3>
       <p className="text-xs text-slate-500 dark:text-slate-400">
         Phát hiện sai sót phiên âm, năm sáng tác hoặc chính tả? Hãy gửi phản hồi cho ban quản trị.
@@ -52,7 +52,7 @@ export function FeedbackForm({ poemId }: FeedbackFormProps) {
 
       {feedbackSuccess && (
         <div className="p-3 bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200 rounded-xl text-xs font-medium border border-emerald-300">
-          ✅ Cảm ơn bạn! Phản hồi góp ý đã được gửi thành công đến Admin.
+          ✓ Cảm ơn bạn! Góp ý đã được gửi đến ban quản trị.
         </div>
       )}
 
@@ -65,15 +65,15 @@ export function FeedbackForm({ poemId }: FeedbackFormProps) {
           onFocus={() => {
             if (!isAuthenticated) openModal('gửi góp ý')
           }}
-          className="w-full p-3.5 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/40"
+          className="w-full p-3.5 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/40"
         />
         <div className="flex justify-end">
           <button
             type="submit"
             disabled={submitting}
-            className="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-medium text-sm rounded-xl shadow-md transition transform active:scale-95 disabled:opacity-50"
+            className="px-5 py-2.5 bg-amber-700 hover:bg-amber-800 text-white font-medium text-sm rounded-xl transition-colors disabled:opacity-50"
           >
-            {submitting ? 'Đang gửi...' : 'Gửi Góp Ý'}
+            {submitting ? 'Đang gửi...' : 'Gửi góp ý'}
           </button>
         </div>
       </form>

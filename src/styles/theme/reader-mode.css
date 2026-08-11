@@ -1,5 +1,11 @@
 /* === Reader Modes (Classic Sepia vs Modern Light / Dark) === */
 
+/* Nền tối cho toàn trang khi bật chế độ tối (Tailwind .dark). Ghi đè body-gradient
+   sáng nhờ độ ưu tiên cao hơn — không cần data-theme. */
+html.dark body {
+  background: #0f172a;
+}
+
 html[data-reader-mode="classic-sepia"] {
   --bg-primary: #fbf0d9;
   --bg-secondary: #f4e4c1;

@@ -36,7 +36,7 @@ export function CommentItem({
   }
 
   return (
-    <div className="p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-900/50 border border-slate-200/60 dark:border-slate-700/60 space-y-3">
+    <div className="p-4 rounded-xl bg-slate-50/80 dark:bg-slate-900/50 border border-slate-200/60 dark:border-slate-700/60 space-y-3">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-full bg-amber-600 text-white flex items-center justify-center font-bold text-xs">
@@ -97,7 +97,7 @@ export function CommentItem({
           }}
           className="text-amber-700 dark:text-amber-400 font-semibold hover:underline"
         >
-          ↩️ Phản hồi ({replies.length})
+          Phản hồi ({replies.length})
         </button>
       </div>
 

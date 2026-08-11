@@ -50,10 +50,10 @@ export default function LoginPage() {
 
   return (
     <div className="max-w-md mx-auto py-12">
-      <div className="bg-white dark:bg-slate-800 rounded-3xl p-8 shadow-xl border border-slate-200 dark:border-slate-700">
+      <div className="bg-white dark:bg-slate-800 rounded-xl p-8 shadow-sm border border-slate-200 dark:border-slate-700">
         <div className="flex border-b border-slate-200 dark:border-slate-700 mb-6">
           <button
-            className={`flex-1 py-3 text-center text-sm font-bold border-b-2 transition ${
+            className={`flex-1 py-3 text-center text-sm font-bold border-b-2 transition-colors ${
               mode === 'login'
                 ? 'border-amber-600 text-amber-700 dark:text-amber-400'
                 : 'border-transparent text-slate-400 hover:text-slate-600'
@@ -66,7 +66,7 @@ export default function LoginPage() {
             Đăng Nhập
           </button>
           <button
-            className={`flex-1 py-3 text-center text-sm font-bold border-b-2 transition ${
+            className={`flex-1 py-3 text-center text-sm font-bold border-b-2 transition-colors ${
               mode === 'register'
                 ? 'border-amber-600 text-amber-700 dark:text-amber-400'
                 : 'border-transparent text-slate-400 hover:text-slate-600'
@@ -120,7 +120,7 @@ export default function LoginPage() {
             required
           />
 
-          {error && <p className="text-xs font-semibold text-rose-500 bg-rose-50 dark:bg-rose-950/50 p-2.5 rounded-xl border border-rose-200 dark:border-rose-900">{error}</p>}
+          {error && <p className="text-xs font-semibold text-rose-500 bg-rose-50 dark:bg-rose-950/50 p-2.5 rounded-md border border-rose-200 dark:border-rose-900">{error}</p>}
 
           <Button type="submit" loading={loading}>
             {mode === 'login' ? 'Đăng nhập ngay' : 'Tạo tài khoản & Đăng nhập'}
@@ -128,13 +128,13 @@ export default function LoginPage() {
         </form>
 
         <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-700 text-center">
-          <p className="text-xs text-slate-400 mb-2">💡 Tài khoản thử nghiệm của Backend:</p>
+          <p className="text-xs text-slate-400 mb-2">Tài khoản thử nghiệm của Backend:</p>
           <button
             type="button"
             className="text-xs font-bold text-amber-700 dark:text-amber-400 hover:underline"
             onClick={fillAdmin}
           >
-            🔑 Điền sẵn tài khoản Admin (`admin` / `admin123`)
+            Điền sẵn tài khoản Admin (`admin` / `admin123`)
           </button>
         </div>
       </div>

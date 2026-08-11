@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { PATHS } from '@/routes/paths'
+import { IconSearch } from '@/components/ui/icons'
 
 export function HeroBanner() {
   const [search, setSearch] = useState('')
@@ -14,34 +15,37 @@ export function HeroBanner() {
   }
 
   return (
-    <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-amber-900 via-amber-800 to-stone-900 text-white p-8 md:p-14 shadow-2xl">
-      <div className="absolute -right-10 -bottom-10 opacity-10 text-[200px] select-none font-serif">
-        詩
-      </div>
-      <div className="relative z-10 max-w-2xl space-y-6">
-        <span className="inline-block px-3.5 py-1 rounded-full text-xs font-semibold uppercase tracking-widest bg-amber-500/20 text-amber-300 border border-amber-400/30">
-          Tôn vinh Thơ Ca Việt Nam
-        </span>
-        <h1 className="text-3xl md:text-5xl font-serif font-bold leading-tight tracking-tight text-amber-50">
-          Lắng Nghe Giai Điệu Hồn Thơ Việt
+    <section className="rounded-xl border border-amber-200/70 dark:border-slate-700 bg-amber-50/60 dark:bg-slate-900/60 px-6 py-12 md:px-12 md:py-16">
+      <div className="max-w-2xl space-y-5">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-700 dark:text-amber-400">
+          Thơ ca Việt Nam
+        </p>
+        <h1 className="font-serif text-3xl md:text-5xl font-bold leading-tight text-slate-900 dark:text-amber-50">
+          Kho tàng thơ ca Việt
         </h1>
-        <p className="text-amber-200/80 text-sm md:text-base leading-relaxed">
-          Hàng ngàn kiệt tác thơ cổ điển và hiện đại. Trải nghiệm đọc thơ tinh tế với chế độ hoài cổ Sepia và giao diện phẳng hiện đại.
+        <p className="text-slate-600 dark:text-slate-300 leading-relaxed md:text-lg">
+          Hàng nghìn bài thơ cổ điển và hiện đại, tra cứu theo tác giả và thể loại,
+          đọc trong chế độ đọc cổ điển hoặc hiện đại.
         </p>
 
-        <form onSubmit={handleSearch} className="flex gap-2 max-w-md pt-2">
-          <input
-            type="text"
-            placeholder="Nhập tên bài thơ, tác giả..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="flex-1 px-4 py-3 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 text-white placeholder-amber-200/50 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
-          />
+        <form onSubmit={handleSearch} className="flex gap-2 max-w-md pt-1">
+          <div className="flex-1 relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+              <IconSearch size={18} />
+            </span>
+            <input
+              type="text"
+              placeholder="Tên bài, tác giả, hoặc một câu thơ…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 rounded-md bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-slate-800 dark:text-slate-100 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/40"
+            />
+          </div>
           <button
             type="submit"
-            className="px-6 py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm rounded-xl shadow-lg transition transform active:scale-95"
+            className="px-6 py-3 bg-amber-700 hover:bg-amber-800 text-white font-medium text-sm rounded-md transition-colors"
           >
-            Tìm Thơ
+            Tìm thơ
           </button>
         </form>
       </div>

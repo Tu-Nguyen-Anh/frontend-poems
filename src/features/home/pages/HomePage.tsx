@@ -7,6 +7,8 @@ import type { PoemResponse, AuthorResponse, GenreResponse } from '@/types'
 import { PATHS, toAuthorDetail, toGenreDetail, toPoemDetail } from '@/routes/paths'
 import { HeroBanner } from '../components/HeroBanner'
 import { LatestPoemsSection } from '../components/LatestPoemsSection'
+import { SectionHeader } from '../components/SectionHeader'
+import { poemDisplayTitle, poemAuthorName } from '@/features/poems/display'
 
 export default function HomePage() {
   const [latestPoems, setLatestPoems] = useState<PoemResponse[]>([])
@@ -40,38 +42,29 @@ export default function HomePage() {
   }, [])
 
   return (
-    <div className="space-y-16 py-4">
-      {/* Hero Banner */}
+    <div className="space-y-14 py-4">
       <HeroBanner />
 
-      {/* Latest Poems Section */}
       <LatestPoemsSection poems={latestPoems} loading={loading} />
 
-      {/* Random Recommendations */}
       {randomPoems.length > 0 && (
         <section className="space-y-6">
-          <div>
-            <h2 className="text-2xl md:text-3xl font-serif font-bold text-slate-900 dark:text-amber-100">
-              ✨ Thơ Ngẫu Nhiên Gợi Ý
-            </h2>
-            <p className="text-[#8B5CF6] dark:text-[#A78BFA] text-sm font-medium">Thưởng thức mỗi khoảnh khắc hứng khởi</p>
-          </div>
-
+          <SectionHeader title="Gợi ý ngẫu nhiên" description="Vài bài thơ để bắt đầu" />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {randomPoems.slice(0, 4).map((poem) => (
               <Link
                 key={poem.id}
                 to={toPoemDetail(poem.id)}
-                className="p-6 rounded-2xl bg-gradient-to-r from-amber-500/5 via-amber-500/10 to-transparent dark:from-amber-950/20 border border-amber-500/20 hover:border-amber-500/40 transition shadow-sm"
+                className="p-6 rounded-xl bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 hover:border-amber-300 dark:hover:border-amber-700/60 transition-colors"
               >
-                <h4 className="text-lg font-serif font-bold text-slate-900 dark:text-amber-200 mb-1">
-                  {poem.name}
+                <h4 className="font-serif text-lg font-bold text-slate-900 dark:text-amber-100 mb-1">
+                  {poemDisplayTitle(poem)}
                 </h4>
-                <p className="text-xs text-amber-700 dark:text-amber-400 font-medium mb-2">
-                  Tác giả: {poem.authorName || 'Vô danh'}
+                <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">
+                  {poemAuthorName(poem)}
                 </p>
-                <p className="text-sm font-serif italic text-slate-700 dark:text-slate-300 line-clamp-2">
-                  "{poem.content.split('\n')[0]}..."
+                <p className="text-sm font-serif italic text-slate-600 dark:text-slate-300 line-clamp-2">
+                  {poem.content.split('\n')[0]}
                 </p>
               </Link>
             ))}
@@ -79,69 +72,51 @@ export default function HomePage() {
         </section>
       )}
 
-      {/* Featured Authors */}
       <section className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl md:text-3xl font-serif font-bold text-slate-900 dark:text-amber-100">
-              ✍️ Tác Giả Tiêu Biểu
-            </h2>
-            <p className="text-slate-500 dark:text-slate-400 text-sm">Các thi sĩ đại thụ tên tuổi</p>
-          </div>
-          <Link
-            to={PATHS.AUTHORS}
-            className="text-amber-700 dark:text-amber-400 font-medium text-sm hover:underline flex items-center gap-1"
-          >
-            Tất cả tác giả →
-          </Link>
-        </div>
-
+        <SectionHeader
+          title="Tác giả tiêu biểu"
+          description="Các nhà thơ trong kho"
+          linkTo={PATHS.AUTHORS}
+          linkLabel="Tất cả tác giả"
+        />
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
           {authors.map((author) => (
             <Link
               key={author.id}
               to={toAuthorDetail(author.id)}
-              className="p-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200/70 dark:border-slate-700/70 text-center hover:border-amber-500 hover:shadow-lg transition transform hover:-translate-y-1"
+              className="p-4 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-center hover:border-amber-300 dark:hover:border-amber-700/60 transition-colors"
             >
-              <div className="w-14 h-14 rounded-full bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-200 flex items-center justify-center font-serif font-bold text-xl mx-auto mb-3 shadow-inner">
+              <div className="w-14 h-14 rounded-full bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-200 flex items-center justify-center font-serif font-bold text-xl mx-auto mb-3">
                 {author.name.charAt(0)}
               </div>
-              <h4 className="font-serif font-bold text-slate-900 dark:text-slate-100 text-sm line-clamp-1">
+              <h4 className="font-serif font-bold text-sm text-slate-900 dark:text-slate-100 line-clamp-1">
                 {author.name}
               </h4>
-              <p className="text-xs text-slate-400 mt-0.5">
-                {author.birthYear ? `Năm ${author.birthYear}` : author.hometown || 'Việt Nam'}
-              </p>
+              {(author.birthYear || author.hometown) && (
+                <p className="text-xs text-slate-400 mt-0.5">
+                  {author.birthYear || author.hometown}
+                </p>
+              )}
             </Link>
           ))}
         </div>
       </section>
 
-      {/* Genres Grid */}
       <section className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl md:text-3xl font-serif font-bold text-slate-900 dark:text-amber-100">
-              🏷️ Thể Loại Thơ Ca
-            </h2>
-            <p className="text-slate-500 dark:text-slate-400 text-sm">Từ Lục bát, Thất ngôn tứ tuyệt đến Thơ tự do</p>
-          </div>
-          <Link
-            to={PATHS.GENRES}
-            className="text-amber-700 dark:text-amber-400 font-medium text-sm hover:underline flex items-center gap-1"
-          >
-            Tất cả thể loại →
-          </Link>
-        </div>
-
+        <SectionHeader
+          title="Thể loại"
+          description="Lục bát, thất ngôn, thơ tự do…"
+          linkTo={PATHS.GENRES}
+          linkLabel="Tất cả thể loại"
+        />
         <div className="flex flex-wrap gap-3">
           {genres.map((genre) => (
             <Link
               key={genre.id}
               to={toGenreDetail(genre.id)}
-              className="px-5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-amber-600 hover:text-white dark:hover:bg-amber-500 dark:hover:text-slate-950 font-medium text-sm text-slate-700 dark:text-slate-300 transition shadow-sm border border-slate-200 dark:border-slate-700"
+              className="px-4 py-2 rounded-md text-sm font-medium text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-amber-700 hover:text-white hover:border-amber-700 dark:hover:bg-amber-600 dark:hover:border-amber-600 transition-colors"
             >
-              🏷️ {genre.name}
+              {genre.name}
             </Link>
           ))}
         </div>

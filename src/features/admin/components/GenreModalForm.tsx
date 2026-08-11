@@ -46,13 +46,13 @@ export function GenreModalForm({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={editingGenre ? '✏️ Chỉnh Sửa Thể Loại' : '✨ Thêm Thể Loại Mới'}
+      title={editingGenre ? 'Chỉnh sửa thể loại' : 'Thêm thể loại mới'}
       maxWidth="sm"
     >
       <form onSubmit={handleSubmit} className="space-y-4 text-sm text-slate-200">
         {errorMsg && (
-          <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-300 text-xs font-semibold">
-            ⚠️ {errorMsg}
+          <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-300 text-xs font-semibold">
+            {errorMsg}
           </div>
         )}
         <div>
@@ -70,16 +70,16 @@ export function GenreModalForm({
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold"
+            className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-medium transition-colors"
           >
             Hủy
           </button>
           <button
             type="submit"
             disabled={submitting}
-            className="px-5 py-2 bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold text-xs rounded-xl shadow transition"
+            className="px-5 py-2 bg-amber-700 hover:bg-amber-800 text-white font-medium text-xs rounded-lg transition-colors"
           >
-            {submitting ? 'Đang lưu...' : 'Lưu Thể Loại'}
+            {submitting ? 'Đang lưu...' : 'Lưu thể loại'}
           </button>
         </div>
       </form>

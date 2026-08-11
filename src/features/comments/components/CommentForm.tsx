@@ -44,16 +44,16 @@ export function CommentForm({ onSubmit }: CommentFormProps) {
           onFocus={() => {
             if (!isAuthenticated) openModal('viết bình luận')
           }}
-          className="w-full p-4 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/40"
+          className="w-full p-4 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/40"
         />
       </div>
       <div className="flex justify-end">
         <button
           type="submit"
           disabled={submitting}
-          className="px-6 py-2.5 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 text-white font-medium text-sm rounded-xl shadow-md transition transform active:scale-95 disabled:opacity-50"
+          className="px-6 py-2.5 bg-amber-700 hover:bg-amber-800 text-white font-medium text-sm rounded-xl transition-colors disabled:opacity-50"
         >
-          {submitting ? 'Đang gửi...' : 'Gửi Bình Luận'}
+          {submitting ? 'Đang gửi...' : 'Gửi bình luận'}
         </button>
       </div>
     </form>

@@ -11,6 +11,12 @@ import { CommentForm } from '@/features/comments/components/CommentForm'
 import { CommentItem } from '@/features/comments/components/CommentItem'
 import { FeedbackForm } from '@/features/feedbacks/components/FeedbackForm'
 import { getErrorMessage } from '@/utils/error'
+import { useLocalStorage } from '@/hooks/useLocalStorage'
+import { poemDisplayTitle, poemAuthorName } from '@/features/poems/display'
+
+// Cài đặt đọc: cỡ chữ và giãn dòng, lưu ở localStorage.
+const FONT_STEPS = ['text-base md:text-lg', 'text-lg md:text-xl', 'text-xl md:text-2xl', 'text-2xl md:text-3xl']
+const LEADING_STEPS = ['leading-relaxed', 'leading-loose', 'leading-[2.4]']
 
 export default function PoemDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -22,7 +28,17 @@ export default function PoemDetailPage() {
   const [comments, setComments] = useState<CommentResponse[]>([])
   const [repliesMap, setRepliesMap] = useState<Record<number, ReplyResponse[]>>({})
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<'content' | 'transliteration' | 'translation'>('content')
+  const [activeTab, setActiveTab] = useState<'content' | 'transliteration' | 'meaning'>('content')
+  const [fontIdx, setFontIdx] = useLocalStorage('poems_reader_font', 1)
+  const [leadingIdx, setLeadingIdx] = useLocalStorage('poems_reader_leading', 1)
+  const [copied, setCopied] = useState<'' | 'poem' | 'link'>('')
+
+  const copyToClipboard = (text: string, kind: 'poem' | 'link') => {
+    navigator.clipboard?.writeText(text).then(() => {
+      setCopied(kind)
+      setTimeout(() => setCopied(''), 1500)
+    })
+  }
 
   useEffect(() => {
     async function loadPoemAndComments() {
@@ -103,7 +119,7 @@ export default function PoemDetailPage() {
       <div className="max-w-4xl mx-auto py-8 space-y-6">
         <Skeleton className="h-10 w-3/4 rounded-xl" />
         <Skeleton className="h-6 w-1/3 rounded-xl" />
-        <Skeleton className="h-64 w-full rounded-2xl" />
+        <Skeleton className="h-64 w-full rounded-xl" />
       </div>
     )
   }
@@ -127,88 +143,134 @@ export default function PoemDetailPage() {
       <div className="flex items-center justify-between gap-4 border-b border-slate-200/60 dark:border-slate-800/60 pb-4">
         <Link
           to={PATHS.POEMS}
-          className="text-sm text-slate-500 hover:text-amber-700 dark:hover:text-amber-400 font-medium flex items-center gap-1 transition"
+          className="text-sm text-slate-500 hover:text-amber-700 dark:hover:text-amber-400 font-medium flex items-center gap-1 transition-colors"
         >
-          ← Trở về Danh Sách
+          ← Trở về danh sách
         </Link>
 
-        {/* Reader Mode Controller */}
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-slate-400 hidden sm:inline">Chế độ đọc:</span>
+        {/* Cài đặt đọc */}
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1">
+            <span className="text-xs text-slate-400 hidden sm:inline mr-0.5">Cỡ chữ</span>
+            <button
+              onClick={() => setFontIdx(Math.max(0, fontIdx - 1))}
+              disabled={fontIdx === 0}
+              aria-label="Giảm cỡ chữ"
+              className="w-7 h-7 rounded-md border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40 transition-colors"
+            >
+              A−
+            </button>
+            <button
+              onClick={() => setFontIdx(Math.min(FONT_STEPS.length - 1, fontIdx + 1))}
+              disabled={fontIdx === FONT_STEPS.length - 1}
+              aria-label="Tăng cỡ chữ"
+              className="w-7 h-7 rounded-md border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-sm hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40 transition-colors"
+            >
+              A+
+            </button>
+          </div>
+          <button
+            onClick={() => setLeadingIdx((leadingIdx + 1) % LEADING_STEPS.length)}
+            aria-label="Đổi giãn dòng"
+            className="px-2.5 h-7 rounded-md border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+          >
+            Giãn dòng
+          </button>
           <button
             onClick={toggleMode}
-            className="px-3 py-1.5 rounded-xl bg-amber-100/80 dark:bg-slate-800 text-amber-950 dark:text-amber-200 text-xs font-semibold hover:bg-amber-200 transition shadow-sm border border-amber-500/20"
+            className="px-3 h-7 rounded-md bg-amber-100 dark:bg-slate-800 text-amber-900 dark:text-amber-200 text-xs font-medium hover:bg-amber-200 dark:hover:bg-slate-700 transition-colors border border-amber-200 dark:border-slate-700"
           >
-            {mode === 'classic-sepia' ? '📜 Style Cổ Điển (Sepia)' : '⚡ Style Hiện Đại'}
+            {mode === 'classic-sepia' ? 'Cổ điển' : mode === 'modern-light' ? 'Sáng' : 'Tối'}
           </button>
         </div>
       </div>
 
       {/* Main Poem Display Card */}
-      <div className="poem-container p-8 md:p-12 rounded-3xl transition-all duration-300">
+      <div className="poem-container p-8 md:p-12 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm transition-colors">
         {/* Header */}
-        <div className="text-center space-y-3 mb-8 pb-6 border-b border-amber-900/10 dark:border-slate-700/50">
+        <div className="text-left space-y-3 mb-8 pb-6 border-b border-amber-900/10 dark:border-slate-700/50">
           <div className="inline-flex items-center gap-2">
             <span className="px-3 py-1 rounded-full text-xs font-semibold bg-amber-600/10 text-amber-800 dark:bg-amber-950 dark:text-amber-300">
-              {poem.genreName || 'Thơ ca'}
+              {poem.genreName || poem.genre_name || 'Thơ ca'}
             </span>
             {poem.year && (
               <span className="text-xs text-slate-400 font-mono">Sáng tác năm {poem.year}</span>
             )}
           </div>
-          <h1 className="text-3xl md:text-5xl font-serif font-bold text-slate-900 dark:text-amber-100 tracking-tight">
-            {poem.name}
+          <h1 className="text-2xl md:text-3xl font-serif font-bold text-slate-900 dark:text-amber-100 tracking-tight">
+            {poemDisplayTitle(poem)}
           </h1>
           <p className="text-base font-medium text-amber-800/80 dark:text-amber-400">
-            Tác giả: <strong>{poem.authorName || 'Vô danh'}</strong>
+            {poemAuthorName(poem)}
           </p>
+          <div className="flex items-center gap-2 pt-1">
+            <button
+              onClick={() =>
+                copyToClipboard(
+                  `${poemDisplayTitle(poem)}\n${poemAuthorName(poem)}\n\n${poem.content}`,
+                  'poem',
+                )
+              }
+              className="px-2.5 py-1 rounded-md border border-slate-200 dark:border-slate-700 text-xs text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            >
+              {copied === 'poem' ? 'Đã sao chép' : 'Sao chép bài thơ'}
+            </button>
+            <button
+              onClick={() => copyToClipboard(window.location.href, 'link')}
+              className="px-2.5 py-1 rounded-md border border-slate-200 dark:border-slate-700 text-xs text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            >
+              {copied === 'link' ? 'Đã chép liên kết' : 'Chia sẻ'}
+            </button>
+          </div>
         </div>
 
-        {/* Tabs for Transliteration / Translation if available */}
-        {(poem.transliteration || poem.translation) && (
-          <div className="flex justify-center gap-2 mb-8">
+        {/* Tabs: Nguyên tác / Phiên âm / Dịch nghĩa (chỉ hiện khi có phần tương ứng) */}
+        {(poem.transliteration || poem.meaning) && (
+          <div className="flex flex-wrap justify-start gap-2 mb-8">
             <button
               onClick={() => setActiveTab('content')}
-              className={`px-4 py-1.5 rounded-xl text-xs font-bold transition ${
+              className={`px-4 py-1.5 rounded-md text-xs font-medium transition-colors ${
                 activeTab === 'content'
-                  ? 'bg-amber-700 text-white shadow'
+                  ? 'bg-amber-700 text-white'
                   : 'bg-amber-100/50 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
               }`}
             >
-              Nguyên Tác
+              Nguyên tác
             </button>
             {poem.transliteration && (
               <button
                 onClick={() => setActiveTab('transliteration')}
-                className={`px-4 py-1.5 rounded-xl text-xs font-bold transition ${
+                className={`px-4 py-1.5 rounded-md text-xs font-medium transition-colors ${
                   activeTab === 'transliteration'
-                    ? 'bg-amber-700 text-white shadow'
+                    ? 'bg-amber-700 text-white'
                     : 'bg-amber-100/50 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
                 }`}
               >
-                Phiên Âm Hán Việt
+                Phiên âm Hán Việt
               </button>
             )}
-            {poem.translation && (
+            {poem.meaning && (
               <button
-                onClick={() => setActiveTab('translation')}
-                className={`px-4 py-1.5 rounded-xl text-xs font-bold transition ${
-                  activeTab === 'translation'
-                    ? 'bg-amber-700 text-white shadow'
+                onClick={() => setActiveTab('meaning')}
+                className={`px-4 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                  activeTab === 'meaning'
+                    ? 'bg-amber-700 text-white'
                     : 'bg-amber-100/50 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
                 }`}
               >
-                Dịch Thơ
+                Dịch nghĩa
               </button>
             )}
           </div>
         )}
 
-        {/* Content Body */}
-        <div className="text-center font-serif text-lg md:text-xl leading-loose tracking-wide whitespace-pre-line my-6 text-slate-800 dark:text-slate-100">
+        {/* Content Body — căn trái trong khổ hẹp, giữ nguyên hình khổ thơ */}
+        <div
+          className={`max-w-[36rem] text-left font-serif tracking-wide whitespace-pre-line my-6 text-slate-800 dark:text-slate-100 ${FONT_STEPS[fontIdx]} ${LEADING_STEPS[leadingIdx]}`}
+        >
           {activeTab === 'content' && poem.content}
           {activeTab === 'transliteration' && poem.transliteration}
-          {activeTab === 'translation' && poem.translation}
+          {activeTab === 'meaning' && poem.meaning}
         </div>
 
         {poem.description && (
@@ -218,13 +280,39 @@ export default function PoemDetailPage() {
         )}
       </div>
 
+      {/* Các bản dịch thơ */}
+      {poem.translations && poem.translations.length > 0 && (
+        <section className="space-y-4">
+          <h3 className="text-xl font-serif font-bold text-slate-900 dark:text-amber-100">
+            Bản dịch ({poem.translations.length})
+          </h3>
+          <div className="space-y-4">
+            {poem.translations.map((t, idx) => (
+              <div
+                key={idx}
+                className="p-5 md:p-6 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm"
+              >
+                {t.translator && (
+                  <p className="mb-2 text-xs font-medium text-amber-700 dark:text-amber-400">
+                    Bản dịch của {t.translator}
+                  </p>
+                )}
+                <div className="font-serif whitespace-pre-line leading-loose text-slate-800 dark:text-slate-100">
+                  {t.content}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* Feedback Form Component */}
       <FeedbackForm poemId={poemId} />
 
       {/* Comments Section */}
-      <section className="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-6">
-        <h3 className="text-xl font-serif font-bold text-slate-900 dark:text-amber-100 flex items-center gap-2">
-          💬 Bình Luận Độc Giả ({comments.length})
+      <section className="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-xl border border-slate-200 dark:border-slate-700 space-y-6">
+        <h3 className="text-xl font-serif font-bold text-slate-900 dark:text-amber-100">
+          Bình luận ({comments.length})
         </h3>
 
         <CommentForm onSubmit={handleCreateComment} />

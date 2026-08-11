@@ -33,7 +33,7 @@ export function ReplyForm({ commentId, onSubmit }: ReplyFormProps) {
       <button
         type="submit"
         disabled={submitting}
-        className="px-4 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl shadow transition"
+        className="px-4 py-1.5 bg-amber-700 hover:bg-amber-800 text-white text-xs font-bold rounded-xl transition-colors"
       >
         {submitting ? '...' : 'Gửi'}
       </button>

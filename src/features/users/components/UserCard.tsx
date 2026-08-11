@@ -2,9 +2,9 @@ import type { UserResponse } from '@/types'
 
 export function UserCard({ user }: { user: UserResponse }) {
   return (
-    <article className="p-6 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm space-y-2">
+    <article className="p-6 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm space-y-2">
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-full bg-amber-600 text-white flex items-center justify-center font-bold text-sm">
+        <div className="w-10 h-10 rounded-full bg-amber-700 text-white flex items-center justify-center font-bold text-sm">
           {user.username.charAt(0).toUpperCase()}
         </div>
         <div>
@@ -14,8 +14,8 @@ export function UserCard({ user }: { user: UserResponse }) {
           </span>
         </div>
       </div>
-      {user.email && <p className="text-xs text-slate-500 dark:text-slate-400">📧 {user.email}</p>}
-      {user.phoneNumber && <p className="text-xs text-slate-500 dark:text-slate-400">📞 {user.phoneNumber}</p>}
+      {user.email && <p className="text-xs text-slate-500 dark:text-slate-400">{user.email}</p>}
+      {user.phoneNumber && <p className="text-xs text-slate-500 dark:text-slate-400">{user.phoneNumber}</p>}
     </article>
   )
 }
