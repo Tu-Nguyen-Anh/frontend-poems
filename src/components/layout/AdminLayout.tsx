@@ -5,12 +5,12 @@ import { useAuth } from '@/hooks/useAuth'
 import { Skeleton } from '@/components/ui/Skeleton'
 
 const ADMIN_NAV = [
-  { to: PATHS.ADMIN, label: '📊 Tổng Quan', icon: '📊', exact: true },
-  { to: PATHS.ADMIN_POEMS, label: '📜 Quản Lý Bài Thơ', icon: '📜' },
-  { to: PATHS.ADMIN_AUTHORS, label: '✍️ Quản Lý Tác Giả', icon: '✍️' },
-  { to: PATHS.ADMIN_GENRES, label: '🏷️ Quản Lý Thể Loại', icon: '🏷️' },
-  { to: PATHS.ADMIN_FEEDBACKS, label: '📩 Quản Lý Góp Ý', icon: '📩' },
-  { to: PATHS.ADMIN_USERS, label: '👥 Quản Lý Người Dùng', icon: '👥' },
+  { to: PATHS.ADMIN, label: 'Tổng quan', exact: true },
+  { to: PATHS.ADMIN_POEMS, label: 'Bài thơ' },
+  { to: PATHS.ADMIN_AUTHORS, label: 'Tác giả' },
+  { to: PATHS.ADMIN_GENRES, label: 'Thể loại' },
+  { to: PATHS.ADMIN_FEEDBACKS, label: 'Góp ý' },
+  { to: PATHS.ADMIN_USERS, label: 'Người dùng' },
 ]
 
 export function AdminLayout() {
@@ -23,8 +23,7 @@ export function AdminLayout() {
         <div>
           <div className="flex items-center justify-between gap-2 pb-6 border-b border-slate-800 mb-6">
             <Link to={PATHS.HOME} className="flex items-center gap-2">
-              <span className="text-2xl">⚙️</span>
-              <span className="font-serif font-bold text-amber-400 text-lg">Admin Dashboard</span>
+              <span className="font-serif font-bold text-amber-400 text-lg">Trang quản trị</span>
             </Link>
           </div>
 
@@ -35,14 +34,13 @@ export function AdminLayout() {
                 to={item.to}
                 end={item.exact}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition ${
+                  `flex items-center px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                     isActive
-                      ? 'bg-amber-600 text-white shadow-lg shadow-amber-600/30'
+                      ? 'bg-amber-700 text-white'
                       : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
                   }`
                 }
               >
-                <span>{item.icon}</span>
                 <span>{item.label}</span>
               </NavLink>
             ))}
@@ -55,14 +53,14 @@ export function AdminLayout() {
             <p className="text-[10px] text-amber-400 font-mono">ADMIN</p>
           </div>
           <Link to={PATHS.HOME} className="text-amber-400 hover:underline">
-            Về Trang Chủ →
+            Về trang chủ
           </Link>
         </div>
       </aside>
 
       {/* Main Content Area */}
       <main className="flex-1 p-6 md:p-10 overflow-y-auto">
-        <Suspense fallback={<Skeleton className="h-64 rounded-2xl bg-slate-900" />}>
+        <Suspense fallback={<Skeleton className="h-64 rounded-xl bg-slate-900" />}>
           <Outlet />
         </Suspense>
       </main>

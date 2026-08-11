@@ -14,7 +14,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
-        darkMode: ['class', '[data-reader-mode="modern-dark"]'],
+        darkMode: 'class',
         theme: {
           extend: {
             fontFamily: {
@@ -50,6 +50,11 @@
         }
       })()
     </script>
+
+    <!-- Nền tối ngay từ paint đầu tiên để tránh chớp trắng trước khi CSS bundle tải -->
+    <style>
+      html.dark, html.dark body { background-color: #0f172a; }
+    </style>
   </head>
   <body class="antialiased min-h-screen">
     <div id="root"></div>

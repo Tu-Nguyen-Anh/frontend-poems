@@ -87,9 +87,9 @@ export default function ProfilePage() {
   return (
     <div className="max-w-4xl mx-auto py-6 space-y-8">
       {/* Profile Card */}
-      <div className="p-8 rounded-3xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-md flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+      <div className="p-8 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div className="flex items-center gap-5">
-          <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-amber-600 to-amber-400 text-white flex items-center justify-center font-bold text-3xl shadow-lg flex-shrink-0">
+          <div className="w-20 h-20 rounded-full bg-amber-700 text-white flex items-center justify-center font-bold text-3xl flex-shrink-0">
             {user?.username.charAt(0).toUpperCase()}
           </div>
           <div className="space-y-1">
@@ -98,13 +98,13 @@ export default function ProfilePage() {
             </h1>
             <p className="text-xs text-slate-400">Thành viên độc giả Thi Đàn</p>
             {email && (
-              <p className="text-xs text-slate-600 dark:text-slate-300 flex items-center gap-1.5 pt-0.5">
-                <span>✉️</span> <span>{email}</span>
+              <p className="text-xs text-slate-600 dark:text-slate-300 pt-0.5">
+                {email}
               </p>
             )}
             {phoneNumber && (
-              <p className="text-xs text-amber-600 dark:text-amber-400 font-semibold flex items-center gap-1.5 pt-0.5">
-                <span>📞</span> <span>SĐT: {phoneNumber}</span>
+              <p className="text-xs text-amber-700 dark:text-amber-400 font-semibold pt-0.5">
+                SĐT: {phoneNumber}
               </p>
             )}
             <div className="flex gap-2 pt-1.5">
@@ -114,9 +114,9 @@ export default function ProfilePage() {
               {isAdmin && (
                 <Link
                   to={PATHS.ADMIN}
-                  className="px-3 py-0.5 rounded-full text-xs font-bold bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300 hover:underline"
+                  className="px-3 py-0.5 rounded-full text-xs font-bold bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-200 hover:underline"
                 >
-                  ⚙️ Admin Dashboard
+                  Admin Dashboard
                 </Link>
               )}
             </div>
@@ -125,16 +125,16 @@ export default function ProfilePage() {
 
         <button
           onClick={handleLogout}
-          className="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-medium text-sm rounded-xl transition shadow"
+          className="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-medium text-sm rounded-md transition-colors"
         >
-          🚪 Đăng Xuất
+          Đăng Xuất
         </button>
       </div>
 
       {/* History of Comments */}
-      <section className="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
-        <h2 className="text-xl font-serif font-bold text-slate-900 dark:text-amber-100 flex items-center gap-2">
-          💬 Lịch Sử Bình Luận Của Tôi ({userComments.length})
+      <section className="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
+        <h2 className="text-xl font-serif font-bold text-slate-900 dark:text-amber-100">
+          Lịch Sử Bình Luận Của Tôi ({userComments.length})
         </h2>
 
         {loading ? (
@@ -146,7 +146,7 @@ export default function ProfilePage() {
             {userComments.map((c) => (
               <div
                 key={c.id}
-                className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-700/60 text-xs space-y-1"
+                className="p-4 rounded-lg bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-700/60 text-xs space-y-1"
               >
                 <div className="flex justify-between text-slate-400">
                   <Link to={toPoemDetail(c.poemId)} className="text-amber-700 font-bold hover:underline">
@@ -162,9 +162,9 @@ export default function ProfilePage() {
       </section>
 
       {/* History of Feedbacks */}
-      <section className="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
-        <h2 className="text-xl font-serif font-bold text-slate-900 dark:text-amber-100 flex items-center gap-2">
-          📩 Lịch Sử Góp Ý Của Tôi ({userFeedbacks.length})
+      <section className="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
+        <h2 className="text-xl font-serif font-bold text-slate-900 dark:text-amber-100">
+          Lịch Sử Góp Ý Của Tôi ({userFeedbacks.length})
         </h2>
 
         {loading ? (
@@ -176,7 +176,7 @@ export default function ProfilePage() {
             {userFeedbacks.map((f) => (
               <div
                 key={f.id}
-                className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-700/60 text-xs space-y-1"
+                className="p-4 rounded-lg bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-700/60 text-xs space-y-1"
               >
                 <div className="flex justify-between items-center">
                   <span className="text-amber-700 font-bold">Bài thơ #{f.poemId}</span>

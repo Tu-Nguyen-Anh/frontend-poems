@@ -6,14 +6,11 @@ export function Footer() {
     <footer className="border-t border-slate-200/60 dark:border-slate-800/60 bg-slate-50 dark:bg-slate-950 py-12 transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-4 gap-8">
         <div className="md:col-span-2">
-          <div className="flex items-center gap-2 mb-3">
-            <span className="text-2xl">📜</span>
-            <span className="text-xl font-serif font-bold text-slate-900 dark:text-amber-100">
-              Thi Đàn Frontend-Poems
-            </span>
-          </div>
+          <span className="block mb-3 text-xl font-serif font-bold text-slate-900 dark:text-amber-100">
+            Thi Đàn
+          </span>
           <p className="text-slate-600 dark:text-slate-400 text-sm max-w-md leading-relaxed">
-            Nền tảng lưu giữ, tôn vinh và chia sẻ kho tàng thơ ca Việt Nam và thế giới. Trải nghiệm đọc thơ tinh tế với chế độ đọc cổ điển & hiện đại.
+            Kho tàng thơ ca Việt Nam — lưu giữ và chia sẻ, với chế độ đọc cổ điển và hiện đại.
           </p>
         </div>
 
@@ -60,7 +57,7 @@ export function Footer() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 mt-8 border-t border-slate-200/40 dark:border-slate-800/40 text-center text-xs text-slate-500 dark:text-slate-500">
-        © {new Date().getFullYear()} Frontend-Poems. Kết nối trực tiếp Spring Boot Backend API.
+        © {new Date().getFullYear()} Thi Đàn. Kho tàng thơ ca Việt Nam.
       </div>
     </footer>
   )

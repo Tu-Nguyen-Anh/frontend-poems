@@ -55,6 +55,12 @@ export interface RefreshTokenRequest {
 
 // --- Poem ---
 
+export interface PoemTranslation {
+  translator?: string
+  content: string
+  sort_order?: number
+}
+
 export interface PoemResponse {
   id: number
   name: string
@@ -63,9 +69,14 @@ export interface PoemResponse {
   content: string
   transliteration?: string
   translation?: string
+  meaning?: string
   language?: string
   genreName?: string
   authorName?: string
+  // API trả snake_case; giữ cả hai để an toàn
+  author_name?: string
+  genre_name?: string
+  translations?: PoemTranslation[]
 }
 
 export interface PoemRequest {

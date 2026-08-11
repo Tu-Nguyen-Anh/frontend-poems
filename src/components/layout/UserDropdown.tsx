@@ -29,9 +29,9 @@ export function UserDropdown() {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition border border-amber-500/20"
+        className="flex items-center gap-2 p-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors border border-amber-500/20"
       >
-        <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-600 to-amber-400 text-white flex items-center justify-center font-bold text-sm shadow">
+        <div className="w-8 h-8 rounded-full bg-amber-600 text-white flex items-center justify-center font-bold text-sm">
           {user?.username.charAt(0).toUpperCase()}
         </div>
         <span className="hidden sm:inline text-sm font-medium text-slate-700 dark:text-slate-200">
@@ -41,7 +41,7 @@ export function UserDropdown() {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-52 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 py-2 z-50 animate-fade-in">
+        <div className="absolute right-0 mt-2 w-52 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 py-2 z-50 animate-fade-in">
           <div className="px-4 py-2 border-b border-slate-100 dark:border-slate-700">
             <p className="text-xs text-slate-400">Tài khoản</p>
             <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate">
@@ -57,27 +57,27 @@ export function UserDropdown() {
           <Link
             to={PATHS.PROFILE}
             onClick={() => setIsOpen(false)}
-            className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-amber-50 dark:hover:bg-slate-700/50 transition"
+            className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-amber-50 dark:hover:bg-slate-700/50 transition-colors"
           >
-            👤 Thông tin cá nhân
+            Thông tin cá nhân
           </Link>
 
           {isAdmin && (
             <Link
               to={PATHS.ADMIN}
               onClick={() => setIsOpen(false)}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-slate-700/50 transition"
+              className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-slate-700/50 transition-colors"
             >
-              ⚙️ Admin Dashboard
+              Admin Dashboard
             </Link>
           )}
 
           <div className="border-t border-slate-100 dark:border-slate-700 mt-1 pt-1">
             <button
               onClick={handleLogout}
-              className="w-full text-left flex items-center gap-2 px-4 py-2 text-sm text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition"
+              className="w-full text-left flex items-center gap-2 px-4 py-2 text-sm text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
             >
-              🚪 Đăng xuất
+              Đăng xuất
             </button>
           </div>
         </div>

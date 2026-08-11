@@ -84,6 +84,12 @@
     background-position: 0 50%;
   }
 }
+/* Dark mode: biến --c-surface-* không đổi theo .dark nên chỉ định màu tối riêng
+   để skeleton không bị trắng lóa trên nền tối. */
+html.dark .skeleton {
+  background: linear-gradient(90deg, #1e293b 25%, #334155 37%, #1e293b 63%);
+  background-size: 400% 100%;
+}
 @media (prefers-reduced-motion: reduce) {
   .skeleton {
     animation: none;

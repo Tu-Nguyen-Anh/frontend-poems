@@ -33,7 +33,10 @@ export function ReaderModeProvider({ children }: { children: ReactNode }) {
   }
 
   useEffect(() => {
-    document.documentElement.setAttribute('data-reader-mode', mode)
+    const root = document.documentElement
+    root.setAttribute('data-reader-mode', mode)
+    // Tailwind dark: variants dùng chiến lược 'class' → bật/tắt .dark theo mode.
+    root.classList.toggle('dark', mode === 'modern-dark')
   }, [mode])
 
   return (

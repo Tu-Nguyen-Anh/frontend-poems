@@ -74,11 +74,11 @@ export default function AdminUsersPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-serif font-bold text-amber-400">👥 Quản Lý Người Dùng</h1>
+        <h1 className="text-3xl font-serif font-bold text-amber-400">Quản lý người dùng</h1>
         <p className="text-slate-400 text-sm">Danh sách tài khoản người dùng trên hệ thống</p>
       </div>
 
-      <div className="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden shadow-xl">
+      <div className="bg-slate-900 rounded-xl border border-slate-800 overflow-hidden">
         <table className="w-full text-left text-sm text-slate-300">
           <thead className="bg-slate-950 text-slate-400 uppercase text-xs">
             <tr>
@@ -105,14 +105,14 @@ export default function AdminUsersPage() {
               </tr>
             ) : (
               users.map((u) => (
-                <tr key={u.id} className="hover:bg-slate-800/50 transition">
+                <tr key={u.id} className="hover:bg-slate-800/50 transition-colors">
                   <td className="px-6 py-4 font-mono text-xs text-slate-500">#{u.id}</td>
                   <td className="px-6 py-4 font-bold text-slate-100">{u.username}</td>
                   <td className="px-6 py-4 text-slate-400">{u.email || '—'}</td>
                   <td className="px-6 py-4">
                     {getPhone(u) ? (
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-amber-500/10 text-amber-300 font-mono text-xs border border-amber-500/20 font-semibold">
-                        📞 {getPhone(u)}
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-amber-500/10 text-amber-300 font-mono text-xs border border-amber-500/20 font-semibold">
+                        {getPhone(u)}
                       </span>
                     ) : (
                       <span className="text-slate-500 italic text-xs">Chưa có SĐT</span>
@@ -122,7 +122,7 @@ export default function AdminUsersPage() {
                     <span
                       className={`px-2.5 py-1 rounded-full text-xs font-bold ${
                         u.role === UserRole.ADMIN || u.role === 'ADMIN' || u.role === 'ROLE_ADMIN'
-                          ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
+                          ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
                           : 'bg-slate-800 text-slate-300 border border-slate-700'
                       }`}
                     >
@@ -132,7 +132,7 @@ export default function AdminUsersPage() {
                   <td className="px-6 py-4 text-right">
                     <button
                       onClick={() => handleDeleteUser(u.id)}
-                      className="px-3 py-1 bg-rose-500/20 text-rose-300 hover:bg-rose-500/40 rounded-lg text-xs font-semibold"
+                      className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded-md text-xs font-medium transition-colors"
                     >
                       Xóa
                     </button>

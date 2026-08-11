@@ -28,17 +28,17 @@ export default function GenresPage() {
     <div className="space-y-8 py-4">
       <div>
         <h1 className="text-3xl md:text-4xl font-serif font-bold text-slate-900 dark:text-amber-100 mb-2">
-          🏷️ Thể Loại Thơ Ca
+          Thể loại thơ ca
         </h1>
         <p className="text-slate-500 dark:text-slate-400 text-sm">
-          Phân loại các thể thơ phong phú trong thi đàn Việt Nam
+          Các thể thơ trong thi đàn Việt Nam
         </p>
       </div>
 
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
           {[1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} className="h-32 rounded-2xl" />
+            <Skeleton key={i} className="h-32 rounded-xl" />
           ))}
         </div>
       ) : (
@@ -47,15 +47,12 @@ export default function GenresPage() {
             <Link
               key={genre.id}
               to={toGenreDetail(genre.id)}
-              className="p-6 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 shadow-sm hover:shadow-xl hover:border-amber-500 transition transform hover:-translate-y-1 group"
+              className="p-6 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-amber-300 dark:hover:border-amber-700/60 transition-colors"
             >
-              <div className="w-12 h-12 rounded-xl bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-200 flex items-center justify-center font-bold text-xl mb-4 group-hover:scale-110 transition">
-                🏷️
-              </div>
-              <h3 className="text-xl font-serif font-bold text-slate-900 dark:text-amber-100 group-hover:text-amber-600 transition">
+              <h3 className="text-xl font-serif font-bold text-slate-900 dark:text-amber-100">
                 {genre.name}
               </h3>
-              <p className="text-xs text-slate-400 mt-1">Khám phá các bài thơ thuộc thể loại này →</p>
+              <p className="text-xs text-slate-400 mt-1">Xem các bài thơ thuộc thể loại này</p>
             </Link>
           ))}
         </div>
