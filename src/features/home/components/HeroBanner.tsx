@@ -2,8 +2,13 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { PATHS } from '@/routes/paths'
 import { IconSearch } from '@/components/ui/icons'
+import { formatNumber } from '@/utils/format'
 
-export function HeroBanner() {
+interface HeroBannerProps {
+  totalPoems?: number | null
+}
+
+export function HeroBanner({ totalPoems }: HeroBannerProps) {
   const [search, setSearch] = useState('')
   const navigate = useNavigate()
 
@@ -24,8 +29,18 @@ export function HeroBanner() {
           Kho tàng thơ ca Việt
         </h1>
         <p className="text-slate-600 dark:text-slate-300 leading-relaxed md:text-lg">
-          Hàng nghìn bài thơ cổ điển và hiện đại, tra cứu theo tác giả và thể loại,
-          đọc trong chế độ đọc cổ điển hoặc hiện đại.
+          {totalPoems != null && totalPoems > 0 ? (
+            <>
+              <strong className="text-amber-700 dark:text-amber-400">{formatNumber(totalPoems)}</strong>{' '}
+              bài thơ cổ điển và hiện đại, tra cứu theo tác giả và thể loại, đọc trong
+              chế độ đọc cổ điển hoặc hiện đại.
+            </>
+          ) : (
+            <>
+              Hàng nghìn bài thơ cổ điển và hiện đại, tra cứu theo tác giả và thể loại,
+              đọc trong chế độ đọc cổ điển hoặc hiện đại.
+            </>
+          )}
         </p>
 
         <form onSubmit={handleSearch} className="flex gap-2 max-w-md pt-1">

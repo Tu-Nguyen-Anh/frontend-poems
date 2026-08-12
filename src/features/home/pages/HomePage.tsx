@@ -15,6 +15,7 @@ export default function HomePage() {
   const [randomPoems, setRandomPoems] = useState<PoemResponse[]>([])
   const [authors, setAuthors] = useState<AuthorResponse[]>([])
   const [genres, setGenres] = useState<GenreResponse[]>([])
+  const [totalPoems, setTotalPoems] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -28,7 +29,10 @@ export default function HomePage() {
           genreService.getGenres({ page: 0, size: 8 }),
         ])
 
-        if (latestRes.status === 'fulfilled') setLatestPoems(latestRes.value.content || [])
+        if (latestRes.status === 'fulfilled') {
+          setLatestPoems(latestRes.value.content || [])
+          setTotalPoems(latestRes.value.amount ?? null)
+        }
         if (randomRes.status === 'fulfilled') setRandomPoems(randomRes.value || [])
         if (authorsRes.status === 'fulfilled') setAuthors(authorsRes.value.content || [])
         if (genresRes.status === 'fulfilled') setGenres(genresRes.value.content || [])
@@ -43,7 +47,7 @@ export default function HomePage() {
 
   return (
     <div className="space-y-14 py-4">
-      <HeroBanner />
+      <HeroBanner totalPoems={totalPoems} />
 
       <LatestPoemsSection poems={latestPoems} loading={loading} />
 
