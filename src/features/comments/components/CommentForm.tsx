@@ -29,28 +29,32 @@ export function CommentForm({ onSubmit }: CommentFormProps) {
     }
   }
 
+  const MAX_LEN = 1000
+  const overLimit = content.length > MAX_LEN
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-3">
-      <div className="relative">
-        <textarea
-          rows={3}
-          placeholder={
-            isAuthenticated
-              ? 'Viết suy ngẫm, cảm nhận của bạn về bài thơ này...'
-              : 'Đăng nhập ngay để tham gia bình luận cùng độc giả!'
-          }
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          onFocus={() => {
-            if (!isAuthenticated) openModal('viết bình luận')
-          }}
-          className="w-full p-4 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/40"
-        />
-      </div>
-      <div className="flex justify-end">
+    <form onSubmit={handleSubmit} className="space-y-2">
+      <textarea
+        rows={3}
+        placeholder={
+          isAuthenticated
+            ? 'Viết suy ngẫm, cảm nhận của bạn về bài thơ này...'
+            : 'Đăng nhập ngay để tham gia bình luận cùng độc giả!'
+        }
+        value={content}
+        onChange={(e) => setContent(e.target.value)}
+        onFocus={() => {
+          if (!isAuthenticated) openModal('viết bình luận')
+        }}
+        className="w-full p-4 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100 placeholder-slate-400 resize-y focus:outline-none focus:ring-2 focus:ring-amber-500/40 leading-relaxed"
+      />
+      <div className="flex items-center justify-end gap-3">
+        <span className={`mr-auto text-xs ${overLimit ? 'text-rose-500 font-semibold' : 'text-slate-400'}`}>
+          {content.length}/{MAX_LEN}
+        </span>
         <button
           type="submit"
-          disabled={submitting}
+          disabled={submitting || overLimit}
           className="px-6 py-2.5 bg-amber-700 hover:bg-amber-800 text-white font-medium text-sm rounded-xl transition-colors disabled:opacity-50"
         >
           {submitting ? 'Đang gửi...' : 'Gửi bình luận'}

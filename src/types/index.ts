@@ -99,6 +99,9 @@ export interface AuthorResponse {
   birthYear?: number
   achievement?: string
   hometown?: string
+  /** Số bài thơ (API trả snake_case) — chỉ có ở endpoint /authors/top */
+  poemCount?: number
+  poem_count?: number
 }
 
 export interface AuthorRequest {
@@ -124,10 +127,14 @@ export interface GenreRequest {
 export interface CommentResponse {
   id: number
   content: string
-  poemId: number
-  userId: number
+  poemId?: number
+  userId?: number
   username: string
-  createdAt: string
+  createdAt?: string
+  /** API trả snake_case, không có transform ở client */
+  poem_id?: number
+  user_id?: number
+  created_at?: string
 }
 
 export interface CommentRequest {
@@ -138,11 +145,15 @@ export interface CommentRequest {
 export interface ReplyResponse {
   id: number
   content: string
-  commentId: number
-  userId: number
+  commentId?: number
+  userId?: number
   username: string
-  createdAt: string
+  createdAt?: string
   contentComment?: string
+  /** API trả snake_case, không có transform ở client */
+  comment_id?: number
+  user_id?: number
+  created_at?: string
 }
 
 export interface ReplyRequest {

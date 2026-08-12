@@ -1,0 +1,88 @@
+/* Thread bình luận kiểu diễn đàn (theo pattern tu-vi-v1): avatar + bubble,
+   sub comment gấp gọn sau nút "Xem N câu trả lời", đường nối cong từ avatar
+   comment gốc rẽ sang từng avatar trả lời. */
+
+.poem-comment-thread {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.poem-comment-expand {
+    align-self: flex-start;
+    margin-left: 44px;
+    background: transparent;
+    border: none;
+    color: #b45309;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 4px 8px;
+    border-radius: 6px;
+}
+.poem-comment-expand:hover { background: rgba(180, 83, 9, 0.08); }
+html.dark .poem-comment-expand { color: #fbbf24; }
+html.dark .poem-comment-expand:hover { background: rgba(251, 191, 36, 0.1); }
+
+.poem-comment-replies {
+    list-style: none;
+    /* Indent đặt ở PADDING của <li> để trục dọc (left:17px = tâm avatar gốc
+       36px) liền một đường; khuỷu cong chạm mép avatar trả lời. */
+    --reply-indent: 44px;
+    margin: 2px 0 0 0;
+    padding: 0;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+.poem-comment-replies > li {
+    position: relative;
+    padding: 14px 0 0 var(--reply-indent);
+}
+.poem-comment-replies > li::before {
+    content: '';
+    position: absolute;
+    left: 17px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #e2e8f0;
+}
+.poem-comment-replies > li:last-child::before { bottom: auto; height: 29px; }
+.poem-comment-replies > li::after {
+    content: '';
+    position: absolute;
+    left: 17px;
+    top: 15px;
+    width: calc(var(--reply-indent) - 16px);
+    height: 14px;
+    border-left: 2px solid #e2e8f0;
+    border-bottom: 2px solid #e2e8f0;
+    border-bottom-left-radius: 9px;
+}
+html.dark .poem-comment-replies > li::before { background: #334155; }
+html.dark .poem-comment-replies > li::after {
+    border-left-color: #334155;
+    border-bottom-color: #334155;
+}
+
+/* Trục nối từ avatar comment gốc xuống thread trả lời (qua vùng nút Xem/Ẩn). */
+.poem-comment-thread:has(.poem-comment-replies) > .poem-comment > .poem-comment-avatar::after {
+    content: '';
+    position: absolute;
+    left: 17px;
+    top: 40px;
+    bottom: -40px;
+    width: 2px;
+    background: #e2e8f0;
+}
+html.dark .poem-comment-thread:has(.poem-comment-replies) > .poem-comment > .poem-comment-avatar::after {
+    background: #334155;
+}
+
+.poem-comment {
+    display: flex;
+    gap: 10px;
+    text-align: left;
+}
+.poem-comment-avatar { flex: 0 0 auto; position: relative; }

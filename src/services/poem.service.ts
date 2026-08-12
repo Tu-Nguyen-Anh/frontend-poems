@@ -2,10 +2,11 @@ import { oplearnClient } from './oplearnClient'
 import type { ResponseGeneral, PageResponse, PoemResponse, PoemRequest } from '@/types'
 
 export const poemService = {
-  async getPoems(params?: { keyword?: string; page?: number; size?: number }): Promise<PageResponse<PoemResponse>> {
+  async getPoems(params?: { keyword?: string; genreId?: number; page?: number; size?: number }): Promise<PageResponse<PoemResponse>> {
     const res = await oplearnClient.get<ResponseGeneral<PageResponse<PoemResponse>>>('/poems', {
       params: {
         keyword: params?.keyword,
+        genreId: params?.genreId,
         page: params?.page ?? 0,
         size: params?.size ?? 10,
       },

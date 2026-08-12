@@ -7,6 +7,14 @@ export function getErrorMessage(error: unknown): string {
     const status = error.response?.status
     const resData = error.response?.data as any
     if (resData && typeof resData === 'object') {
+      // ResponseGeneral lỗi: message thật nằm ở data.detail (Error{code,detail});
+      // resData.message chỉ là reason phrase chung chung ("Bad Request"…) nên xét sau.
+      if (resData.data?.detail && typeof resData.data.detail === 'string') {
+        return resData.data.detail
+      }
+      if (resData.data?.message && typeof resData.data.message === 'string') {
+        return resData.data.message
+      }
       if (resData.message) return resData.message
       if (resData.error && typeof resData.error === 'string') return resData.error
       if (Array.isArray(resData.errors)) return resData.errors.join(', ')

@@ -7,10 +7,16 @@ export function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-4 gap-8">
         <div className="md:col-span-2">
           <span className="block mb-3 text-xl font-serif font-bold text-slate-900 dark:text-amber-100">
-            Thi Đàn
+            Tiểu Thi Hào
           </span>
           <p className="text-slate-600 dark:text-slate-400 text-sm max-w-md leading-relaxed">
             Kho tàng thơ ca Việt Nam — lưu giữ và chia sẻ, với chế độ đọc cổ điển và hiện đại.
+          </p>
+          <p className="mt-3 text-slate-500 dark:text-slate-500 text-xs max-w-md leading-relaxed italic">
+            Tiểu Thi Hào là dự án phi thương mại, hoạt động vì mục đích lưu giữ và
+            lan tỏa thơ ca — không quảng cáo, không thu phí. Tác phẩm thuộc bản quyền
+            của tác giả và dịch giả; nếu bạn là chủ sở hữu và muốn điều chỉnh, xin
+            liên hệ qua mục góp ý.
           </p>
         </div>
 
@@ -57,7 +63,7 @@ export function Footer() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 mt-8 border-t border-slate-200/40 dark:border-slate-800/40 text-center text-xs text-slate-500 dark:text-slate-500">
-        © {new Date().getFullYear()} Thi Đàn. Kho tàng thơ ca Việt Nam.
+        © {new Date().getFullYear()} Tiểu Thi Hào. Kho tàng thơ ca Việt Nam — trang phi thương mại, phục vụ cộng đồng yêu thơ.
       </div>
     </footer>
   )

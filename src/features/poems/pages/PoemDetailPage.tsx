@@ -4,6 +4,7 @@ import { poemService } from '@/services/poem.service'
 import { commentService } from '@/services/comment.service'
 import { replyService } from '@/services/reply.service'
 import { useReaderMode } from '@/contexts/ReaderModeContext'
+import { useToast } from '@/contexts/ToastContext'
 import type { PoemResponse, CommentResponse, ReplyResponse } from '@/types'
 import { PATHS } from '@/routes/paths'
 import { Skeleton } from '@/components/ui/Skeleton'
@@ -12,7 +13,8 @@ import { CommentItem } from '@/features/comments/components/CommentItem'
 import { FeedbackForm } from '@/features/feedbacks/components/FeedbackForm'
 import { getErrorMessage } from '@/utils/error'
 import { useLocalStorage } from '@/hooks/useLocalStorage'
-import { poemDisplayTitle, poemAuthorName } from '@/features/poems/display'
+import { poemDisplayTitle, poemAuthorName, poemGenreName } from '@/features/poems/display'
+import { Seo } from '@/components/common/Seo'
 
 // Cài đặt đọc: cỡ chữ và giãn dòng, lưu ở localStorage.
 const FONT_STEPS = ['text-base md:text-lg', 'text-lg md:text-xl', 'text-xl md:text-2xl', 'text-2xl md:text-3xl']
@@ -23,6 +25,7 @@ export default function PoemDetailPage() {
   const poemId = Number(id)
 
   const { mode, toggleMode } = useReaderMode()
+  const { toast } = useToast()
 
   const [poem, setPoem] = useState<PoemResponse | null>(null)
   const [comments, setComments] = useState<CommentResponse[]>([])
@@ -80,7 +83,7 @@ export default function PoemDetailPage() {
       const newComment = await commentService.createComment({ poemId, content })
       setComments((prev) => [newComment, ...prev])
     } catch (err) {
-      alert(getErrorMessage(err))
+      toast(getErrorMessage(err))
     }
   }
 
@@ -89,7 +92,7 @@ export default function PoemDetailPage() {
       await commentService.deleteComment(commentId)
       setComments((prev) => prev.filter((c) => c.id !== commentId))
     } catch (err) {
-      alert(getErrorMessage(err))
+      toast(getErrorMessage(err))
     }
   }
 
@@ -98,7 +101,7 @@ export default function PoemDetailPage() {
       const updated = await commentService.updateComment(commentId, content)
       setComments((prev) => prev.map((c) => (c.id === commentId ? { ...c, content: updated.content } : c)))
     } catch (err) {
-      alert(getErrorMessage(err))
+      toast(getErrorMessage(err))
     }
   }
 
@@ -110,7 +113,7 @@ export default function PoemDetailPage() {
         [commentId]: [...(prev[commentId] || []), newReply],
       }))
     } catch (err) {
-      alert(getErrorMessage(err))
+      toast(getErrorMessage(err))
     }
   }
 
@@ -137,8 +140,33 @@ export default function PoemDetailPage() {
     )
   }
 
+  const seoTitle = `${poemDisplayTitle(poem)} – ${poemAuthorName(poem)}`
+  const seoDescription = poem.content
+    .split('\n')
+    .map((l) => l.trim())
+    .filter(Boolean)
+    .slice(0, 3)
+    .join(' / ')
+    .slice(0, 160)
+
   return (
     <div className="max-w-4xl mx-auto py-6 space-y-10">
+      <Seo title={seoTitle} description={seoDescription} path={`/poems/${poem.id}`} ogType="article" />
+      {/* Structured data cho Google Rich Results */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'Poem',
+            name: poemDisplayTitle(poem),
+            author: { '@type': 'Person', name: poemAuthorName(poem) },
+            genre: poemGenreName(poem),
+            inLanguage: poem.language || 'vi',
+            url: `${window.location.origin}/poems/${poem.id}`,
+          }),
+        }}
+      />
       {/* Top Toolbar */}
       <div className="flex items-center justify-between gap-4 border-b border-slate-200/60 dark:border-slate-800/60 pb-4">
         <Link
@@ -306,9 +334,6 @@ export default function PoemDetailPage() {
         </section>
       )}
 
-      {/* Feedback Form Component */}
-      <FeedbackForm poemId={poemId} />
-
       {/* Comments Section */}
       <section className="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-xl border border-slate-200 dark:border-slate-700 space-y-6">
         <h3 className="text-xl font-serif font-bold text-slate-900 dark:text-amber-100">
@@ -336,6 +361,9 @@ export default function PoemDetailPage() {
           )}
         </div>
       </section>
+
+      {/* Feedback Form Component */}
+      <FeedbackForm poemId={poemId} />
     </div>
   )
 }

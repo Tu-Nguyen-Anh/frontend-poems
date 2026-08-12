@@ -3,8 +3,10 @@ import { genreService } from '@/services/genre.service'
 import type { GenreResponse, GenreRequest } from '@/types'
 import { GenreModalForm } from '../components/GenreModalForm'
 import { getErrorMessage } from '@/utils/error'
+import { useToast } from '@/contexts/ToastContext'
 
 export default function AdminGenresPage() {
+  const { toast } = useToast()
   const [genres, setGenres] = useState<GenreResponse[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -42,7 +44,7 @@ export default function AdminGenresPage() {
       setIsModalOpen(false)
       await loadData()
     } catch (err) {
-      alert(`Lỗi khi lưu thể loại: ${getErrorMessage(err)}`)
+      toast(`Lỗi khi lưu thể loại: ${getErrorMessage(err)}`)
       throw err
     }
   }
@@ -53,7 +55,7 @@ export default function AdminGenresPage() {
       await genreService.deleteGenre(id)
       setGenres((prev) => prev.filter((g) => g.id !== id))
     } catch (err) {
-      alert(`Lỗi khi xóa thể loại: ${getErrorMessage(err)}`)
+      toast(`Lỗi khi xóa thể loại: ${getErrorMessage(err)}`)
     }
   }
 

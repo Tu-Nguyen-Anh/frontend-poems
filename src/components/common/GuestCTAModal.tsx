@@ -25,7 +25,7 @@ export function GuestCTAModal() {
 
   const handleRegister = () => {
     closeModal()
-    navigate('/register')
+    navigate(PATHS.REGISTER)
   }
 
   return (
@@ -50,13 +50,13 @@ export function GuestCTAModal() {
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <button
             onClick={handleLogin}
-            className="w-full sm:w-1/2 py-2.5 px-4 bg-amber-700 hover:bg-amber-800 text-white font-medium rounded-xl transition-colors"
+            className="w-full sm:w-1/2 py-2.5 px-4 bg-amber-700 hover:bg-amber-800 text-white font-medium rounded-md transition-colors"
           >
             Đăng nhập
           </button>
           <button
             onClick={handleRegister}
-            className="w-full sm:w-1/2 py-2.5 px-4 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-medium rounded-xl transition-colors border border-slate-200 dark:border-slate-700"
+            className="w-full sm:w-1/2 py-2.5 px-4 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-medium rounded-md transition-colors border border-slate-200 dark:border-slate-700"
           >
             Đăng ký
           </button>

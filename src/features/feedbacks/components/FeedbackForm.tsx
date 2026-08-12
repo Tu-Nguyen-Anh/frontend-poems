@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { useGuestCTAModal } from '@/contexts/GuestCTAModalContext'
+import { useToast } from '@/contexts/ToastContext'
 import { feedbackService } from '@/services/feedback.service'
 
 import { getErrorMessage } from '@/utils/error'
@@ -12,6 +13,7 @@ interface FeedbackFormProps {
 export function FeedbackForm({ poemId }: FeedbackFormProps) {
   const { isAuthenticated } = useAuth()
   const { openModal } = useGuestCTAModal()
+  const { toast } = useToast()
 
   const [feedbackContent, setFeedbackContent] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -35,7 +37,7 @@ export function FeedbackForm({ poemId }: FeedbackFormProps) {
       setFeedbackContent('')
       setTimeout(() => setFeedbackSuccess(false), 4000)
     } catch (err) {
-      alert(`Lỗi khi gửi nhận xét / góp ý: ${getErrorMessage(err)}`)
+      toast(`Lỗi khi gửi nhận xét / góp ý: ${getErrorMessage(err)}`)
     } finally {
       setSubmitting(false)
     }

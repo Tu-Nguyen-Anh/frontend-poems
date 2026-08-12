@@ -6,9 +6,11 @@ import { formatNumber } from '@/utils/format'
 
 interface HeroBannerProps {
   totalPoems?: number | null
+  totalAuthors?: number | null
+  totalGenres?: number | null
 }
 
-export function HeroBanner({ totalPoems }: HeroBannerProps) {
+export function HeroBanner({ totalPoems, totalAuthors, totalGenres }: HeroBannerProps) {
   const [search, setSearch] = useState('')
   const navigate = useNavigate()
 
@@ -29,19 +31,42 @@ export function HeroBanner({ totalPoems }: HeroBannerProps) {
           Kho tàng thơ ca Việt
         </h1>
         <p className="text-slate-600 dark:text-slate-300 leading-relaxed md:text-lg">
-          {totalPoems != null && totalPoems > 0 ? (
-            <>
-              <strong className="text-amber-700 dark:text-amber-400">{formatNumber(totalPoems)}</strong>{' '}
-              bài thơ cổ điển và hiện đại, tra cứu theo tác giả và thể loại, đọc trong
-              chế độ đọc cổ điển hoặc hiện đại.
-            </>
-          ) : (
-            <>
-              Hàng nghìn bài thơ cổ điển và hiện đại, tra cứu theo tác giả và thể loại,
-              đọc trong chế độ đọc cổ điển hoặc hiện đại.
-            </>
-          )}
+          Thơ cổ điển và hiện đại, tra cứu theo tác giả và thể loại, đọc trong chế độ
+          đọc cổ điển hoặc hiện đại.
         </p>
+
+        {totalPoems != null && totalPoems > 0 && (
+          <dl className="flex flex-wrap gap-x-10 gap-y-4 pt-2">
+            <div>
+              <dt className="text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                Bài thơ
+              </dt>
+              <dd className="font-serif text-2xl md:text-3xl font-bold text-amber-700 dark:text-amber-400">
+                {formatNumber(totalPoems)}
+              </dd>
+            </div>
+            {totalAuthors != null && totalAuthors > 0 && (
+              <div>
+                <dt className="text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                  Tác giả
+                </dt>
+                <dd className="font-serif text-2xl md:text-3xl font-bold text-amber-700 dark:text-amber-400">
+                  {formatNumber(totalAuthors)}
+                </dd>
+              </div>
+            )}
+            {totalGenres != null && totalGenres > 0 && (
+              <div>
+                <dt className="text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                  Thể loại
+                </dt>
+                <dd className="font-serif text-2xl md:text-3xl font-bold text-amber-700 dark:text-amber-400">
+                  {formatNumber(totalGenres)}
+                </dd>
+              </div>
+            )}
+          </dl>
+        )}
 
         <form onSubmit={handleSearch} className="flex gap-2 max-w-md pt-1">
           <div className="flex-1 relative">

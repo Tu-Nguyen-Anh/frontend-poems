@@ -6,6 +6,7 @@ import { feedbackService } from '@/services/feedback.service'
 import { userService } from '@/services/user.service'
 import type { CommentResponse, FeedbackResponse, UserResponse } from '@/types'
 import { PATHS, toPoemDetail } from '@/routes/paths'
+import { Seo } from '@/components/common/Seo'
 
 export default function ProfilePage() {
   const { user, isAdmin, logout } = useAuth()
@@ -86,6 +87,7 @@ export default function ProfilePage() {
 
   return (
     <div className="max-w-4xl mx-auto py-6 space-y-8">
+      <Seo title="Trang cá nhân" noindex />
       {/* Profile Card */}
       <div className="p-8 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div className="flex items-center gap-5">
@@ -96,7 +98,7 @@ export default function ProfilePage() {
             <h1 className="text-2xl font-serif font-bold text-slate-900 dark:text-amber-100">
               {user?.username}
             </h1>
-            <p className="text-xs text-slate-400">Thành viên độc giả Thi Đàn</p>
+            <p className="text-xs text-slate-400">Thành viên độc giả Tiểu Thi Hào</p>
             {email && (
               <p className="text-xs text-slate-600 dark:text-slate-300 pt-0.5">
                 {email}
@@ -149,10 +151,15 @@ export default function ProfilePage() {
                 className="p-4 rounded-lg bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-700/60 text-xs space-y-1"
               >
                 <div className="flex justify-between text-slate-400">
-                  <Link to={toPoemDetail(c.poemId)} className="text-amber-700 font-bold hover:underline">
-                    Xem bài thơ #{c.poemId} →
+                  <Link
+                    to={toPoemDetail(c.poemId ?? c.poem_id ?? 0)}
+                    className="text-amber-700 font-bold hover:underline"
+                  >
+                    Xem bài thơ #{c.poemId ?? c.poem_id} →
                   </Link>
-                  <span>{new Date(c.createdAt).toLocaleDateString('vi-VN')}</span>
+                  {(c.createdAt ?? c.created_at) && (
+                    <span>{new Date(c.createdAt ?? c.created_at ?? '').toLocaleDateString('vi-VN')}</span>
+                  )}
                 </div>
                 <p className="text-slate-800 dark:text-slate-200 text-sm font-serif">{c.content}</p>
               </div>

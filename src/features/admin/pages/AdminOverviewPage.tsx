@@ -49,7 +49,7 @@ export default function AdminOverviewPage() {
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-serif font-bold text-amber-400">Tổng quan</h1>
-        <p className="text-slate-400 text-sm">Tổng quan số liệu toàn bộ hệ thống Thi Đàn</p>
+        <p className="text-slate-400 text-sm">Tổng quan số liệu toàn bộ hệ thống Tiểu Thi Hào</p>
       </div>
 
       {/* Metrics Grid */}

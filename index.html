@@ -4,7 +4,12 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Thi Đàn - Kho Tàng Thơ Ca Việt Nam | Frontend-Poems</title>
+    <title>Tiểu Thi Hào – Kho tàng thơ ca Việt Nam</title>
+    <meta name="description" content="Kho tàng thơ ca Việt Nam và thế giới — tra cứu theo tác giả, thể loại, đọc nguyên tác chữ Hán kèm phiên âm, dịch nghĩa và nhiều bản dịch." />
+    <meta property="og:site_name" content="Tiểu Thi Hào" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Tiểu Thi Hào – Kho tàng thơ ca Việt Nam" />
+    <meta property="og:description" content="Kho tàng thơ ca Việt Nam và thế giới — tra cứu theo tác giả, thể loại, đọc nguyên tác kèm phiên âm, dịch nghĩa và nhiều bản dịch." />
     <!-- Google Fonts: Merriweather, Inter, Playfair Display & Plus Jakarta Sans -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -42,11 +47,14 @@
         try {
           var mode = localStorage.getItem('poems_reader_style_mode') || 'classic-sepia'
           document.documentElement.setAttribute('data-reader-mode', mode)
+          // data-theme phải set cùng .dark: token CSS (--c-ink-*) đổi theo [data-theme]
+          document.documentElement.setAttribute('data-theme', mode === 'modern-dark' ? 'dark' : 'light')
           if (mode === 'modern-dark') {
             document.documentElement.classList.add('dark')
           }
         } catch (e) {
           document.documentElement.setAttribute('data-reader-mode', 'classic-sepia')
+          document.documentElement.setAttribute('data-theme', 'light')
         }
       })()
     </script>

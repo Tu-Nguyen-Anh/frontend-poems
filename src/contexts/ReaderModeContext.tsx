@@ -37,6 +37,9 @@ export function ReaderModeProvider({ children }: { children: ReactNode }) {
     root.setAttribute('data-reader-mode', mode)
     // Tailwind dark: variants dùng chiến lược 'class' → bật/tắt .dark theo mode.
     root.classList.toggle('dark', mode === 'modern-dark')
+    // Token CSS (--c-ink-* …) đổi theo [data-theme] — phải set kèm, nếu không
+    // label/input trong dark mode giữ màu chữ tối của light mode (khó đọc).
+    root.setAttribute('data-theme', mode === 'modern-dark' ? 'dark' : 'light')
   }, [mode])
 
   return (

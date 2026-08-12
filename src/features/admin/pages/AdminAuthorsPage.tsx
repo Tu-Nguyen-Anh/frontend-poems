@@ -3,8 +3,10 @@ import { authorService } from '@/services/author.service'
 import type { AuthorResponse, AuthorRequest } from '@/types'
 import { AuthorModalForm } from '../components/AuthorModalForm'
 import { getErrorMessage } from '@/utils/error'
+import { useToast } from '@/contexts/ToastContext'
 
 export default function AdminAuthorsPage() {
+  const { toast } = useToast()
   const [authors, setAuthors] = useState<AuthorResponse[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -42,7 +44,7 @@ export default function AdminAuthorsPage() {
       setIsModalOpen(false)
       await loadData()
     } catch (err) {
-      alert(`Lỗi khi lưu tác giả: ${getErrorMessage(err)}`)
+      toast(`Lỗi khi lưu tác giả: ${getErrorMessage(err)}`)
       throw err
     }
   }
@@ -53,7 +55,7 @@ export default function AdminAuthorsPage() {
       await authorService.deleteAuthor(id)
       setAuthors((prev) => prev.filter((a) => a.id !== id))
     } catch (err) {
-      alert(`Lỗi khi xóa tác giả: ${getErrorMessage(err)}`)
+      toast(`Lỗi khi xóa tác giả: ${getErrorMessage(err)}`)
     }
   }
 
