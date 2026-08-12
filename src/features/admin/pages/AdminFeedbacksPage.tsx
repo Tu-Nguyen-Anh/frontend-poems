@@ -4,8 +4,10 @@ import { FeedbackStatus, type FeedbackResponse } from '@/types'
 import { Link } from 'react-router-dom'
 import { toPoemDetail } from '@/routes/paths'
 import { getErrorMessage } from '@/utils/error'
+import { useToast } from '@/contexts/ToastContext'
 
 export default function AdminFeedbacksPage() {
+  const { toast } = useToast()
   const [feedbacks, setFeedbacks] = useState<FeedbackResponse[]>([])
   const [statusFilter, setStatusFilter] = useState<FeedbackStatus | ''>('')
   const [loading, setLoading] = useState(true)
@@ -36,7 +38,7 @@ export default function AdminFeedbacksPage() {
         prev.map((f) => (f.id === id ? { ...f, status } : f))
       )
     } catch (err) {
-      alert(`Lỗi khi duyệt / từ chối góp ý: ${getErrorMessage(err)}`)
+      toast(`Lỗi khi duyệt / từ chối góp ý: ${getErrorMessage(err)}`)
     }
   }
 
@@ -46,7 +48,7 @@ export default function AdminFeedbacksPage() {
       await feedbackService.deleteFeedback(id)
       setFeedbacks((prev) => prev.filter((f) => f.id !== id))
     } catch (err) {
-      alert(`Lỗi khi xóa góp ý: ${getErrorMessage(err)}`)
+      toast(`Lỗi khi xóa góp ý: ${getErrorMessage(err)}`)
     }
   }
 

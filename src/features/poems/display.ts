@@ -25,3 +25,8 @@ export function poemDisplayTitle(poem: PoemLike): string {
 export function poemAuthorName(poem: PoemLike & { author_name?: string }): string {
   return (poem.authorName ?? poem.author_name)?.trim() || 'Khuyết danh'
 }
+
+/** Tên thể loại hiển thị; API trả snake_case nên đọc cả hai. */
+export function poemGenreName(poem: { genreName?: string; genre_name?: string }): string {
+  return (poem.genreName ?? poem.genre_name)?.trim() || 'Thơ'
+}

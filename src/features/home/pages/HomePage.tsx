@@ -9,6 +9,8 @@ import { HeroBanner } from '../components/HeroBanner'
 import { LatestPoemsSection } from '../components/LatestPoemsSection'
 import { SectionHeader } from '../components/SectionHeader'
 import { poemDisplayTitle, poemAuthorName } from '@/features/poems/display'
+import { Seo } from '@/components/common/Seo'
+import { formatNumber } from '@/utils/format'
 
 export default function HomePage() {
   const [latestPoems, setLatestPoems] = useState<PoemResponse[]>([])
@@ -16,6 +18,8 @@ export default function HomePage() {
   const [authors, setAuthors] = useState<AuthorResponse[]>([])
   const [genres, setGenres] = useState<GenreResponse[]>([])
   const [totalPoems, setTotalPoems] = useState<number | null>(null)
+  const [totalAuthors, setTotalAuthors] = useState<number | null>(null)
+  const [totalGenres, setTotalGenres] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -25,7 +29,7 @@ export default function HomePage() {
         const [latestRes, randomRes, authorsRes, genresRes] = await Promise.allSettled([
           poemService.getLatestPoems({ page: 0, size: 6 }),
           poemService.getRandomPoems(),
-          authorService.getAuthors({ page: 0, size: 6 }),
+          authorService.getTopAuthors({ page: 0, size: 6 }),
           genreService.getGenres({ page: 0, size: 8 }),
         ])
 
@@ -34,8 +38,14 @@ export default function HomePage() {
           setTotalPoems(latestRes.value.amount ?? null)
         }
         if (randomRes.status === 'fulfilled') setRandomPoems(randomRes.value || [])
-        if (authorsRes.status === 'fulfilled') setAuthors(authorsRes.value.content || [])
-        if (genresRes.status === 'fulfilled') setGenres(genresRes.value.content || [])
+        if (authorsRes.status === 'fulfilled') {
+          setAuthors(authorsRes.value.content || [])
+          setTotalAuthors(authorsRes.value.amount ?? null)
+        }
+        if (genresRes.status === 'fulfilled') {
+          setGenres(genresRes.value.content || [])
+          setTotalGenres(genresRes.value.amount ?? null)
+        }
       } catch (err) {
         console.error('Lỗi tải dữ liệu trang chủ', err)
       } finally {
@@ -47,7 +57,15 @@ export default function HomePage() {
 
   return (
     <div className="space-y-14 py-4">
-      <HeroBanner totalPoems={totalPoems} />
+      <Seo
+        path="/"
+        description={
+          totalPoems
+            ? `${formatNumber(totalPoems)} bài thơ Việt Nam và thế giới — tra cứu theo tác giả, thể loại, đọc nguyên tác kèm phiên âm, dịch nghĩa và nhiều bản dịch.`
+            : undefined
+        }
+      />
+      <HeroBanner totalPoems={totalPoems} totalAuthors={totalAuthors} totalGenres={totalGenres} />
 
       <LatestPoemsSection poems={latestPoems} loading={loading} />
 
@@ -79,7 +97,11 @@ export default function HomePage() {
       <section className="space-y-6">
         <SectionHeader
           title="Tác giả tiêu biểu"
-          description="Các nhà thơ trong kho"
+          description={
+            totalAuthors
+              ? `${formatNumber(totalAuthors)} nhà thơ trong kho — xếp theo số bài thơ`
+              : 'Các nhà thơ trong kho'
+          }
           linkTo={PATHS.AUTHORS}
           linkLabel="Tất cả tác giả"
         />
@@ -96,6 +118,11 @@ export default function HomePage() {
               <h4 className="font-serif font-bold text-sm text-slate-900 dark:text-slate-100 line-clamp-1">
                 {author.name}
               </h4>
+              {(author.poemCount ?? author.poem_count) != null && (
+                <p className="text-xs text-amber-700 dark:text-amber-400 font-medium mt-0.5">
+                  {formatNumber(author.poemCount ?? author.poem_count ?? 0)} bài thơ
+                </p>
+              )}
               {(author.birthYear || author.hometown) && (
                 <p className="text-xs text-slate-400 mt-0.5">
                   {author.birthYear || author.hometown}

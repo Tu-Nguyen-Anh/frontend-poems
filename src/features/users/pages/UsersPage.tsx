@@ -16,7 +16,7 @@ export default function UsersPage() {
         <h1 className="text-3xl font-serif font-bold text-slate-900 dark:text-amber-100 mb-1">
           Danh Sách Người Dùng
         </h1>
-        <p className="text-slate-500 text-sm">Cộng đồng độc giả và nhà quản trị Thi Đàn</p>
+        <p className="text-slate-500 text-sm">Cộng đồng độc giả và nhà quản trị Tiểu Thi Hào</p>
       </div>
 
       <div className="max-w-md relative">

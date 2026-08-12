@@ -4,6 +4,7 @@ import { genreService } from '@/services/genre.service'
 import type { GenreResponse } from '@/types'
 import { toGenreDetail } from '@/routes/paths'
 import { Skeleton } from '@/components/ui/Skeleton'
+import { Seo } from '@/components/common/Seo'
 
 export default function GenresPage() {
   const [genres, setGenres] = useState<GenreResponse[]>([])
@@ -26,6 +27,11 @@ export default function GenresPage() {
 
   return (
     <div className="space-y-8 py-4">
+      <Seo
+        title="Thể loại thơ ca"
+        description="Các thể thơ Việt Nam và thế giới: lục bát, thất ngôn bát cú, ngũ ngôn, thơ mới, ca trù… kèm tuyển tập bài thơ từng thể loại."
+        path="/genres"
+      />
       <div>
         <h1 className="text-3xl md:text-4xl font-serif font-bold text-slate-900 dark:text-amber-100 mb-2">
           Thể loại thơ ca

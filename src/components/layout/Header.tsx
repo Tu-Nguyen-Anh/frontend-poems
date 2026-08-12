@@ -45,7 +45,7 @@ export function Header() {
     <header className="sticky top-0 z-40 w-full bg-white/85 dark:bg-slate-900/85 backdrop-blur border-b border-slate-200/70 dark:border-slate-800/70">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
         <Link to={PATHS.HOME} className="flex-shrink-0 font-serif text-xl font-bold tracking-tight text-amber-800 dark:text-amber-200">
-          Thi Đàn
+          Tiểu Thi Hào
         </Link>
 
         <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-xs relative">

@@ -5,6 +5,7 @@ import type { GenreResponse, PoemResponse } from '@/types'
 import { PATHS, toPoemDetail } from '@/routes/paths'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { poemDisplayTitle, poemAuthorName } from '@/features/poems/display'
+import { Seo } from '@/components/common/Seo'
 
 export default function GenreDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -59,6 +60,11 @@ export default function GenreDetailPage() {
 
   return (
     <div className="max-w-4xl mx-auto py-6 space-y-8">
+      <Seo
+        title={`Thơ ${genre.name}`}
+        description={`Tuyển tập các bài thơ thể ${genre.name} — đọc và tra cứu theo thể loại.`}
+        path={`/genres/${genre.id}`}
+      />
       <Link
         to={PATHS.GENRES}
         className="text-sm text-slate-500 hover:text-amber-700 font-medium flex items-center gap-1"

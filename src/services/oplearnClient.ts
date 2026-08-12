@@ -8,7 +8,7 @@ import { tokenStorage } from './tokenStorage'
 export const oplearnClient = axios.create({
   baseURL: env.OPLEARN_API_URL,
   timeout: 15000,
-  headers: { 'Content-Type': 'application/json' },
+  headers: { 'Content-Type': 'application/json', 'Accept-Language': 'vi' },
 })
 
 oplearnClient.interceptors.request.use((config) => {

@@ -5,8 +5,10 @@ import { genreService } from '@/services/genre.service'
 import type { PoemResponse, AuthorResponse, GenreResponse, PoemRequest } from '@/types'
 import { PoemModalForm } from '../components/PoemModalForm'
 import { getErrorMessage } from '@/utils/error'
+import { useToast } from '@/contexts/ToastContext'
 
 export default function AdminPoemsPage() {
+  const { toast } = useToast()
   const [poems, setPoems] = useState<PoemResponse[]>([])
   const [authors, setAuthors] = useState<AuthorResponse[]>([])
   const [genres, setGenres] = useState<GenreResponse[]>([])
@@ -52,7 +54,7 @@ export default function AdminPoemsPage() {
       setIsModalOpen(false)
       await loadData()
     } catch (err) {
-      alert(`Lỗi khi lưu bài thơ: ${getErrorMessage(err)}`)
+      toast(`Lỗi khi lưu bài thơ: ${getErrorMessage(err)}`)
       throw err
     }
   }
@@ -63,7 +65,7 @@ export default function AdminPoemsPage() {
       await poemService.deletePoem(id)
       setPoems((prev) => prev.filter((p) => p.id !== id))
     } catch (err) {
-      alert(getErrorMessage(err))
+      toast(getErrorMessage(err))
     }
   }
 

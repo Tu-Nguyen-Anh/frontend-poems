@@ -8,7 +8,8 @@ export const genreService = {
         keyword: params?.keyword,
         page: params?.page ?? 0,
         size: params?.size ?? 10,
-        isAll: params?.isAll ?? false,
+        // backend nhận param tên "all" (PARAM_ALL), không phải "isAll"
+        all: params?.isAll ?? false,
       },
     })
     return res.data.data

@@ -1,0 +1,128 @@
+/* Toast stack góc phải-trên (theo pattern tu-vi-v1): card nổi + thanh màu
+   trái + icon tròn theo type, slide-in từ phải, click để dismiss sớm. */
+
+.toast-stack {
+    position: fixed;
+    /* Dưới header sticky để không đè lên menu/nút Đăng nhập. */
+    top: 76px;
+    right: 24px;
+    left: auto;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 10px;
+    pointer-events: none;
+    max-width: calc(100vw - 32px);
+}
+.toast {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 38px 12px 14px;
+    border-radius: 12px;
+    background: #ffffff;
+    box-shadow: 0 16px 32px -8px rgba(17, 24, 39, 0.18),
+                0 4px 12px rgba(17, 24, 39, 0.08);
+    color: #1e293b;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    min-width: 280px;
+    max-width: 400px;
+    cursor: pointer;
+    pointer-events: auto;
+    position: relative;
+    overflow: hidden;
+    animation: toast-in 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+}
+html.dark .toast {
+    background: #1e293b;
+    color: #e2e8f0;
+    box-shadow: 0 16px 32px -8px rgba(0, 0, 0, 0.5),
+                0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Thanh accent trái — màu theo type. */
+.toast::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 4px;
+}
+.toast--info::before    { background: #b45309; }
+.toast--success::before { background: #16a34a; }
+.toast--error::before   { background: #dc2626; }
+
+.toast-ico {
+    flex: none;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1;
+    color: #fff;
+}
+.toast--info .toast-ico    { background: #b45309; }
+.toast--success .toast-ico { background: #16a34a; }
+.toast--error .toast-ico   { background: #dc2626; }
+
+.toast-body {
+    flex: 1;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.toast-title {
+    font-weight: 700;
+    font-size: 0.92rem;
+    line-height: 1.35;
+}
+.toast-desc {
+    font-size: 0.86rem;
+    line-height: 1.45;
+    color: #475569;
+}
+html.dark .toast-desc { color: #94a3b8; }
+
+.toast-close {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    color: #94a3b8;
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.toast-close:hover { background: rgba(148, 163, 184, 0.15); color: inherit; }
+
+@keyframes toast-in {
+    from { opacity: 0; transform: translateX(24px); }
+    to   { opacity: 1; transform: translateX(0); }
+}
+
+@media (max-width: 600px) {
+    .toast-stack {
+        left: 12px;
+        right: 12px;
+        top: 64px;
+        align-items: stretch;
+        max-width: none;
+    }
+    .toast { max-width: none; min-width: 0; width: 100%; }
+}

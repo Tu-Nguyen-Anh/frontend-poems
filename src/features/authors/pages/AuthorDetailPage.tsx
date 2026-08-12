@@ -5,6 +5,7 @@ import type { AuthorResponse, PoemResponse } from '@/types'
 import { PATHS, toPoemDetail } from '@/routes/paths'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { poemDisplayTitle } from '@/features/poems/display'
+import { Seo } from '@/components/common/Seo'
 
 export default function AuthorDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -59,6 +60,11 @@ export default function AuthorDetailPage() {
 
   return (
     <div className="max-w-4xl mx-auto py-6 space-y-8">
+      <Seo
+        title={`Thơ ${author.name}`}
+        description={`Tuyển tập thơ của ${author.name}${author.hometown ? ` (${author.hometown})` : ''} — đọc toàn bộ tác phẩm, tiểu sử và thành tựu.`}
+        path={`/authors/${author.id}`}
+      />
       <Link
         to={PATHS.AUTHORS}
         className="text-sm text-slate-500 hover:text-amber-700 font-medium flex items-center gap-1"

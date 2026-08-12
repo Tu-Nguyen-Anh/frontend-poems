@@ -8,7 +8,18 @@ export const authorService = {
         keyword: params?.keyword,
         page: params?.page ?? 0,
         size: params?.size ?? 10,
-        isAll: params?.isAll ?? false,
+        // backend nhận param tên "all" (PARAM_ALL), không phải "isAll"
+        all: params?.isAll ?? false,
+      },
+    })
+    return res.data.data
+  },
+
+  async getTopAuthors(params?: { page?: number; size?: number }): Promise<PageResponse<AuthorResponse>> {
+    const res = await oplearnClient.get<ResponseGeneral<PageResponse<AuthorResponse>>>('/authors/top', {
+      params: {
+        page: params?.page ?? 0,
+        size: params?.size ?? 6,
       },
     })
     return res.data.data
