@@ -14,6 +14,7 @@ import { FeedbackForm } from '@/features/feedbacks/components/FeedbackForm'
 import { getErrorMessage } from '@/utils/error'
 import { useLocalStorage } from '@/hooks/useLocalStorage'
 import { poemDisplayTitle, poemAuthorName, poemGenreName } from '@/features/poems/display'
+import { languageLabel } from '@/features/browse/labels'
 import { Seo } from '@/components/common/Seo'
 
 // Cài đặt đọc: cỡ chữ và giãn dòng, lưu ở localStorage.
@@ -233,29 +234,30 @@ export default function PoemDetailPage() {
       <div className="poem-container p-8 md:p-12 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm transition-colors">
         {/* Header */}
         <div className="text-left space-y-3 mb-8 pb-6 border-b border-amber-900/10 dark:border-slate-700/50">
-          <div className="inline-flex items-center gap-2">
-            <span className="px-3 py-1 rounded-full text-xs font-semibold bg-amber-600/10 text-amber-800 dark:bg-amber-950 dark:text-amber-300">
-              {poem.genreName || poem.genre_name || 'Thơ ca'}
-            </span>
-            {poem.era && (
-              <span className="px-3 py-1 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-700/60 text-slate-600 dark:text-slate-300">
-                {poem.era}
-              </span>
-            )}
-            {poem.language && (
-              <span className="px-3 py-1 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-700/60 text-slate-600 dark:text-slate-300">
-                {poem.language}
-              </span>
-            )}
-            {poem.year && (
-              <span className="text-xs text-slate-400 font-mono">Sáng tác năm {poem.year}</span>
-            )}
+          {/* Chỉ mục phân cấp: Ngôn ngữ › Thời kỳ › Thể loại */}
+          <div className="flex flex-wrap items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+            {[
+              poem.language ? languageLabel(poem.language) : null,
+              poem.era || null,
+              poem.genreName || poem.genre_name || null,
+            ]
+              .filter(Boolean)
+              .map((label, i) => (
+                <span key={i} className="flex items-center gap-1.5">
+                  {i > 0 && <span className="text-slate-300 dark:text-slate-600">›</span>}
+                  <span className={i === 0 ? 'font-semibold text-amber-800 dark:text-amber-300' : 'font-medium'}>
+                    {label}
+                  </span>
+                </span>
+              ))}
+            {poem.year && <span className="ml-1 font-mono text-slate-400">· Sáng tác năm {poem.year}</span>}
           </div>
           <h1 className="text-2xl md:text-3xl font-serif font-bold text-slate-900 dark:text-amber-100 tracking-tight">
             {poemDisplayTitle(poem)}
           </h1>
-          <p className="text-base font-medium text-amber-800/80 dark:text-amber-400">
-            {poemAuthorName(poem)}
+          <p className="text-base">
+            <span className="text-slate-500 dark:text-slate-400">Tác giả: </span>
+            <span className="font-semibold text-amber-800/90 dark:text-amber-400">{poemAuthorName(poem)}</span>
           </p>
           <div className="flex items-center gap-2 pt-1">
             <button

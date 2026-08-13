@@ -1,16 +1,26 @@
-import { Suspense } from 'react'
-import { Outlet } from 'react-router-dom'
+import { Suspense, useEffect } from 'react'
+import { Outlet, useLocation } from 'react-router-dom'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { Header } from './Header'
 import { Footer } from './Footer'
 import { useReaderMode } from '@/contexts/ReaderModeContext'
 import { GuestCTAModal } from '@/components/common/GuestCTAModal'
 
+/** Đổi trang (URL path đổi) → tự cuộn lên đầu (SPA không tự reset scroll). */
+function ScrollToTop() {
+  const { pathname } = useLocation()
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [pathname])
+  return null
+}
+
 export function MainLayout() {
   const { mode } = useReaderMode()
 
   return (
     <div className={`min-h-screen flex flex-col transition-colors duration-300 mode-${mode}`}>
+      <ScrollToTop />
       <Header />
       <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <Suspense

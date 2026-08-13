@@ -108,6 +108,59 @@ html.dark .skeleton {
   padding: 48px;
 }
 
+/* Chế độ tập trung khi đọc (spotlight): giữa màn sáng, trên/dưới tối dần.
+   Phủ cố định theo viewport, không chặn tương tác (pointer-events:none),
+   nằm dưới header (z-40) để thanh menu vẫn sáng & bấm được. */
+.reading-focus-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 30; /* DƯỚI header (z-40) để menu vẫn sáng & bấm được */
+  pointer-events: none;
+  /* MỜ (không tối) xung quanh: giữa nét, rìa nhoè dần — mask trong suốt ở giữa. */
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  -webkit-mask-image: radial-gradient(
+    ellipse 62% 50% at 44% 50%,
+    rgba(0, 0, 0, 0) 36%,
+    rgba(0, 0, 0, 0.5) 58%,
+    #000 82%
+  );
+  mask-image: radial-gradient(
+    ellipse 62% 50% at 44% 50%,
+    rgba(0, 0, 0, 0) 36%,
+    rgba(0, 0, 0, 0.5) 58%,
+    #000 82%
+  );
+  animation: focus-fade-in 0.3s ease;
+}
+/* Mobile: vùng nét FULL chiều rộng — dải ngang giữa nét, chỉ mờ trên/dưới. */
+@media (max-width: 640px) {
+  .reading-focus-overlay {
+    -webkit-mask-image: linear-gradient(
+      180deg,
+      #000 0%,
+      rgba(0, 0, 0, 0.55) 24%,
+      rgba(0, 0, 0, 0) 40%,
+      rgba(0, 0, 0, 0) 58%,
+      rgba(0, 0, 0, 0.55) 74%,
+      #000 100%
+    );
+    mask-image: linear-gradient(
+      180deg,
+      #000 0%,
+      rgba(0, 0, 0, 0.55) 24%,
+      rgba(0, 0, 0, 0) 40%,
+      rgba(0, 0, 0, 0) 58%,
+      rgba(0, 0, 0, 0.55) 74%,
+      #000 100%
+    );
+  }
+}
+@keyframes focus-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 /* Thanh cuộn mảnh (cây duyệt, cột Miller).
    Lưu ý Chrome 121+: nếu đặt scrollbar-width thì nó BỎ QUA ::-webkit-scrollbar.
    Nên Chrome/Safari dùng ::-webkit-scrollbar (3px); Firefox dùng scrollbar-width

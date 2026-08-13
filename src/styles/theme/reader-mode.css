@@ -50,20 +50,24 @@ html[data-reader-mode="modern-light"] body {
 }
 
 html[data-reader-mode="modern-dark"] {
-  --bg-primary: #0f172a;
-  --bg-secondary: #1e293b;
-  --bg-card: #1e293b;
-  --text-main: #f8fafc;
-  --text-muted: #94a3b8;
-  --border-color: #334155;
+  --bg-primary: #0a0e18;
+  --bg-secondary: #121a2b;
+  --bg-card: #131b2b;
+  --text-main: #eef3fb;
+  --text-muted: #8ca0c0;
+  --border-color: #26314a;
   --font-poem: 'Inter', system-ui, sans-serif;
   background-color: var(--bg-primary);
   color: var(--text-main);
 }
 
 html[data-reader-mode="modern-dark"] body {
-  background-color: #0f172a;
-  color: #f8fafc;
+  /* Trên sáng hơn (quầng xanh nhẹ) → dưới tối dần, đỡ đơn sắc. */
+  background:
+    radial-gradient(1100px 520px at 50% -8%, rgba(77, 139, 240, 0.12), transparent 68%),
+    linear-gradient(180deg, #141d31 0%, #0e1526 46%, #0a0e18 100%);
+  background-attachment: fixed;
+  color: #eef3fb;
 }
 
 /* Animations */
@@ -85,7 +89,7 @@ html[data-reader-mode="modern-dark"] body {
 }
 
 html[data-reader-mode="modern-dark"] .glass-panel {
-  background: rgba(30, 41, 59, 0.7);
+  background: rgba(19, 27, 43, 0.72);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.1);

@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
-import { useFetch } from '@/hooks'
 import { poemService } from '@/services/poem.service'
-import type { FacetItem } from '@/types'
+import type { FacetItem, PoemResponse } from '@/types'
 import { poemDisplayTitle } from '@/features/poems/display'
 import { useBrowse, type BrowseSelection } from '../browseContext'
 import { useFacets } from '../hooks/useFacets'
@@ -56,19 +55,6 @@ function TreeNode({
           ? { language: node.language, era: node.era, genreId: node.genre?.id }
           : null
   const { items } = useFacets(facetPath, open && !isAuthor && !isLeaf)
-  const { data: poems } = useFetch(
-    () =>
-      open && isAuthor
-        ? poemService.browsePoems({
-            language: node.language,
-            era: node.era,
-            genreId: node.genre?.id,
-            authorId: node.author?.id,
-            size: 100,
-          })
-        : Promise.resolve(null),
-    [open, isAuthor, node.author?.id],
-  )
 
   const handleClick = () => {
     if (isLeaf) {
@@ -115,19 +101,69 @@ function TreeNode({
                 node={childNode(level, node, it)}
               />
             ))}
-          {/* Cấp 3: bài của tác giả */}
-          {isAuthor &&
-            poems?.content.map((p) => (
-              <TreeNode
-                key={p.id}
-                level={4}
-                label={poemDisplayTitle(p)}
-                node={{ ...node, poemId: p.id }}
-              />
-            ))}
+          {/* Cấp 3: bài của tác giả — phân trang "Xem thêm" để tránh nạp quá nhiều. */}
+          {isAuthor && <AuthorPoems node={node} />}
         </div>
       )}
     </div>
+  )
+}
+
+const AUTHOR_POEM_PAGE = 30
+
+/** Danh sách bài của 1 tác giả trong cây, tải theo trang + nút "Xem thêm". */
+function AuthorPoems({ node }: { node: BrowseSelection }) {
+  const [poems, setPoems] = useState<PoemResponse[]>([])
+  const [total, setTotal] = useState(0)
+  const [page, setPage] = useState(0)
+  const [loading, setLoading] = useState(false)
+
+  const load = (pageN: number) => {
+    setLoading(true)
+    poemService
+      .browsePoems({
+        language: node.language,
+        era: node.era,
+        genreId: node.genre?.id,
+        authorId: node.author?.id,
+        page: pageN,
+        size: AUTHOR_POEM_PAGE,
+      })
+      .then((res) => {
+        setPoems((prev) => (pageN === 0 ? res.content : [...prev, ...res.content]))
+        setTotal(res.amount)
+        setPage(pageN)
+        setLoading(false)
+      })
+      .catch(() => setLoading(false))
+  }
+
+  useEffect(() => {
+    load(0)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const remaining = total - poems.length
+  return (
+    <>
+      {poems.map((p) => (
+        <TreeNode key={p.id} level={4} label={poemDisplayTitle(p)} node={{ ...node, poemId: p.id }} />
+      ))}
+      {loading && (
+        <div style={{ paddingLeft: 8 + 4 * 14 }} className="pr-2 py-1 text-xs text-slate-400">
+          Đang tải…
+        </div>
+      )}
+      {!loading && remaining > 0 && (
+        <button
+          onClick={() => load(page + 1)}
+          style={{ paddingLeft: 8 + 4 * 14 }}
+          className="w-full text-left pr-2 py-1 text-xs text-amber-700 hover:text-amber-900 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-slate-800/60 rounded"
+        >
+          + Xem thêm {fmt(remaining)} bài
+        </button>
+      )}
+    </>
   )
 }
 
