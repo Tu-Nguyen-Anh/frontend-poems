@@ -83,7 +83,7 @@ export default function AdminFeedbacksPage() {
           <button
             onClick={() => setStatusFilter(FeedbackStatus.RESOLVED)}
             className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
-              statusFilter === FeedbackStatus.RESOLVED || statusFilter === FeedbackStatus.APPROVED
+              statusFilter === FeedbackStatus.RESOLVED
                 ? 'bg-emerald-600 text-white'
                 : 'text-slate-400 hover:text-white'
             }`}
