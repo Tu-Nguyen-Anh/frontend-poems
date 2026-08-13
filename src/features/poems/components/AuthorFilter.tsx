@@ -56,7 +56,7 @@ export function AuthorFilter({
   }
 
   return (
-    <div ref={boxRef} className="relative w-full md:w-52">
+    <div ref={boxRef} className="relative w-full min-w-0">
       <div className="flex items-center rounded-md bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus-within:ring-2 focus-within:ring-amber-500/30">
         <input
           value={open ? query : value?.label ?? ''}
