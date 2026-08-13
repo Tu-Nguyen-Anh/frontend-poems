@@ -13,7 +13,7 @@ import { poemDisplayTitle, poemAuthorName, poemGenreName } from '@/features/poem
 import { Seo } from '@/components/common/Seo'
 import { BrowseContext, type BrowseSelection, type Ref } from '@/features/browse/browseContext'
 import { BrowseTree } from '@/features/browse/components/BrowseTree'
-import { languageLabel } from '@/features/browse/labels'
+import { AuthorFilter } from '@/features/poems/components/AuthorFilter'
 
 export default function PoemsPage() {
   const [searchParams] = useSearchParams()
@@ -33,7 +33,6 @@ export default function PoemsPage() {
   const [selectedAuthor, setSelectedAuthor] = useState<Ref | null>(null)
   const [eras, setEras] = useState<string[]>([])
   const [selectedEra, setSelectedEra] = useState<string>('')
-  const [languages, setLanguages] = useState<string[]>([])
   const [selectedLanguage, setSelectedLanguage] = useState<string>('')
   const [loading, setLoading] = useState(true)
   const [view, setView] = useLocalStorage<'list' | 'grid'>('poems_view', 'list')
@@ -47,14 +46,12 @@ export default function PoemsPage() {
   useEffect(() => {
     async function fetchFilters() {
       try {
-        const [genreRes, eraRes, langRes] = await Promise.all([
+        const [genreRes, eraRes] = await Promise.all([
           genreService.getGenres({ isAll: true }),
           poemService.getEras(),
-          poemService.getLanguages(),
         ])
         setGenres(genreRes.content || [])
         setEras(eraRes)
-        setLanguages(langRes)
       } catch (err) {
         console.error(err)
       }
@@ -140,8 +137,6 @@ export default function PoemsPage() {
     [selection, applyPath, navigate],
   )
 
-  const clearBrowse = () => applyPath({})
-
   return (
     <div className="flex gap-6 py-4">
       {/* Cây điều hướng — bê từ trang Duyệt sang */}
@@ -223,37 +218,15 @@ export default function PoemsPage() {
               ))}
             </select>
 
-            <select
-              value={selectedLanguage}
-              onChange={(e) => {
-                setSelectedLanguage(e.target.value)
+            <AuthorFilter
+              value={selectedAuthor}
+              onChange={(a) => {
+                setSelectedAuthor(a)
                 setPage(0)
               }}
-              aria-label="Lọc theo ngôn ngữ"
-              className="w-full md:w-36 px-3 py-2 text-sm rounded-md bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-500/30 cursor-pointer"
-            >
-              <option value="">Mọi ngôn ngữ</option>
-              {languages.map((l) => (
-                <option key={l} value={l}>
-                  {languageLabel(l)}
-                </option>
-              ))}
-            </select>
+            />
           </div>
         </div>
-
-        {/* Đường dẫn đang lọc (từ cây) + nút xoá */}
-        {selectedAuthor && (
-          <div className="flex items-center gap-2 text-sm">
-            <span className="text-slate-500 dark:text-slate-400">Đang xem tác giả:</span>
-            <span className="px-2.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 font-medium">
-              {selectedAuthor.label}
-            </span>
-            <button onClick={clearBrowse} className="text-slate-400 hover:text-amber-700" title="Bỏ lọc">
-              ✕ bỏ lọc
-            </button>
-          </div>
-        )}
 
         {/* Result count + view switch */}
         <div className="flex items-center justify-between">
