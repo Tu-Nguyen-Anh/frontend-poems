@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, useLocation, useNavigate, Link } from 'react-router-dom'
 import { poemService } from '@/services/poem.service'
 import { commentService } from '@/services/comment.service'
 import { replyService } from '@/services/reply.service'
 import { useReaderMode } from '@/contexts/ReaderModeContext'
 import { useToast } from '@/contexts/ToastContext'
 import type { PoemResponse, CommentResponse, ReplyResponse } from '@/types'
-import { PATHS } from '@/routes/paths'
+import { PATHS, poemIdFromSlug, toPoemSlug } from '@/routes/paths'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { CommentForm } from '@/features/comments/components/CommentForm'
 import { CommentItem } from '@/features/comments/components/CommentItem'
@@ -21,9 +21,12 @@ const FONT_STEPS = ['text-base md:text-lg', 'text-lg md:text-xl', 'text-xl md:te
 const LEADING_STEPS = ['leading-relaxed', 'leading-loose', 'leading-[2.4]']
 
 export default function PoemDetailPage() {
-  const { id } = useParams<{ id: string }>()
-  const poemId = Number(id)
+  // Đến từ route slug `/:slug` hoặc route cũ `/poems/:id`.
+  const { id, slug } = useParams<{ id?: string; slug?: string }>()
+  const poemId = id ? Number(id) : slug ? poemIdFromSlug(slug) : null
 
+  const location = useLocation()
+  const navigate = useNavigate()
   const { mode, toggleMode } = useReaderMode()
   const { toast } = useToast()
 
@@ -45,7 +48,10 @@ export default function PoemDetailPage() {
 
   useEffect(() => {
     async function loadPoemAndComments() {
-      if (!poemId) return
+      if (!poemId) {
+        setLoading(false)
+        return
+      }
       setLoading(true)
       try {
         const [poemData, commentData] = await Promise.all([
@@ -78,7 +84,17 @@ export default function PoemDetailPage() {
     loadPoemAndComments()
   }, [poemId])
 
+  // Chuẩn hoá URL: nếu vào bằng /poems/:id hoặc slug cũ/sai, thay bằng slug chuẩn.
+  useEffect(() => {
+    if (!poem) return
+    const canonical = toPoemSlug(poem)
+    if (location.pathname !== canonical) {
+      navigate(canonical, { replace: true })
+    }
+  }, [poem, location.pathname, navigate])
+
   const handleCreateComment = async (content: string) => {
+    if (!poemId) return
     try {
       const newComment = await commentService.createComment({ poemId, content })
       setComments((prev) => [newComment, ...prev])
@@ -151,7 +167,7 @@ export default function PoemDetailPage() {
 
   return (
     <div className="max-w-4xl mx-auto py-6 space-y-10">
-      <Seo title={seoTitle} description={seoDescription} path={`/poems/${poem.id}`} ogType="article" />
+      <Seo title={seoTitle} description={seoDescription} path={toPoemSlug(poem)} ogType="article" />
       {/* Structured data cho Google Rich Results */}
       <script
         type="application/ld+json"
@@ -163,7 +179,7 @@ export default function PoemDetailPage() {
             author: { '@type': 'Person', name: poemAuthorName(poem) },
             genre: poemGenreName(poem),
             inLanguage: poem.language || 'vi',
-            url: `${window.location.origin}/poems/${poem.id}`,
+            url: `${window.location.origin}${toPoemSlug(poem)}`,
           }),
         }}
       />
@@ -221,6 +237,16 @@ export default function PoemDetailPage() {
             <span className="px-3 py-1 rounded-full text-xs font-semibold bg-amber-600/10 text-amber-800 dark:bg-amber-950 dark:text-amber-300">
               {poem.genreName || poem.genre_name || 'Thơ ca'}
             </span>
+            {poem.era && (
+              <span className="px-3 py-1 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-700/60 text-slate-600 dark:text-slate-300">
+                {poem.era}
+              </span>
+            )}
+            {poem.language && (
+              <span className="px-3 py-1 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-700/60 text-slate-600 dark:text-slate-300">
+                {poem.language}
+              </span>
+            )}
             {poem.year && (
               <span className="text-xs text-slate-400 font-mono">Sáng tác năm {poem.year}</span>
             )}
@@ -363,7 +389,7 @@ export default function PoemDetailPage() {
       </section>
 
       {/* Feedback Form Component */}
-      <FeedbackForm poemId={poemId} />
+      <FeedbackForm poemId={poem.id} />
     </div>
   )
 }

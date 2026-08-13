@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import type { PoemResponse } from '@/types'
-import { PATHS, toPoemDetail } from '@/routes/paths'
+import { PATHS, toPoemSlug } from '@/routes/paths'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { SectionHeader } from './SectionHeader'
 import { poemDisplayTitle, poemAuthorName } from '@/features/poems/display'
@@ -31,7 +31,7 @@ export function LatestPoemsSection({ poems, loading }: LatestPoemsSectionProps) 
           {poems.map((poem) => (
             <Link
               key={poem.id}
-              to={toPoemDetail(poem.id)}
+              to={toPoemSlug(poem)}
               className="group flex items-start justify-between gap-4 p-4 rounded-xl bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 hover:border-amber-300 dark:hover:border-amber-700/60 transition-colors"
             >
               <div className="min-w-0 flex-1">

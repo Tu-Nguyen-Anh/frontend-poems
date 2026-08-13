@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { genreService } from '@/services/genre.service'
 import type { GenreResponse, PoemResponse } from '@/types'
-import { PATHS, toPoemDetail } from '@/routes/paths'
+import { PATHS, toPoemSlug } from '@/routes/paths'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { poemDisplayTitle, poemAuthorName } from '@/features/poems/display'
 import { Seo } from '@/components/common/Seo'
@@ -93,7 +93,7 @@ export default function GenreDetailPage() {
             {poems.map((poem) => (
               <Link
                 key={poem.id}
-                to={toPoemDetail(poem.id)}
+                to={toPoemSlug(poem)}
                 className="p-6 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-amber-300 dark:hover:border-amber-700/60 transition-colors"
               >
                 <h3 className="text-xl font-serif font-bold text-slate-900 dark:text-amber-100 mb-1">
