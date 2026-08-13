@@ -1,14 +1,16 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { authorService } from '@/services/author.service'
 import { useDebounce } from '@/hooks/useDebounce'
 import type { AuthorResponse } from '@/types'
 import type { Ref } from '@/features/browse/browseContext'
 
 const countOf = (a: AuthorResponse) => a.poemCount ?? a.poem_count
+const PAGE = 30
 
 /**
- * Ô lọc theo tác giả: mặc định gợi ý 10 tác giả nhiều bài nhất; gõ để tìm thêm
- * (server-side, giới hạn 10 kết quả). Chọn 1 tác giả → lọc danh sách bài.
+ * Ô lọc theo tác giả: mặc định xếp theo nhiều bài nhất, cuộn xuống nạp thêm
+ * (infinite scroll — duyệt hết 5k+ tác giả), hoặc gõ để tìm nhanh. Ghim tác giả
+ * đang chọn lên đầu.
  */
 export function AuthorFilter({
   value,
@@ -21,8 +23,11 @@ export function AuthorFilter({
   const [query, setQuery] = useState('')
   const debounced = useDebounce(query, 300)
   const [options, setOptions] = useState<AuthorResponse[]>([])
+  const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(false)
+  const pageRef = useRef(0)
   const boxRef = useRef<HTMLDivElement>(null)
+  const listRef = useRef<HTMLUListElement>(null)
 
   useEffect(() => {
     const onDocClick = (e: MouseEvent) => {
@@ -32,28 +37,52 @@ export function AuthorFilter({
     return () => document.removeEventListener('mousedown', onDocClick)
   }, [])
 
-  // Mở + rỗng → top 10; có từ khoá → tìm (size 10, không cho quá lớn).
+  // Nạp 1 trang (reset=true khi mở/đổi từ khoá; false khi cuộn thêm).
+  const fetchPage = useCallback(
+    (pageN: number, reset: boolean) => {
+      setLoading(true)
+      const q = debounced.trim()
+      const req = q
+        ? authorService.getAuthors({ keyword: q, page: pageN, size: PAGE })
+        : authorService.getTopAuthors({ page: pageN, size: PAGE })
+      req
+        .then((res) => {
+          pageRef.current = pageN
+          setTotal(res.amount || 0)
+          setOptions((prev) => (reset ? res.content || [] : [...prev, ...(res.content || [])]))
+        })
+        .catch(() => reset && setOptions([]))
+        .finally(() => setLoading(false))
+    },
+    [debounced],
+  )
+
   useEffect(() => {
     if (!open) return
-    let alive = true
-    setLoading(true)
-    const q = debounced.trim()
-    const req = q
-      ? authorService.getAuthors({ keyword: q, size: 10 })
-      : authorService.getTopAuthors({ size: 10 })
-    req
-      .then((res) => alive && (setOptions(res.content || []), setLoading(false)))
-      .catch(() => alive && (setOptions([]), setLoading(false)))
-    return () => {
-      alive = false
+    if (listRef.current) listRef.current.scrollTop = 0
+    fetchPage(0, true)
+  }, [open, debounced, fetchPage])
+
+  // Cuộn gần đáy → nạp trang kế (duyệt hết danh sách tác giả).
+  const onListScroll = () => {
+    const el = listRef.current
+    if (!el || loading) return
+    if (el.scrollTop + el.clientHeight >= el.scrollHeight - 48 && options.length < total) {
+      fetchPage(pageRef.current + 1, false)
     }
-  }, [open, debounced])
+  }
 
   const pick = (a: AuthorResponse) => {
     onChange({ id: a.id, label: a.name })
     setQuery('')
     setOpen(false)
   }
+
+  // Ghim tác giả đang chọn lên đầu danh sách nếu chưa có (để mở dropdown luôn thấy).
+  const displayOptions =
+    value && !options.some((a) => a.id === value.id)
+      ? [{ id: value.id, name: value.label } as AuthorResponse, ...options]
+      : options
 
   return (
     <div ref={boxRef} className="relative w-full min-w-0">
@@ -86,34 +115,46 @@ export function AuthorFilter({
       </div>
 
       {open && (
-        <ul className="thin-scrollbar absolute z-20 mt-1 w-full max-h-72 overflow-y-auto rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-lg">
-          {loading && <li className="px-3 py-2 text-sm text-slate-400">Đang tải…</li>}
-          {!loading && options.length === 0 && (
+        <ul
+          ref={listRef}
+          onScroll={onListScroll}
+          className="thin-scrollbar absolute z-20 mt-1 w-full max-h-72 overflow-y-auto rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-lg"
+        >
+          {loading && options.length === 0 && (
+            <li className="px-3 py-2 text-sm text-slate-400">Đang tải…</li>
+          )}
+          {!loading && displayOptions.length === 0 && (
             <li className="px-3 py-2 text-sm text-slate-400">Không tìm thấy tác giả</li>
           )}
-          {!loading && !debounced.trim() && options.length > 0 && (
+          {!debounced.trim() && displayOptions.length > 0 && (
             <li className="px-3 pt-2 pb-1 text-[11px] uppercase tracking-wide text-slate-400">
-              Tác giả nhiều bài nhất
+              {value ? 'Đang chọn / nhiều bài nhất' : 'Tác giả nhiều bài nhất'}
             </li>
           )}
-          {options.map((a) => (
+          {displayOptions.map((a) => (
             <li key={a.id}>
               <button
                 type="button"
                 onClick={() => pick(a)}
                 className={`w-full text-left px-3 py-1.5 text-sm flex items-center justify-between gap-2 transition-colors ${
                   a.id === value?.id
-                    ? 'bg-amber-100 text-amber-900 dark:bg-amber-950/60 dark:text-amber-200'
+                    ? 'bg-amber-100 text-amber-900 dark:bg-amber-950/60 dark:text-amber-200 font-medium'
                     : 'text-slate-700 hover:bg-amber-50 dark:text-slate-300 dark:hover:bg-slate-800/60'
                 }`}
               >
-                <span className="truncate">{a.name}</span>
+                <span className="truncate flex items-center gap-1.5">
+                  {a.id === value?.id && <span className="text-amber-600 dark:text-amber-400">✓</span>}
+                  {a.name}
+                </span>
                 {countOf(a) != null && (
                   <span className="text-[11px] tabular-nums text-slate-400">{countOf(a)!.toLocaleString('vi-VN')}</span>
                 )}
               </button>
             </li>
           ))}
+          {loading && options.length > 0 && (
+            <li className="px-3 py-2 text-xs text-center text-slate-400">Đang tải thêm…</li>
+          )}
         </ul>
       )}
     </div>

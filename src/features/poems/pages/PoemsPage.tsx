@@ -14,9 +14,10 @@ import { Seo } from '@/components/common/Seo'
 import { BrowseContext, type BrowseSelection, type Ref } from '@/features/browse/browseContext'
 import { BrowseTree } from '@/features/browse/components/BrowseTree'
 import { AuthorFilter } from '@/features/poems/components/AuthorFilter'
+import { FilterSelect } from '@/features/poems/components/FilterSelect'
 
 export default function PoemsPage() {
-  const [searchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams()
   const navigate = useNavigate()
   const urlKeyword = searchParams.get('keyword') || ''
 
@@ -28,12 +29,18 @@ export default function PoemsPage() {
   const [poems, setPoems] = useState<PoemResponse[]>([])
   const [totalAmount, setTotalAmount] = useState(0)
   const [genres, setGenres] = useState<GenreResponse[]>([])
-  // Các chiều lọc = một đường dẫn duyệt (đồng bộ với cây bên trái).
-  const [selectedGenre, setSelectedGenre] = useState<Ref | null>(null)
-  const [selectedAuthor, setSelectedAuthor] = useState<Ref | null>(null)
+  // Các chiều lọc = một đường dẫn duyệt (đồng bộ với cây trái + URL).
+  const [selectedGenre, setSelectedGenre] = useState<Ref | null>(() => {
+    const g = searchParams.get('genreId')
+    return g ? { id: Number(g), label: searchParams.get('genreLabel') || '' } : null
+  })
+  const [selectedAuthor, setSelectedAuthor] = useState<Ref | null>(() => {
+    const a = searchParams.get('authorId')
+    return a ? { id: Number(a), label: searchParams.get('authorLabel') || '' } : null
+  })
   const [eras, setEras] = useState<string[]>([])
-  const [selectedEra, setSelectedEra] = useState<string>('')
-  const [selectedLanguage, setSelectedLanguage] = useState<string>('')
+  const [selectedEra, setSelectedEra] = useState<string>(searchParams.get('era') || '')
+  const [selectedLanguage, setSelectedLanguage] = useState<string>(searchParams.get('language') || '')
   const [loading, setLoading] = useState(true)
   const [view, setView] = useLocalStorage<'list' | 'grid'>('poems_view', 'list')
 
@@ -42,6 +49,27 @@ export default function PoemsPage() {
     setKeyword(urlKeyword)
     setPage(0)
   }, [urlKeyword])
+
+  // Đẩy TOÀN BỘ bộ lọc (từ khoá + ngôn ngữ + thời kỳ + thể loại + tác giả) lên URL
+  // để chia sẻ link / nút back hoạt động.
+  useEffect(() => {
+    const params = new URLSearchParams()
+    if (debouncedKeyword) params.set('keyword', debouncedKeyword)
+    if (selectedLanguage) params.set('language', selectedLanguage)
+    if (selectedEra) params.set('era', selectedEra)
+    if (selectedGenre) {
+      params.set('genreId', String(selectedGenre.id))
+      if (selectedGenre.label) params.set('genreLabel', selectedGenre.label)
+    }
+    if (selectedAuthor) {
+      params.set('authorId', String(selectedAuthor.id))
+      if (selectedAuthor.label) params.set('authorLabel', selectedAuthor.label)
+    }
+    if (params.toString() !== searchParams.toString()) {
+      setSearchParams(params, { replace: true })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedKeyword, selectedLanguage, selectedEra, selectedGenre, selectedAuthor])
 
   useEffect(() => {
     async function fetchFilters() {
@@ -65,29 +93,22 @@ export default function PoemsPage() {
     async function fetchPoems() {
       setLoading(true)
       try {
-        // Có từ khoá → tìm kiếm xếp hạng (getPoems). Không có mà đang lọc theo
-        // cây (ngôn ngữ/thời kỳ/thể thơ/tác giả) → browsePoems (hỗ trợ authorId
-        // và rổ "(Chưa phân loại)"). Mặc định không lọc → giữ getPoems như cũ.
-        const res =
-          debouncedKeyword
-            ? await poemService.getPoems({
-                keyword: debouncedKeyword,
-                genreId: selectedGenre?.id,
-                era: selectedEra || undefined,
-                language: selectedLanguage || undefined,
-                page,
-                size,
-              })
-            : anyBrowseFilter
-              ? await poemService.browsePoems({
-                  language: selectedLanguage || undefined,
-                  era: selectedEra || undefined,
-                  genreId: selectedGenre?.id,
-                  authorId: selectedAuthor?.id,
-                  page,
-                  size,
-                })
-              : await poemService.getPoems({ page, size })
+        // Đang lọc (ngôn ngữ/thời kỳ/thể thơ/TÁC GIẢ) → browsePoems (lọc đủ 4 chiều
+        // + keyword) để keyword luôn nằm TRONG phạm vi lọc (vd đúng tác giả đã chọn).
+        // Chỉ có keyword, không lọc → getPoems (xếp hạng theo độ liên quan).
+        const res = anyBrowseFilter
+          ? await poemService.browsePoems({
+              language: selectedLanguage || undefined,
+              era: selectedEra || undefined,
+              genreId: selectedGenre?.id,
+              authorId: selectedAuthor?.id,
+              keyword: debouncedKeyword || undefined,
+              page,
+              size,
+            })
+          : debouncedKeyword
+            ? await poemService.getPoems({ keyword: debouncedKeyword, page, size })
+            : await poemService.getPoems({ page, size })
         setPoems(res.content || [])
         setTotalAmount(res.amount || 0)
       } catch (err) {
@@ -182,41 +203,25 @@ export default function PoemsPage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 w-full md:w-[520px] md:flex-shrink-0">
-            <select
-              value={selectedGenre?.id ?? ''}
-              onChange={(e) => {
-                const id = e.target.value ? Number(e.target.value) : null
-                const g = genres.find((x) => x.id === id)
-                setSelectedGenre(id ? { id, label: g?.name ?? '' } : null)
+            <FilterSelect
+              value={selectedGenre ? String(selectedGenre.id) : ''}
+              placeholder="Tất cả thể loại"
+              options={genres.map((g) => ({ value: String(g.id), label: g.name }))}
+              onSelect={(opt) => {
+                setSelectedGenre(opt ? { id: Number(opt.value), label: opt.label } : null)
                 setPage(0)
               }}
-              aria-label="Lọc theo thể loại"
-              className="w-full min-w-0 px-3 py-2 text-sm rounded-md bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-500/30 cursor-pointer"
-            >
-              <option value="">Tất cả thể loại</option>
-              {genres.map((g) => (
-                <option key={g.id} value={g.id}>
-                  {g.name}
-                </option>
-              ))}
-            </select>
+            />
 
-            <select
+            <FilterSelect
               value={selectedEra}
-              onChange={(e) => {
-                setSelectedEra(e.target.value)
+              placeholder="Tất cả thời kỳ"
+              options={eras.map((e) => ({ value: e, label: e }))}
+              onSelect={(opt) => {
+                setSelectedEra(opt ? opt.value : '')
                 setPage(0)
               }}
-              aria-label="Lọc theo thời kỳ"
-              className="w-full min-w-0 px-3 py-2 text-sm rounded-md bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-500/30 cursor-pointer"
-            >
-              <option value="">Tất cả thời kỳ</option>
-              {eras.map((e) => (
-                <option key={e} value={e}>
-                  {e}
-                </option>
-              ))}
-            </select>
+            />
 
             <AuthorFilter
               value={selectedAuthor}

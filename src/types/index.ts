@@ -107,6 +107,10 @@ export interface AuthorResponse {
   birthYear?: number
   achievement?: string
   hometown?: string
+  /** Ảnh chân dung + tiểu sử (crawl thivien). API trả snake_case → đọc cả hai. */
+  avatarUrl?: string
+  avatar_url?: string
+  bio?: string
   /** Số bài thơ (API trả snake_case) — chỉ có ở endpoint /authors/top */
   poemCount?: number
   poem_count?: number

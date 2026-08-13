@@ -19,6 +19,7 @@ export default function AuthorDetailPage() {
 
   const [author, setAuthor] = useState<AuthorResponse | null>(null)
   const [loading, setLoading] = useState(true)
+  const [avatarError, setAvatarError] = useState(false)
 
   const [poems, setPoems] = useState<PoemResponse[]>([])
   const [totalPoems, setTotalPoems] = useState(0)
@@ -79,6 +80,9 @@ export default function AuthorDetailPage() {
     )
   }
 
+  const avatarUrl = author.avatar_url ?? author.avatarUrl
+  const bio = author.bio?.trim()
+
   return (
     <div className="max-w-4xl mx-auto py-6 space-y-8">
       <Seo
@@ -94,10 +98,21 @@ export default function AuthorDetailPage() {
       </Link>
 
       <div className="p-8 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex flex-col md:flex-row gap-6 items-center md:items-start">
-        <div className="w-24 h-24 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-200 flex items-center justify-center font-serif font-bold text-4xl flex-shrink-0">
-          {author.name.charAt(0)}
-        </div>
-        <div className="space-y-3 text-center md:text-left">
+        {avatarUrl && !avatarError ? (
+          <img
+            src={avatarUrl}
+            alt={`Chân dung ${author.name}`}
+            loading="lazy"
+            referrerPolicy="no-referrer"
+            onError={() => setAvatarError(true)}
+            className="w-28 h-28 rounded-xl object-cover border border-slate-200 dark:border-slate-700 flex-shrink-0 bg-slate-100 dark:bg-slate-900"
+          />
+        ) : (
+          <div className="w-28 h-28 rounded-xl bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-200 flex items-center justify-center font-serif font-bold text-4xl flex-shrink-0">
+            {author.name.charAt(0)}
+          </div>
+        )}
+        <div className="space-y-3 text-center md:text-left flex-1 min-w-0">
           <h1 className="text-3xl font-serif font-bold text-slate-900 dark:text-amber-100">
             {author.name}
           </h1>
@@ -105,11 +120,17 @@ export default function AuthorDetailPage() {
             {author.birthYear && <span>Năm sinh: {author.birthYear}</span>}
             {author.hometown && <span>Quê quán: {author.hometown}</span>}
           </div>
-          {author.achievement && (
+          {bio ? (
+            <div className="pt-3 border-t border-slate-100 dark:border-slate-700">
+              <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-line">
+                {bio}
+              </p>
+            </div>
+          ) : author.achievement ? (
             <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed pt-2 border-t border-slate-100 dark:border-slate-700">
-              <strong>Thành tựu & Tiểu sử:</strong> {author.achievement}
+              <strong>Thành tựu &amp; Tiểu sử:</strong> {author.achievement}
             </p>
-          )}
+          ) : null}
         </div>
       </div>
 

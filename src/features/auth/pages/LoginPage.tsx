@@ -119,7 +119,7 @@ export default function LoginPage() {
             required
           />
 
-          <Button type="submit" loading={loading}>
+          <Button type="submit" loading={loading} className="w-full">
             {mode === 'login' ? 'Đăng nhập ngay' : 'Tạo tài khoản & Đăng nhập'}
           </Button>
 
