@@ -4,7 +4,7 @@ import { poemService } from '@/services/poem.service'
 import { authorService } from '@/services/author.service'
 import { genreService } from '@/services/genre.service'
 import type { PoemResponse, AuthorResponse, GenreResponse } from '@/types'
-import { PATHS, toAuthorDetail, toGenreDetail, toPoemDetail } from '@/routes/paths'
+import { PATHS, toAuthorDetail, toGenreDetail, toPoemSlug } from '@/routes/paths'
 import { HeroBanner } from '../components/HeroBanner'
 import { LatestPoemsSection } from '../components/LatestPoemsSection'
 import { SectionHeader } from '../components/SectionHeader'
@@ -76,7 +76,7 @@ export default function HomePage() {
             {randomPoems.slice(0, 4).map((poem) => (
               <Link
                 key={poem.id}
-                to={toPoemDetail(poem.id)}
+                to={toPoemSlug(poem)}
                 className="p-6 rounded-xl bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 hover:border-amber-300 dark:hover:border-amber-700/60 transition-colors"
               >
                 <h4 className="font-serif text-lg font-bold text-slate-900 dark:text-amber-100 mb-1">

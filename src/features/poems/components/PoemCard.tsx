@@ -1,11 +1,11 @@
 import { Link, useLocation } from 'react-router-dom'
-import { PATHS, toPoemDetail } from '@/routes/paths'
+import { PATHS, toPoemSlug } from '@/routes/paths'
 import type { PoemResponse } from '@/types'
 import { poemDisplayTitle, poemAuthorName } from '@/features/poems/display'
 
 export function PoemCard({ poem }: { poem: PoemResponse }) {
   const location = useLocation()
-  const detailPath = toPoemDetail(poem.id)
+  const detailPath = toPoemSlug(poem)
   const linkState = { listSearch: location.search }
 
   const poemTitle = poemDisplayTitle(poem)

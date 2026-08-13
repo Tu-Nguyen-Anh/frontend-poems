@@ -107,3 +107,38 @@ html.dark .skeleton {
   gap: 16px;
   padding: 48px;
 }
+
+/* Thanh cuộn mảnh (cây duyệt, cột Miller).
+   Lưu ý Chrome 121+: nếu đặt scrollbar-width thì nó BỎ QUA ::-webkit-scrollbar.
+   Nên Chrome/Safari dùng ::-webkit-scrollbar (3px); Firefox dùng scrollbar-width
+   qua @supports (Firefox không hỗ trợ selector ::-webkit-scrollbar). */
+.thin-scrollbar::-webkit-scrollbar {
+  width: 3px;
+  height: 3px;
+}
+.thin-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.thin-scrollbar::-webkit-scrollbar-thumb {
+  background: rgb(203 213 225);
+  border-radius: 9999px;
+}
+.thin-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgb(148 163 184);
+}
+:root[data-theme='dark'] .thin-scrollbar::-webkit-scrollbar-thumb,
+.dark .thin-scrollbar::-webkit-scrollbar-thumb {
+  background: rgb(51 65 85);
+}
+
+/* Firefox (không có ::-webkit-scrollbar) */
+@supports not selector(::-webkit-scrollbar) {
+  .thin-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(203 213 225) transparent;
+  }
+  :root[data-theme='dark'] .thin-scrollbar,
+  .dark .thin-scrollbar {
+    scrollbar-color: rgb(71 85 105) transparent;
+  }
+}

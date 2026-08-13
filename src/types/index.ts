@@ -71,12 +71,20 @@ export interface PoemResponse {
   translation?: string
   meaning?: string
   language?: string
+  era?: string
   genreName?: string
   authorName?: string
   // API trả snake_case; giữ cả hai để an toàn
   author_name?: string
   genre_name?: string
   translations?: PoemTranslation[]
+}
+
+/** Một nhánh trong cây duyệt phân cấp (Ngôn ngữ → Thời kỳ → Thể thơ → Tác giả). */
+export interface FacetItem {
+  id: number | null
+  label: string
+  count: number
 }
 
 export interface PoemRequest {

@@ -47,6 +47,9 @@ const router = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
+      // Slug đẹp ở gốc: /qua-deo-ngang-ba-huyen-thanh-quan-<mã> → chi tiết bài thơ.
+      // Đặt cuối để các route tĩnh (poems, authors…) ưu tiên khớp trước.
+      { path: PATHS.POEM_SLUG, element: <PoemDetailPage /> },
       { path: '*', element: <NotFoundPage /> },
     ],
   },
