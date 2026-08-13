@@ -7,6 +7,7 @@ export interface BrowsePath {
   era?: string
   genreId?: number
   authorId?: number
+  keyword?: string
 }
 
 export const poemService = {
@@ -29,6 +30,7 @@ export const poemService = {
         era: path.era,
         genreId: path.genreId,
         authorId: path.authorId,
+        keyword: path.keyword,
         page: path.page ?? 0,
         size: path.size ?? 30,
       },
