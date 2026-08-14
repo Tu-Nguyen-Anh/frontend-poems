@@ -4,10 +4,6 @@ export function formatDate(value: string | number | Date, locale = 'vi-VN'): str
   return new Date(value).toLocaleDateString(locale)
 }
 
-export function formatCurrency(value: number, currency = 'VND', locale = 'vi-VN'): string {
-  return new Intl.NumberFormat(locale, { style: 'currency', currency }).format(value)
-}
-
 export function formatNumber(value: number, locale = 'vi-VN'): string {
   return new Intl.NumberFormat(locale).format(value)
 }

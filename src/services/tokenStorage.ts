@@ -1,6 +1,6 @@
 import { STORAGE_KEYS } from '@/constants'
 import { storage } from '@/utils/storage'
-import type { TokenResponse, UserResponse } from '@/types'
+import type { UserResponse } from '@/types'
 
 /** Nơi duy nhất đọc/ghi token và user profile. */
 export const tokenStorage = {

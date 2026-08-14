@@ -1,5 +1,4 @@
 import { createContext } from 'react'
-import type { UserResponse } from '@/types'
 
 export interface AuthUser {
   id?: number

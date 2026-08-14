@@ -116,6 +116,10 @@ export interface AuthorResponse {
   avatarLocal?: string
   avatar_local?: string
   bio?: string
+  /** Quốc gia tác giả (crawl thivien). API trả snake_case → đọc cả hai. */
+  country?: string
+  countryId?: number
+  country_id?: number
   /** Số bài thơ (API trả snake_case) — chỉ có ở endpoint /authors/top */
   poemCount?: number
   poem_count?: number

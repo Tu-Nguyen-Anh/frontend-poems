@@ -1,5 +1,5 @@
 import { oplearnClient } from './oplearnClient'
-import type { ResponseGeneral, PageResponse, CommentResponse, CommentRequest } from '@/types'
+import type { PageResponse, CommentResponse, CommentRequest } from '@/types'
 
 export const commentService = {
   async getCommentsByPoem(poemId: number, params?: { page?: number; size?: number }): Promise<PageResponse<CommentResponse>> {
