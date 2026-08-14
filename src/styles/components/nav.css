@@ -7,7 +7,6 @@
   z-index: 200;
   background: #fcfaf5;
   box-shadow: 0 1px 0 rgba(0, 0, 0, 0.04), 0 2px 8px rgba(0, 0, 0, 0.04);
-  -webkit-backdrop-filter: saturate(140%) blur(10px);
   backdrop-filter: saturate(140%) blur(10px);
 }
 .topnav::before {

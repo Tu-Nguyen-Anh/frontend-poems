@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { poemService } from '@/services/poem.service'
 import { authorService } from '@/services/author.service'
@@ -28,10 +28,11 @@ export default function HomePage() {
     async function loadData() {
       setLoading(true)
       try {
-        const [latestRes, randomRes, authorsRes, genresRes, statsRes] = await Promise.allSettled([
+        const [latestRes, randomRes, featuredRes, topRes, genresRes, statsRes] = await Promise.allSettled([
           poemService.getLatestPoems({ page: 0, size: 6 }),
           poemService.getRandomPoems(),
-          authorService.getTopAuthors({ page: 0, size: 6 }),
+          authorService.getFeaturedAuthors(),
+          authorService.getTopAuthors({ page: 0, size: 1 }),
           genreService.getGenres({ page: 0, size: 8 }),
           poemService.getStats(),
         ])
@@ -42,9 +43,12 @@ export default function HomePage() {
           setTotalPoems(latestRes.value.amount ?? null)
         }
         if (randomRes.status === 'fulfilled') setRandomPoems(randomRes.value || [])
-        if (authorsRes.status === 'fulfilled') {
-          setAuthors(authorsRes.value.content || [])
-          setTotalAuthors(authorsRes.value.amount ?? null)
+        // Tổng số tác giả (cho hero + mô tả) lấy từ /top; danh sách hiển thị dùng /featured (ghim tay).
+        if (topRes.status === 'fulfilled') setTotalAuthors(topRes.value.amount ?? null)
+        if (featuredRes.status === 'fulfilled' && featuredRes.value.length > 0) {
+          setAuthors(featuredRes.value)
+        } else if (topRes.status === 'fulfilled') {
+          setAuthors(topRes.value.content || [])
         }
         if (genresRes.status === 'fulfilled') {
           setGenres(genresRes.value.content || [])
@@ -59,6 +63,25 @@ export default function HomePage() {
     loadData()
   }, [])
 
+  // Bốc 5 bài ngẫu nhiên mới, tự đổi liên tục để người đọc luôn có nội dung mới.
+  const loadRandom = useCallback(async () => {
+    try {
+      const r = await poemService.getRandomPoems()
+      if (r && r.length) setRandomPoems(r)
+    } catch {
+      /* im lặng — giữ danh sách cũ nếu lỗi mạng tạm thời */
+    }
+  }, [])
+
+  // Bốc lại khi người dùng quay lại tab (F5 đã tự gọi ở lần mount đầu).
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') loadRandom()
+    }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => document.removeEventListener('visibilitychange', onVisible)
+  }, [loadRandom])
+
   return (
     <div className="space-y-14 py-4">
       <Seo
@@ -69,31 +92,13 @@ export default function HomePage() {
             : undefined
         }
       />
-      <HeroBanner totalPoems={totalPoems} totalAuthors={totalAuthors} totalGenres={totalGenres} />
-
-      {stats && stats.total_poems > 0 && (
-        <section className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white/60 dark:bg-slate-900/40 px-5 py-4 md:px-6 md:py-5">
-          <p className="text-sm md:text-base text-slate-700 dark:text-slate-200 leading-relaxed">
-            <span className="font-serif font-semibold text-slate-900 dark:text-amber-100">Thư viện thơ:</span>{' '}
-            <strong className="text-amber-700 dark:text-amber-400">{formatNumber(stats.total_poems)}</strong> tác phẩm của{' '}
-            <strong className="text-amber-700 dark:text-amber-400">{formatNumber(stats.total_authors)}</strong> tác giả từ{' '}
-            <strong className="text-amber-700 dark:text-amber-400">{formatNumber(stats.total_countries)}</strong> nước, trong đó:
-          </p>
-          <ul className="mt-2 flex flex-wrap gap-x-6 gap-y-1 text-sm text-slate-600 dark:text-slate-300">
-            <li>· <strong>{formatNumber(stats.viet_count)}</strong> bài tiếng Việt</li>
-            <li>· <strong>{formatNumber(stats.han_count)}</strong> bài chữ Hán</li>
-            <li>· <strong>{formatNumber(stats.foreign_count)}</strong> bài tiếng nước ngoài khác</li>
-          </ul>
-        </section>
-      )}
-
-      <LatestPoemsSection poems={latestPoems} loading={loading} />
+      <HeroBanner totalPoems={totalPoems} totalAuthors={totalAuthors} totalGenres={totalGenres} stats={stats} />
 
       {randomPoems.length > 0 && (
         <section className="space-y-6">
-          <SectionHeader title="Gợi ý ngẫu nhiên" description="Vài bài thơ để bắt đầu" />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {randomPoems.slice(0, 4).map((poem) => (
+          <SectionHeader title="Tuyển tập thơ" description="Mỗi lần ghé thăm là 6 bài thơ khác nhau" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {randomPoems.slice(0, 6).map((poem) => (
               <Link
                 key={poem.id}
                 to={toPoemSlug(poem)}
@@ -114,18 +119,20 @@ export default function HomePage() {
         </section>
       )}
 
+      <LatestPoemsSection poems={latestPoems} loading={loading} />
+
       <section className="space-y-6">
         <SectionHeader
           title="Tác giả tiêu biểu"
           description={
             totalAuthors
-              ? `${formatNumber(totalAuthors)} nhà thơ trong kho — xếp theo số bài thơ`
-              : 'Các nhà thơ trong kho'
+              ? `Những tên tuổi lớn của thi ca Việt — trong kho ${formatNumber(totalAuthors)} nhà thơ`
+              : 'Những tên tuổi lớn của thi ca Việt'
           }
           linkTo={PATHS.AUTHORS}
           linkLabel="Tất cả tác giả"
         />
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
           {authors.map((author) => (
             <Link
               key={author.id}
