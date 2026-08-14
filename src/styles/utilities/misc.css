@@ -119,7 +119,6 @@ html.dark .skeleton {
   /* MỜ (không tối) xung quanh: giữa nét, rìa nhoè dần — mask trong suốt ở giữa.
      Desktop dùng backdrop-filter + mask cùng phần tử (đẹp, chạy tốt). */
   backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
   -webkit-mask-image: radial-gradient(
     ellipse 62% 50% at 44% 50%,
     rgba(0, 0, 0, 0) 36%,

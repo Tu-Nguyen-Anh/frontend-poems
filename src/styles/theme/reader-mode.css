@@ -84,13 +84,11 @@ html[data-reader-mode="modern-dark"] body {
 .glass-panel {
   background: rgba(255, 255, 255, 0.7);
   backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 html[data-reader-mode="modern-dark"] .glass-panel {
   background: rgba(19, 27, 43, 0.72);
   backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
