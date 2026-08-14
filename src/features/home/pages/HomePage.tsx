@@ -69,23 +69,7 @@ export default function HomePage() {
             : undefined
         }
       />
-      <HeroBanner totalPoems={totalPoems} totalAuthors={totalAuthors} totalGenres={totalGenres} />
-
-      {stats && stats.total_poems > 0 && (
-        <section className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white/60 dark:bg-slate-900/40 px-5 py-4 md:px-6 md:py-5">
-          <p className="text-sm md:text-base text-slate-700 dark:text-slate-200 leading-relaxed">
-            <span className="font-serif font-semibold text-slate-900 dark:text-amber-100">Thư viện thơ:</span>{' '}
-            <strong className="text-amber-700 dark:text-amber-400">{formatNumber(stats.total_poems)}</strong> tác phẩm của{' '}
-            <strong className="text-amber-700 dark:text-amber-400">{formatNumber(stats.total_authors)}</strong> tác giả từ{' '}
-            <strong className="text-amber-700 dark:text-amber-400">{formatNumber(stats.total_countries)}</strong> nước, trong đó:
-          </p>
-          <ul className="mt-2 flex flex-wrap gap-x-6 gap-y-1 text-sm text-slate-600 dark:text-slate-300">
-            <li>· <strong>{formatNumber(stats.viet_count)}</strong> bài tiếng Việt</li>
-            <li>· <strong>{formatNumber(stats.han_count)}</strong> bài chữ Hán</li>
-            <li>· <strong>{formatNumber(stats.foreign_count)}</strong> bài tiếng nước ngoài khác</li>
-          </ul>
-        </section>
-      )}
+      <HeroBanner totalPoems={totalPoems} totalAuthors={totalAuthors} totalGenres={totalGenres} stats={stats} />
 
       <LatestPoemsSection poems={latestPoems} loading={loading} />
 

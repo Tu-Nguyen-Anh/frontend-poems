@@ -4,14 +4,16 @@ import { PATHS } from '@/routes/paths'
 import { IconSearch } from '@/components/ui/icons'
 import { formatNumber } from '@/utils/format'
 import { useDebounce } from '@/hooks/useDebounce'
+import type { LibraryStats } from '@/types'
 
 interface HeroBannerProps {
   totalPoems?: number | null
   totalAuthors?: number | null
   totalGenres?: number | null
+  stats?: LibraryStats | null
 }
 
-export function HeroBanner({ totalPoems, totalAuthors, totalGenres }: HeroBannerProps) {
+export function HeroBanner({ totalPoems, totalAuthors, totalGenres, stats }: HeroBannerProps) {
   const [search, setSearch] = useState('')
   const navigate = useNavigate()
   const debounced = useDebounce(search, 500)
@@ -75,7 +77,28 @@ export function HeroBanner({ totalPoems, totalAuthors, totalGenres }: HeroBanner
                 </dd>
               </div>
             )}
+            {stats != null && stats.total_countries > 0 && (
+              <div>
+                <dt className="text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                  Quốc gia
+                </dt>
+                <dd className="font-serif text-2xl md:text-3xl font-bold text-amber-700 dark:text-amber-400">
+                  {formatNumber(stats.total_countries)}
+                </dd>
+              </div>
+            )}
           </dl>
+        )}
+
+        {stats != null && stats.total_poems > 0 && (
+          <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400 pt-1">
+            Trong đó{' '}
+            <span className="font-semibold text-amber-700 dark:text-amber-400">{formatNumber(stats.viet_count)}</span> bài tiếng Việt
+            {' · '}
+            <span className="font-semibold text-amber-700 dark:text-amber-400">{formatNumber(stats.han_count)}</span> bài chữ Hán
+            {' · '}
+            <span className="font-semibold text-amber-700 dark:text-amber-400">{formatNumber(stats.foreign_count)}</span> bài tiếng nước ngoài khác
+          </p>
         )}
 
         <form onSubmit={handleSearch} className="flex gap-2 max-w-md pt-1">
