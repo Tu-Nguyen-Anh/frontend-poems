@@ -83,8 +83,8 @@ export const poemService = {
   },
 
   async getRandomPoems(): Promise<PoemResponse[]> {
-    const res = await oplearnClient.get<ResponseGeneral<PoemResponse[]>>('/poems/random')
-    return res.data.data
+    const res = await oplearnClient.get<ResponseGeneral<PageResponse<PoemResponse>>>('/poems/random')
+    return res.data.data?.content ?? []
   },
 
   async createPoem(data: PoemRequest): Promise<PoemResponse> {

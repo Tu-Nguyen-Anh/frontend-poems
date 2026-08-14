@@ -48,41 +48,41 @@ export function HeroBanner({ totalPoems, totalAuthors, totalGenres, stats }: Her
         </p>
 
         {totalPoems != null && totalPoems > 0 && (
-          <dl className="flex flex-wrap gap-x-10 gap-y-4 pt-2">
+          <dl className="flex flex-nowrap justify-between gap-x-3 sm:flex-wrap sm:justify-start sm:gap-x-10 sm:gap-y-4 pt-2">
             <div>
-              <dt className="text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              <dt className="text-[10px] sm:text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 whitespace-nowrap">
                 Bài thơ
               </dt>
-              <dd className="font-serif text-2xl md:text-3xl font-bold text-amber-700 dark:text-amber-400">
+              <dd className="font-serif text-lg sm:text-2xl md:text-3xl font-bold text-amber-700 dark:text-amber-400">
                 {formatNumber(totalPoems)}
               </dd>
             </div>
             {totalAuthors != null && totalAuthors > 0 && (
               <div>
-                <dt className="text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                <dt className="text-[10px] sm:text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 whitespace-nowrap">
                   Tác giả
                 </dt>
-                <dd className="font-serif text-2xl md:text-3xl font-bold text-amber-700 dark:text-amber-400">
+                <dd className="font-serif text-lg sm:text-2xl md:text-3xl font-bold text-amber-700 dark:text-amber-400">
                   {formatNumber(totalAuthors)}
                 </dd>
               </div>
             )}
             {totalGenres != null && totalGenres > 0 && (
               <div>
-                <dt className="text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                <dt className="text-[10px] sm:text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 whitespace-nowrap">
                   Thể loại
                 </dt>
-                <dd className="font-serif text-2xl md:text-3xl font-bold text-amber-700 dark:text-amber-400">
+                <dd className="font-serif text-lg sm:text-2xl md:text-3xl font-bold text-amber-700 dark:text-amber-400">
                   {formatNumber(totalGenres)}
                 </dd>
               </div>
             )}
             {stats != null && stats.total_countries > 0 && (
               <div>
-                <dt className="text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                <dt className="text-[10px] sm:text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 whitespace-nowrap">
                   Quốc gia
                 </dt>
-                <dd className="font-serif text-2xl md:text-3xl font-bold text-amber-700 dark:text-amber-400">
+                <dd className="font-serif text-lg sm:text-2xl md:text-3xl font-bold text-amber-700 dark:text-amber-400">
                   {formatNumber(stats.total_countries)}
                 </dd>
               </div>

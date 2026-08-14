@@ -25,6 +25,11 @@ export const authorService = {
     return res.data.data
   },
 
+  async getFeaturedAuthors(): Promise<AuthorResponse[]> {
+    const res = await oplearnClient.get<ResponseGeneral<AuthorResponse[]>>('/authors/featured')
+    return res.data.data ?? []
+  },
+
   async getAuthorById(id: number): Promise<AuthorResponse> {
     const res = await oplearnClient.get<ResponseGeneral<AuthorResponse>>(`/authors/${id}`)
     return res.data.data
