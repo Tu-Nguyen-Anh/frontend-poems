@@ -6,7 +6,7 @@ import { replyService } from '@/services/reply.service'
 import { useReaderMode } from '@/contexts/ReaderModeContext'
 import { useToast } from '@/contexts/ToastContext'
 import type { PoemResponse, CommentResponse, ReplyResponse } from '@/types'
-import { PATHS, poemIdFromSlug, toPoemSlug } from '@/routes/paths'
+import { PATHS, poemIdFromSlug, toPoemSlug, toAuthorDetail } from '@/routes/paths'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { CommentForm } from '@/features/comments/components/CommentForm'
 import { CommentItem } from '@/features/comments/components/CommentItem'
@@ -14,6 +14,9 @@ import { FeedbackForm } from '@/features/feedbacks/components/FeedbackForm'
 import { getErrorMessage } from '@/utils/error'
 import { useLocalStorage } from '@/hooks/useLocalStorage'
 import { poemDisplayTitle, poemAuthorName, poemGenreName } from '@/features/poems/display'
+import { FavoriteButton } from '@/features/poems/components/FavoriteButton'
+import { HighlightableContent } from '@/features/poems/components/HighlightableContent'
+import { useAuth } from '@/hooks/useAuth'
 import { languageLabel } from '@/features/browse/labels'
 import { Seo } from '@/components/common/Seo'
 
@@ -30,6 +33,7 @@ export default function PoemDetailPage() {
   const navigate = useNavigate()
   const { mode, toggleMode } = useReaderMode()
   const { toast } = useToast()
+  const { isAuthenticated } = useAuth()
 
   const [poem, setPoem] = useState<PoemResponse | null>(null)
   const [comments, setComments] = useState<CommentResponse[]>([])
@@ -167,7 +171,7 @@ export default function PoemDetailPage() {
     .slice(0, 160)
 
   return (
-    <div className="max-w-4xl mx-auto py-6 space-y-10">
+    <div className="max-w-4xl mx-auto pt-1 pb-8 space-y-6">
       <Seo title={seoTitle} description={seoDescription} path={toPoemSlug(poem)} ogType="article" />
       {/* Structured data cho Google Rich Results */}
       <script
@@ -257,9 +261,19 @@ export default function PoemDetailPage() {
           </h1>
           <p className="text-base">
             <span className="text-slate-500 dark:text-slate-400">Tác giả: </span>
-            <span className="font-semibold text-amber-800/90 dark:text-amber-400">{poemAuthorName(poem)}</span>
+            {(poem.authorId ?? poem.author_id) != null ? (
+              <Link
+                to={toAuthorDetail(poem.authorId ?? poem.author_id!)}
+                className="font-semibold text-amber-800/90 dark:text-amber-400 hover:underline"
+              >
+                {poemAuthorName(poem)}
+              </Link>
+            ) : (
+              <span className="font-semibold text-amber-800/90 dark:text-amber-400">{poemAuthorName(poem)}</span>
+            )}
           </p>
           <div className="flex items-center gap-2 pt-1">
+            <FavoriteButton poemId={poem.id} />
             <button
               onClick={() =>
                 copyToClipboard(
@@ -320,14 +334,24 @@ export default function PoemDetailPage() {
           </div>
         )}
 
-        {/* Content Body — căn trái trong khổ hẹp, giữ nguyên hình khổ thơ */}
-        <div
-          className={`max-w-[36rem] text-left font-serif tracking-wide whitespace-pre-line my-6 text-slate-800 dark:text-slate-100 ${FONT_STEPS[fontIdx]} ${LEADING_STEPS[leadingIdx]}`}
-        >
-          {activeTab === 'content' && poem.content}
-          {activeTab === 'transliteration' && poem.transliteration}
-          {activeTab === 'meaning' && poem.meaning}
-        </div>
+        {/* Content Body — căn trái trong khổ hẹp, giữ nguyên hình khổ thơ.
+            Tab "Nguyên tác": bôi đen để tô màu + ghi chú (cần đăng nhập). */}
+        {(() => {
+          const contentClass = `max-w-[36rem] text-left font-serif tracking-wide whitespace-pre-line my-6 text-slate-800 dark:text-slate-100 ${FONT_STEPS[fontIdx]} ${LEADING_STEPS[leadingIdx]}`
+          return activeTab === 'content' ? (
+            <HighlightableContent
+              content={poem.content}
+              poemId={poem.id}
+              enabled={isAuthenticated}
+              className={contentClass}
+            />
+          ) : (
+            <div className={contentClass}>
+              {activeTab === 'transliteration' && poem.transliteration}
+              {activeTab === 'meaning' && poem.meaning}
+            </div>
+          )
+        })()}
 
         {poem.description && (
           <div className="mt-10 p-4 rounded-xl bg-amber-500/5 dark:bg-slate-900/40 border border-amber-500/10 text-xs italic text-slate-600 dark:text-slate-400">

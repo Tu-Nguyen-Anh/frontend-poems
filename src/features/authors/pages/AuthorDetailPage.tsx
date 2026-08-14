@@ -10,6 +10,7 @@ import { Pagination } from '@/components/ui/Pagination'
 import { IconSearch } from '@/components/ui/icons'
 import { poemDisplayTitle } from '@/features/poems/display'
 import { Seo } from '@/components/common/Seo'
+import { env } from '@/config/env'
 
 const PAGE_SIZE = 12
 
@@ -80,7 +81,11 @@ export default function AuthorDetailPage() {
     )
   }
 
-  const avatarUrl = author.avatar_url ?? author.avatarUrl
+  // Ưu tiên ảnh tự crawl trên RustFS (avatar_local); fallback URL gốc thivien (avatar_url).
+  const avatarLocal = author.avatar_local ?? author.avatarLocal
+  const avatarUrl = avatarLocal
+    ? `${env.AVATAR_BASE_URL}/${avatarLocal}`
+    : (author.avatar_url ?? author.avatarUrl)
   const bio = author.bio?.trim()
 
   return (

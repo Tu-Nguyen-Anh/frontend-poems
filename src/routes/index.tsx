@@ -10,6 +10,8 @@ import { PATHS } from './paths'
 const HomePage = lazy(() => import('@/features/home/pages/HomePage'))
 const PoemsPage = lazy(() => import('@/features/poems/pages/PoemsPage'))
 const PoemDetailPage = lazy(() => import('@/features/poems/pages/PoemDetailPage'))
+const FavoritesPage = lazy(() => import('@/features/poems/pages/FavoritesPage'))
+const MyHighlightsPage = lazy(() => import('@/features/poems/pages/MyHighlightsPage'))
 const AuthorsPage = lazy(() => import('@/features/authors/pages/AuthorsPage'))
 const AuthorDetailPage = lazy(() => import('@/features/authors/pages/AuthorDetailPage'))
 const GenresPage = lazy(() => import('@/features/genres/pages/GenresPage'))
@@ -44,6 +46,22 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <ProfilePage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: PATHS.FAVORITES,
+        element: (
+          <ProtectedRoute>
+            <FavoritesPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: PATHS.HIGHLIGHTS,
+        element: (
+          <ProtectedRoute>
+            <MyHighlightsPage />
           </ProtectedRoute>
         ),
       },

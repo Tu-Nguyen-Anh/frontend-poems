@@ -74,8 +74,10 @@ export interface PoemResponse {
   era?: string
   genreName?: string
   authorName?: string
+  authorId?: number
   // API trả snake_case; giữ cả hai để an toàn
   author_name?: string
+  author_id?: number
   genre_name?: string
   translations?: PoemTranslation[]
 }
@@ -110,6 +112,9 @@ export interface AuthorResponse {
   /** Ảnh chân dung + tiểu sử (crawl thivien). API trả snake_case → đọc cả hai. */
   avatarUrl?: string
   avatar_url?: string
+  /** Key ảnh tự crawl trên RustFS (dạng "<uuid>.<ext>"); link = `${env.AVATAR_BASE_URL}/${avatar_local}`. */
+  avatarLocal?: string
+  avatar_local?: string
   bio?: string
   /** Số bài thơ (API trả snake_case) — chỉ có ở endpoint /authors/top */
   poemCount?: number

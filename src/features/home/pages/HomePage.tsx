@@ -11,6 +11,7 @@ import { SectionHeader } from '../components/SectionHeader'
 import { poemDisplayTitle, poemAuthorName } from '@/features/poems/display'
 import { Seo } from '@/components/common/Seo'
 import { formatNumber } from '@/utils/format'
+import { AuthorAvatar } from '@/features/authors/components/AuthorAvatar'
 
 export default function HomePage() {
   const [latestPoems, setLatestPoems] = useState<PoemResponse[]>([])
@@ -112,9 +113,7 @@ export default function HomePage() {
               to={toAuthorDetail(author.id)}
               className="p-4 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-center hover:border-amber-300 dark:hover:border-amber-700/60 transition-colors"
             >
-              <div className="w-14 h-14 rounded-full bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-200 flex items-center justify-center font-serif font-bold text-xl mx-auto mb-3">
-                {author.name.charAt(0)}
-              </div>
+              <AuthorAvatar author={author} size={56} className="mx-auto mb-3" />
               <h4 className="font-serif font-bold text-sm text-slate-900 dark:text-slate-100 line-clamp-1">
                 {author.name}
               </h4>

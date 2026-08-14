@@ -10,6 +10,8 @@ export const PATHS = {
   LOGIN: '/login',
   REGISTER: '/register',
   PROFILE: '/profile',
+  FAVORITES: '/favorites',
+  HIGHLIGHTS: '/highlights',
   // Admin Dashboard routes
   ADMIN: '/admin',
   ADMIN_POEMS: '/admin/poems',

@@ -186,7 +186,8 @@ export function Header() {
       )}
     </header>
 
-      {/* Overlay chế độ tập trung — giữa sáng, trên/dưới tối. */}
+      {/* Overlay chế độ tập trung — giữa nét, xung quanh mờ dần (desktop);
+          mobile không blur được nên làm tối nhẹ xung quanh (xem CSS). */}
       {focusMode && <div className="reading-focus-overlay" aria-hidden="true" />}
     </>
   )
