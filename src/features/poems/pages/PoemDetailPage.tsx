@@ -177,6 +177,8 @@ export default function PoemDetailPage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
+          // Escape '<' -> '<' để tên bài/tác giả chứa "</script>" không thoát khỏi
+          // thẻ script và chèn mã (stored XSS). JSON.stringify KHÔNG tự escape việc này.
           __html: JSON.stringify({
             '@context': 'https://schema.org',
             '@type': 'Poem',
@@ -185,7 +187,7 @@ export default function PoemDetailPage() {
             genre: poemGenreName(poem),
             inLanguage: poem.language || 'vi',
             url: `${window.location.origin}${toPoemSlug(poem)}`,
-          }),
+          }).replace(/</g, '\\u003c'),
         }}
       />
       {/* Top Toolbar */}

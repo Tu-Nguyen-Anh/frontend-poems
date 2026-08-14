@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { PATHS } from '@/routes/paths'
 import { IconSearch } from '@/components/ui/icons'
 import { formatNumber } from '@/utils/format'
+import { useDebounce } from '@/hooks/useDebounce'
 
 interface HeroBannerProps {
   totalPoems?: number | null
@@ -13,6 +14,15 @@ interface HeroBannerProps {
 export function HeroBanner({ totalPoems, totalAuthors, totalGenres }: HeroBannerProps) {
   const [search, setSearch] = useState('')
   const navigate = useNavigate()
+  const debounced = useDebounce(search, 500)
+
+  // Tự chuyển sang trang kết quả khi ngừng gõ (auto-search), không cần bấm Enter.
+  useEffect(() => {
+    const kw = debounced.trim()
+    if (kw.length >= 2) {
+      navigate(`${PATHS.POEMS}?keyword=${encodeURIComponent(kw)}`)
+    }
+  }, [debounced, navigate])
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
