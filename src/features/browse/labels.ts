@@ -4,7 +4,7 @@
  */
 const LANGUAGE_LABELS: Record<string, string> = {
   Việt: 'Thơ Việt Nam',
-  Hán: 'Thơ Trung Quốc',
+  Hán: 'Thơ chữ Hán',
 }
 
 export function languageLabel(value?: string): string {

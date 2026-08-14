@@ -87,6 +87,7 @@ export default function AuthorDetailPage() {
     ? `${env.AVATAR_BASE_URL}/${avatarLocal}`
     : (author.avatar_url ?? author.avatarUrl)
   const bio = author.bio?.trim()
+  const country = author.country
 
   return (
     <div className="max-w-4xl mx-auto py-6 space-y-8">
@@ -123,6 +124,7 @@ export default function AuthorDetailPage() {
           </h1>
           <div className="flex flex-wrap gap-4 text-xs font-semibold text-amber-800 dark:text-amber-300">
             {author.birthYear && <span>Năm sinh: {author.birthYear}</span>}
+            {country && <span>Quốc gia: {country}</span>}
             {author.hometown && <span>Quê quán: {author.hometown}</span>}
           </div>
           {bio ? (

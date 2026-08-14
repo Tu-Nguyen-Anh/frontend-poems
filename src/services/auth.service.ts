@@ -1,5 +1,5 @@
 import { oplearnClient } from './oplearnClient'
-import type { ResponseGeneral, TokenResponse, LoginRequest, RegisterRequest, UserResponse } from '@/types'
+import type { TokenResponse, LoginRequest, RegisterRequest } from '@/types'
 import { tokenStorage } from './tokenStorage'
 
 export const authService = {

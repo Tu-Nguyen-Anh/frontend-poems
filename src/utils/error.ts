@@ -1,5 +1,4 @@
 import { isAxiosError } from 'axios'
-import type { ResponseGeneral } from '@/types'
 
 /** Lấy thông điệp lỗi chính xác từ backend (ResponseGeneral / Axios Error / Error object) */
 export function getErrorMessage(error: unknown): string {

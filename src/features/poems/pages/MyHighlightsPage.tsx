@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { highlightService, type HighlightWithPoem } from '@/services/highlight.service'
 import { Skeleton } from '@/components/ui/Skeleton'
-import { PATHS, toPoemSlug } from '@/routes/paths'
+import { toPoemSlug } from '@/routes/paths'
 import { Seo } from '@/components/common/Seo'
 import { useToast } from '@/contexts/ToastContext'
 
