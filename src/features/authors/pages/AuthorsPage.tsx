@@ -8,6 +8,7 @@ import { Skeleton } from '@/components/ui/Skeleton'
 import { IconSearch } from '@/components/ui/icons'
 import { Seo } from '@/components/common/Seo'
 import { Pagination } from '@/components/ui/Pagination'
+import { AuthorAvatar } from '@/features/authors/components/AuthorAvatar'
 
 export default function AuthorsPage() {
   const [authors, setAuthors] = useState<AuthorResponse[]>([])
@@ -92,9 +93,7 @@ export default function AuthorsPage() {
               className="p-6 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-amber-300 dark:hover:border-amber-700/60 transition-colors"
             >
               <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-200 flex items-center justify-center font-serif font-bold text-2xl">
-                  {author.name.charAt(0)}
-                </div>
+                <AuthorAvatar author={author} size={64} />
                 <div>
                   <h3 className="text-lg font-serif font-bold text-slate-900 dark:text-amber-100">
                     {author.name}

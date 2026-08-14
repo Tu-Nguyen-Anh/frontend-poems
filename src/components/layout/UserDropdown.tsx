@@ -62,6 +62,22 @@ export function UserDropdown() {
             Thông tin cá nhân
           </Link>
 
+          <Link
+            to={PATHS.FAVORITES}
+            onClick={() => setIsOpen(false)}
+            className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-amber-50 dark:hover:bg-slate-700/50 transition-colors"
+          >
+            <span aria-hidden="true" className="text-rose-500">♥</span> Bài thơ yêu thích
+          </Link>
+
+          <Link
+            to={PATHS.HIGHLIGHTS}
+            onClick={() => setIsOpen(false)}
+            className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-amber-50 dark:hover:bg-slate-700/50 transition-colors"
+          >
+            <span aria-hidden="true" className="text-amber-500">✎</span> Ghi chú của tôi
+          </Link>
+
           {isAdmin && (
             <Link
               to={PATHS.ADMIN}
