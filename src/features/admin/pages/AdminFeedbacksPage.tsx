@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom'
 import { toPoemDetail } from '@/routes/paths'
 import { getErrorMessage } from '@/utils/error'
 import { useToast } from '@/contexts/ToastContext'
+import { RichContent } from '@/components/common/RichContent'
 
 export default function AdminFeedbacksPage() {
   const { toast } = useToast()
@@ -141,7 +142,9 @@ export default function AdminFeedbacksPage() {
                         Bài thơ #{f.poemId}
                       </Link>
                     </td>
-                    <td className="px-6 py-4 text-slate-200">{f.content}</td>
+                    <td className="px-6 py-4 text-slate-200 min-w-[280px]">
+                      <RichContent content={f.content} />
+                    </td>
                     <td className="px-6 py-4">
                       <span
                         className={`px-2.5 py-1 rounded-full text-xs font-bold ${

@@ -1,21 +1,40 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import { commentService } from '@/services/comment.service'
 import { feedbackService } from '@/services/feedback.service'
 import { userService } from '@/services/user.service'
+import { fileService } from '@/services/file.service'
+import { useToast } from '@/contexts/ToastContext'
+import { getErrorMessage } from '@/utils/error'
 import type { CommentResponse, FeedbackResponse, UserResponse } from '@/types'
 import { PATHS, toPoemDetail } from '@/routes/paths'
 import { Seo } from '@/components/common/Seo'
+import { RichContent } from '@/components/common/RichContent'
 
 export default function ProfilePage() {
   const { user, isAdmin, logout } = useAuth()
+  const { toast } = useToast()
   const navigate = useNavigate()
 
   const [userInfo, setUserInfo] = useState<UserResponse | null>(null)
   const [userComments, setUserComments] = useState<CommentResponse[]>([])
   const [userFeedbacks, setUserFeedbacks] = useState<FeedbackResponse[]>([])
   const [loading, setLoading] = useState(true)
+  const [avatarUrl, setAvatarUrl] = useState<string>('')
+  const [uploadingAvatar, setUploadingAvatar] = useState(false)
+  const avatarInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (user?.id) {
+      const saved = localStorage.getItem(`user_avatar_${user.id}`)
+      if (saved) {
+        setAvatarUrl(saved)
+      } else if ((user as any).avatarUrl || (user as any).avatar_url) {
+        setAvatarUrl((user as any).avatarUrl || (user as any).avatar_url)
+      }
+    }
+  }, [user])
 
   useEffect(() => {
     async function fetchUserData() {
@@ -85,15 +104,77 @@ export default function ProfilePage() {
   const email = userInfo?.email || user?.email
   const phoneNumber = getPhone(userInfo) || getPhone(user)
 
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !user?.id) return
+
+    if (!file.type.startsWith('image/')) {
+      toast('Vui lòng chọn file hình ảnh hợp lệ.')
+      return
+    }
+
+    setUploadingAvatar(true)
+    try {
+      const res = await fileService.uploadFile(file)
+      setAvatarUrl(res.url)
+      localStorage.setItem(`user_avatar_${user.id}`, res.url)
+      window.dispatchEvent(new Event('avatar-changed'))
+      toast('Đổi ảnh đại diện thành công!')
+    } catch (err) {
+      toast(`Lỗi khi tải ảnh đại diện: ${getErrorMessage(err)}`)
+    } finally {
+      setUploadingAvatar(false)
+      if (avatarInputRef.current) avatarInputRef.current.value = ''
+    }
+  }
+
   return (
     <div className="max-w-4xl mx-auto py-6 space-y-8">
       <Seo title="Trang cá nhân" noindex />
       {/* Profile Card */}
       <div className="p-8 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div className="flex items-center gap-5">
-          <div className="w-20 h-20 rounded-full bg-amber-700 text-white flex items-center justify-center font-bold text-3xl flex-shrink-0">
-            {user?.username.charAt(0).toUpperCase()}
+          <div className="relative group flex-shrink-0">
+            <input
+              type="file"
+              ref={avatarInputRef}
+              onChange={handleAvatarUpload}
+              accept="image/*"
+              className="hidden"
+            />
+            {avatarUrl ? (
+              <img
+                src={avatarUrl}
+                alt={user?.username}
+                className="w-20 h-20 rounded-full object-cover border-2 border-amber-500 shadow-md"
+              />
+            ) : (
+              <div className="w-20 h-20 rounded-full bg-amber-700 text-white flex items-center justify-center font-bold text-3xl">
+                {user?.username.charAt(0).toUpperCase()}
+              </div>
+            )}
+
+            <button
+              type="button"
+              onClick={() => avatarInputRef.current?.click()}
+              disabled={uploadingAvatar}
+              className="absolute inset-0 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white text-[10px] font-medium"
+              title="Đổi ảnh đại diện"
+            >
+              {uploadingAvatar ? (
+                <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <>
+                  <svg className="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  Đổi ảnh
+                </>
+              )}
+            </button>
           </div>
+
           <div className="space-y-1">
             <h1 className="text-2xl font-serif font-bold text-slate-900 dark:text-amber-100">
               {user?.username}
@@ -161,7 +242,7 @@ export default function ProfilePage() {
                     <span>{new Date(c.createdAt ?? c.created_at ?? '').toLocaleDateString('vi-VN')}</span>
                   )}
                 </div>
-                <p className="text-slate-800 dark:text-slate-200 text-sm font-serif">{c.content}</p>
+                <RichContent content={c.content} className="font-serif text-sm pt-1" />
               </div>
             ))}
           </div>
@@ -199,7 +280,7 @@ export default function ProfilePage() {
                     {f.status}
                   </span>
                 </div>
-                <p className="text-slate-700 dark:text-slate-300 text-sm">{f.content}</p>
+                <RichContent content={f.content} className="text-sm pt-1" />
               </div>
             ))}
           </div>

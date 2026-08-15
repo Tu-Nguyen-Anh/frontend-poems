@@ -12,6 +12,25 @@ export interface PageResponse<T> {
   amount: number
 }
 
+export interface CursorPageResponse<T> {
+  content: T[]
+  next_cursor?: number | null
+  nextCursor?: number | null
+  has_next?: boolean
+  hasNext?: boolean
+  total_elements?: number | null
+  totalElements?: number | null
+}
+
+export interface FileUploadResponse {
+  url: string
+  file_name: string
+  fileName?: string
+  size: number
+  content_type: string
+  contentType?: string
+}
+
 // --- Auth & User ---
 
 export enum UserRole {

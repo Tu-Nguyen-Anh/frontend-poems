@@ -6,8 +6,22 @@ import { PATHS } from '@/routes/paths'
 export function UserDropdown() {
   const { user, isAdmin, logout } = useAuth()
   const [isOpen, setIsOpen] = useState(false)
+  const [avatarUrl, setAvatarUrl] = useState<string>('')
   const dropdownRef = useRef<HTMLDivElement>(null)
   const navigate = useNavigate()
+
+  useEffect(() => {
+    const updateAvatar = () => {
+      if (user?.id) {
+        const saved = localStorage.getItem(`user_avatar_${user.id}`)
+        setAvatarUrl(saved || (user as any).avatarUrl || (user as any).avatar_url || '')
+      }
+    }
+    updateAvatar()
+
+    window.addEventListener('avatar-changed', updateAvatar)
+    return () => window.removeEventListener('avatar-changed', updateAvatar)
+  }, [user?.id, user])
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -31,9 +45,17 @@ export function UserDropdown() {
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-2 p-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors border border-amber-500/20"
       >
-        <div className="w-8 h-8 rounded-full bg-amber-600 text-white flex items-center justify-center font-bold text-sm">
-          {user?.username.charAt(0).toUpperCase()}
-        </div>
+        {avatarUrl ? (
+          <img
+            src={avatarUrl}
+            alt={user?.username}
+            className="w-8 h-8 rounded-full object-cover border border-amber-500"
+          />
+        ) : (
+          <div className="w-8 h-8 rounded-full bg-amber-600 text-white flex items-center justify-center font-bold text-sm">
+            {user?.username.charAt(0).toUpperCase()}
+          </div>
+        )}
         <span className="hidden sm:inline text-sm font-medium text-slate-700 dark:text-slate-200">
           {user?.username}
         </span>

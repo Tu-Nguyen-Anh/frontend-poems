@@ -37,6 +37,10 @@ export default function PoemDetailPage() {
 
   const [poem, setPoem] = useState<PoemResponse | null>(null)
   const [comments, setComments] = useState<CommentResponse[]>([])
+  const [nextCursor, setNextCursor] = useState<number | null>(null)
+  const [hasNext, setHasNext] = useState(false)
+  const [totalComments, setTotalComments] = useState<number | null>(null)
+  const [loadingMore, setLoadingMore] = useState(false)
   const [repliesMap, setRepliesMap] = useState<Record<number, ReplyResponse[]>>({})
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'content' | 'transliteration' | 'meaning'>('content')
@@ -61,11 +65,15 @@ export default function PoemDetailPage() {
       try {
         const [poemData, commentData] = await Promise.all([
           poemService.getPoemById(poemId),
-          commentService.getCommentsByPoem(poemId, { page: 0, size: 50 }),
+          commentService.getCommentsByPoem(poemId, { size: 10 }),
         ])
         setPoem(poemData)
         const commentList = commentData.content || []
         setComments(commentList)
+        setNextCursor(commentData.next_cursor ?? commentData.nextCursor ?? null)
+        setHasNext(Boolean(commentData.has_next ?? commentData.hasNext))
+        const total = commentData.total_elements ?? commentData.totalElements
+        setTotalComments(total !== null && total !== undefined ? total : commentList.length)
 
         if (commentList.length > 0) {
           const map: Record<number, ReplyResponse[]> = {}
@@ -98,11 +106,45 @@ export default function PoemDetailPage() {
     }
   }, [poem, location.pathname, navigate])
 
+  const handleLoadMoreComments = async () => {
+    if (!poemId || nextCursor === null || loadingMore) return
+    setLoadingMore(true)
+    try {
+      const res = await commentService.getCommentsByPoem(poemId, {
+        cursor: nextCursor,
+        size: 10,
+      })
+      const newComments = res.content || []
+      setComments((prev) => [...prev, ...newComments])
+      setNextCursor(res.next_cursor ?? res.nextCursor ?? null)
+      setHasNext(Boolean(res.has_next ?? res.hasNext))
+
+      if (newComments.length > 0) {
+        const map: Record<number, ReplyResponse[]> = {}
+        const replyPromises = newComments.map(async (c) => {
+          try {
+            const reps = await replyService.getRepliesByComment(c.id)
+            map[c.id] = reps || []
+          } catch {
+            map[c.id] = []
+          }
+        })
+        await Promise.all(replyPromises)
+        setRepliesMap((prev) => ({ ...prev, ...map }))
+      }
+    } catch (err) {
+      toast(`Không thể tải thêm bình luận: ${getErrorMessage(err)}`)
+    } finally {
+      setLoadingMore(false)
+    }
+  }
+
   const handleCreateComment = async (content: string) => {
     if (!poemId) return
     try {
       const newComment = await commentService.createComment({ poemId, content })
       setComments((prev) => [newComment, ...prev])
+      setTotalComments((prev) => (prev !== null ? prev + 1 : 1))
     } catch (err) {
       toast(getErrorMessage(err))
     }
@@ -112,6 +154,7 @@ export default function PoemDetailPage() {
     try {
       await commentService.deleteComment(commentId)
       setComments((prev) => prev.filter((c) => c.id !== commentId))
+      setTotalComments((prev) => (prev !== null ? Math.max(0, prev - 1) : 0))
     } catch (err) {
       toast(getErrorMessage(err))
     }
@@ -389,7 +432,7 @@ export default function PoemDetailPage() {
       {/* Comments Section */}
       <section className="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-xl border border-slate-200 dark:border-slate-700 space-y-6">
         <h3 className="text-xl font-serif font-bold text-slate-900 dark:text-amber-100">
-          Bình luận ({comments.length})
+          Bình luận ({totalComments !== null ? totalComments : comments.length})
         </h3>
 
         <CommentForm onSubmit={handleCreateComment} />
@@ -400,16 +443,37 @@ export default function PoemDetailPage() {
               Chưa có bình luận nào. Hãy là người đầu tiên để lại cảm nhận!
             </p>
           ) : (
-            comments.map((comment) => (
-              <CommentItem
-                key={comment.id}
-                comment={comment}
-                replies={repliesMap[comment.id] || []}
-                onDelete={handleDeleteComment}
-                onUpdate={handleUpdateComment}
-                onAddReply={handleAddReply}
-              />
-            ))
+            <>
+              {comments.map((comment) => (
+                <CommentItem
+                  key={comment.id}
+                  comment={comment}
+                  replies={repliesMap[comment.id] || []}
+                  onDelete={handleDeleteComment}
+                  onUpdate={handleUpdateComment}
+                  onAddReply={handleAddReply}
+                />
+              ))}
+
+              {hasNext && (
+                <div className="text-center pt-2">
+                  <button
+                    onClick={handleLoadMoreComments}
+                    disabled={loadingMore}
+                    className="px-5 py-2 text-xs font-semibold rounded-lg bg-amber-50 hover:bg-amber-100 dark:bg-slate-700/60 dark:hover:bg-slate-700 text-amber-800 dark:text-amber-300 transition-colors disabled:opacity-50 inline-flex items-center gap-2"
+                  >
+                    {loadingMore ? (
+                      <>
+                        <span className="w-3.5 h-3.5 border-2 border-amber-600 border-t-transparent rounded-full animate-spin inline-block" />
+                        Đang tải bình luận...
+                      </>
+                    ) : (
+                      'Xem thêm bình luận'
+                    )}
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
       </section>

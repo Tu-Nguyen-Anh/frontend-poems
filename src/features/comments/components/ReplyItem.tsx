@@ -1,18 +1,6 @@
 import type { ReplyResponse } from '@/types'
 import { formatRelativeTime } from '@/utils/format'
-
-/** Tô màu @mention trong nội dung trả lời. */
-function renderWithMentions(text: string) {
-  return text.split(/(@[\w.-]+)/g).map((part, i) =>
-    part.startsWith('@') ? (
-      <span key={i} className="font-semibold text-amber-700 dark:text-amber-400">
-        {part}
-      </span>
-    ) : (
-      part
-    ),
-  )
-}
+import { RichContent } from '@/components/common/RichContent'
 
 interface ReplyItemProps {
   reply: ReplyResponse
@@ -45,9 +33,7 @@ export function ReplyItem({ reply, parentUsername, onReply }: ReplyItemProps) {
             Trả lời <span className="font-semibold text-amber-700 dark:text-amber-400">@{parentUsername}</span>
           </p>
         )}
-        <p className="mt-1 text-sm text-slate-700 dark:text-slate-300 whitespace-pre-line leading-relaxed">
-          {renderWithMentions(reply.content)}
-        </p>
+        <RichContent content={reply.content} className="mt-1" />
         {onReply && (
           <div className="mt-2 pt-2 border-t border-dashed border-slate-200 dark:border-slate-700">
             <button
@@ -63,3 +49,4 @@ export function ReplyItem({ reply, parentUsername, onReply }: ReplyItemProps) {
     </div>
   )
 }
+

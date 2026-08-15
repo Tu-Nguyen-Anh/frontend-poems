@@ -5,6 +5,7 @@ import { useGuestCTAModal } from '@/contexts/GuestCTAModalContext'
 import { ReplyItem } from './ReplyItem'
 import { ReplyForm } from './ReplyForm'
 import { formatRelativeTime } from '@/utils/format'
+import { RichContent } from '@/components/common/RichContent'
 
 interface CommentItemProps {
   comment: CommentResponse
@@ -128,9 +129,7 @@ export function CommentItem({
               </button>
             </div>
           ) : (
-            <p className="mt-1 text-sm text-slate-700 dark:text-slate-300 whitespace-pre-line leading-relaxed">
-              {comment.content}
-            </p>
+            <RichContent content={comment.content} className="mt-1" />
           )}
 
           {/* Action bar — footer với đường kẻ đứt như diễn đàn */}
