@@ -1,15 +1,17 @@
 import { lazy } from 'react'
-import { createBrowserRouter, RouterProvider } from 'react-router-dom'
+import { createBrowserRouter, RouterProvider, useParams } from 'react-router-dom'
 import { ProtectedRoute } from '@/components/common/ProtectedRoute'
 import { AdminRoute } from '@/components/common/AdminRoute'
 import { MainLayout } from '@/components/layout/MainLayout'
 import { AdminLayout } from '@/components/layout/AdminLayout'
-import { PATHS } from './paths'
+import { PATHS, storyIdFromSlug } from './paths'
 
 // Lazy load Client pages
 const HomePage = lazy(() => import('@/features/home/pages/HomePage'))
 const PoemsPage = lazy(() => import('@/features/poems/pages/PoemsPage'))
 const PoemDetailPage = lazy(() => import('@/features/poems/pages/PoemDetailPage'))
+const StoriesPage = lazy(() => import('@/features/stories/pages/StoriesPage'))
+const StoryDetailPage = lazy(() => import('@/features/stories/pages/StoryDetailPage'))
 const FavoritesPage = lazy(() => import('@/features/poems/pages/FavoritesPage'))
 const MyHighlightsPage = lazy(() => import('@/features/poems/pages/MyHighlightsPage'))
 const AuthorsPage = lazy(() => import('@/features/authors/pages/AuthorsPage'))
@@ -28,6 +30,12 @@ const AdminGenresPage = lazy(() => import('@/features/admin/pages/AdminGenresPag
 const AdminFeedbacksPage = lazy(() => import('@/features/admin/pages/AdminFeedbacksPage'))
 const AdminUsersPage = lazy(() => import('@/features/admin/pages/AdminUsersPage'))
 
+/** Route gốc /:slug — slug bài văn (mã >= OFFSET) → StoryDetailPage; còn lại → PoemDetailPage. */
+function RootSlugResolver() {
+  const { slug } = useParams()
+  return storyIdFromSlug(slug || '') != null ? <StoryDetailPage /> : <PoemDetailPage />
+}
+
 const router = createBrowserRouter([
   {
     element: <MainLayout />,
@@ -35,6 +43,8 @@ const router = createBrowserRouter([
       { path: PATHS.HOME, element: <HomePage /> },
       { path: PATHS.POEMS, element: <PoemsPage /> },
       { path: PATHS.POEM_DETAIL, element: <PoemDetailPage /> },
+      { path: PATHS.STORIES, element: <StoriesPage /> },
+      { path: PATHS.STORY_DETAIL, element: <StoryDetailPage /> },
       { path: PATHS.AUTHORS, element: <AuthorsPage /> },
       { path: PATHS.AUTHOR_DETAIL, element: <AuthorDetailPage /> },
       { path: PATHS.GENRES, element: <GenresPage /> },
@@ -67,7 +77,7 @@ const router = createBrowserRouter([
       },
       // Slug đẹp ở gốc: /qua-deo-ngang-ba-huyen-thanh-quan-<mã> → chi tiết bài thơ.
       // Đặt cuối để các route tĩnh (poems, authors…) ưu tiên khớp trước.
-      { path: PATHS.POEM_SLUG, element: <PoemDetailPage /> },
+      { path: PATHS.POEM_SLUG, element: <RootSlugResolver /> },
       { path: '*', element: <NotFoundPage /> },
     ],
   },

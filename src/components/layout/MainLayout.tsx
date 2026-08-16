@@ -3,6 +3,7 @@ import { Outlet, useLocation } from 'react-router-dom'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { Header } from './Header'
 import { Footer } from './Footer'
+import { BackToTop } from './BackToTop'
 import { useReaderMode } from '@/contexts/ReaderModeContext'
 import { GuestCTAModal } from '@/components/common/GuestCTAModal'
 
@@ -36,6 +37,7 @@ export function MainLayout() {
         </Suspense>
       </main>
       <Footer />
+      <BackToTop />
       <GuestCTAModal />
     </div>
   )

@@ -10,6 +10,7 @@ import { ReaderModeToggle } from './ReaderModeToggle'
 const NAV_LINKS = [
   { to: PATHS.HOME, label: 'Trang chủ', end: true },
   { to: PATHS.POEMS, label: 'Kho thơ', end: false },
+  { to: PATHS.STORIES, label: 'Truyện ngắn', end: false },
   { to: PATHS.AUTHORS, label: 'Tác giả', end: false },
   { to: PATHS.GENRES, label: 'Thể loại', end: false },
 ]

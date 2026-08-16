@@ -151,9 +151,12 @@ export interface AuthorResponse {
   country?: string
   countryId?: number
   country_id?: number
-  /** Số bài thơ (API trả snake_case) — chỉ có ở endpoint /authors/top */
+  /** Số bài thơ (API trả snake_case) */
   poemCount?: number
   poem_count?: number
+  /** Số tác phẩm văn xuôi (API trả snake_case) */
+  storyCount?: number
+  story_count?: number
 }
 
 export interface AuthorRequest {
@@ -258,4 +261,44 @@ export interface RandomPoemsParams {
 
 // --- Reader Mode ---
 export type ReaderStyleMode = 'modern-light' | 'modern-dark' | 'classic-sepia'
+
+// --- Văn xuôi / Truyện ngắn (API trả snake_case) ---
+export interface StoryChapterMeta {
+  seq: number
+  title?: string
+  word_count?: number
+  char_count?: number
+}
+
+export interface StoryResponse {
+  id: number
+  title: string
+  author?: string
+  author_url?: string
+  author_id?: number
+  year?: number
+  genre?: string
+  category?: string
+  collection?: string
+  source?: string
+  type?: string
+  chapter_count?: number
+  char_count?: number
+  word_count?: number
+  chapters?: StoryChapterMeta[]
+}
+
+export interface StoryChapterResponse {
+  story_id: number
+  seq: number
+  title?: string
+  word_count?: number
+  char_count?: number
+  content: string
+}
+
+export interface StoryCollection {
+  collection: string
+  count: number
+}
 

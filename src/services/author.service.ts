@@ -2,10 +2,11 @@ import { oplearnClient } from './oplearnClient'
 import type { ResponseGeneral, PageResponse, AuthorResponse, AuthorRequest, PoemResponse } from '@/types'
 
 export const authorService = {
-  async getAuthors(params?: { keyword?: string; page?: number; size?: number; isAll?: boolean }): Promise<PageResponse<AuthorResponse>> {
+  async getAuthors(params?: { keyword?: string; type?: 'poem' | 'story'; page?: number; size?: number; isAll?: boolean }): Promise<PageResponse<AuthorResponse>> {
     const res = await oplearnClient.get<ResponseGeneral<PageResponse<AuthorResponse>>>('/authors', {
       params: {
         keyword: params?.keyword,
+        type: params?.type,
         page: params?.page ?? 0,
         size: params?.size ?? 10,
         // backend nhận param tên "all" (PARAM_ALL), không phải "isAll"

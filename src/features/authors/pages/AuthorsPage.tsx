@@ -18,6 +18,7 @@ export default function AuthorsPage() {
   const debouncedKeyword = useDebounce(keyword, 300)
   const [page, setPage] = useState(0)
   const [size, setSize] = useState(24)
+  const [type, setType] = useState<'' | 'poem' | 'story'>('')
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -26,6 +27,7 @@ export default function AuthorsPage() {
       try {
         const res = await authorService.getAuthors({
           keyword: debouncedKeyword || undefined,
+          type: type || undefined,
           page,
           size,
         })
@@ -38,7 +40,7 @@ export default function AuthorsPage() {
       }
     }
     fetchAuthors()
-  }, [debouncedKeyword, page, size])
+  }, [debouncedKeyword, type, page, size])
 
   const totalPages = Math.ceil(totalAmount / size) || 1
 
@@ -79,7 +81,24 @@ export default function AuthorsPage() {
             className="w-full pl-9 pr-4 py-2.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/30"
           />
         </div>
-        <PageSizeSelect value={size} onChange={(s) => { setSize(s); setPage(0) }} unit="tác giả" options={[24, 48, 96]} />
+        <div className="flex items-center gap-2">
+          <div className="flex gap-1 bg-slate-100 dark:bg-slate-900 p-1 rounded-lg">
+            {([['', 'Tất cả'], ['poem', 'Có thơ'], ['story', 'Có văn']] as const).map(([val, label]) => (
+              <button
+                key={val}
+                onClick={() => { setType(val); setPage(0) }}
+                className={`px-3 py-1.5 text-sm font-semibold rounded-md transition-colors ${
+                  type === val
+                    ? 'bg-amber-100 text-amber-900 dark:bg-amber-950/60 dark:text-amber-200'
+                    : 'text-slate-600 hover:text-amber-700 dark:text-slate-300 dark:hover:text-amber-300'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          <PageSizeSelect value={size} onChange={(s) => { setSize(s); setPage(0) }} unit="tác giả" options={[24, 48, 96]} />
+        </div>
       </div>
 
       {loading ? (
@@ -110,6 +129,18 @@ export default function AuthorsPage() {
                   {author.hometown && (
                     <p className="text-xs text-slate-400 mt-1">Quê quán: {author.hometown}</p>
                   )}
+                  <div className="flex flex-wrap gap-1.5 mt-2">
+                    {(author.poem_count ?? author.poemCount ?? 0) > 0 && (
+                      <span className="text-[11px] px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 font-semibold">
+                        {(author.poem_count ?? author.poemCount)!.toLocaleString('vi-VN')} thơ
+                      </span>
+                    )}
+                    {(author.story_count ?? author.storyCount ?? 0) > 0 && (
+                      <span className="text-[11px] px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-semibold">
+                        {(author.story_count ?? author.storyCount)!.toLocaleString('vi-VN')} văn
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
               {author.achievement && (

@@ -2,6 +2,8 @@ export const PATHS = {
   HOME: '/',
   POEMS: '/poems',
   POEM_DETAIL: '/poems/:id',
+  STORIES: '/stories',
+  STORY_DETAIL: '/stories/:id',
   POEM_SLUG: '/:slug',
   AUTHORS: '/authors',
   AUTHOR_DETAIL: '/authors/:id',
@@ -60,7 +62,38 @@ export function poemIdFromSlug(slug: string): number | null {
   return Number.isFinite(id) && id > 0 ? id : null
 }
 
+/**
+ * Slug bài văn ở gốc: `tieu-de-tac-gia-<mã>` (vd `/tat-den-ngo-tat-to-5yc23`).
+ * Mã = base36 của (id + OFFSET) để: (a) đảm bảo không trùng, (b) phân biệt với slug
+ * thơ khi cùng ở route gốc `/:slug` (thơ decode < OFFSET, văn decode >= OFFSET).
+ * OFFSET đủ lớn so với max id thơ hiện tại (~330k) và văn (~3.4k).
+ */
+export const STORY_SLUG_OFFSET = 10_000_000
+
+interface StoryLike {
+  id: number
+  title?: string
+  author?: string
+}
+
+export function storySlug(s: StoryLike): string {
+  const title = slugify(s.title || '')
+  const author = slugify(s.author || '')
+  const token = (s.id + STORY_SLUG_OFFSET).toString(36)
+  return [title, author, token].filter(Boolean).join('-')
+}
+
+export const toStorySlug = (s: StoryLike) => `/${storySlug(s)}`
+
+/** Lấy id bài văn từ slug (mã ở segment cuối). Trả null nếu không phải slug văn. */
+export function storyIdFromSlug(slug: string): number | null {
+  const token = (slug || '').split('-').pop() || ''
+  const n = parseInt(token, 36)
+  return Number.isFinite(n) && n >= STORY_SLUG_OFFSET ? n - STORY_SLUG_OFFSET : null
+}
+
 /** Link theo id (dùng nơi chỉ có id, hoặc fallback tương thích cũ /poems/:id). */
 export const toPoemDetail = (id: number | string) => `/poems/${id}`
+export const toStoryDetail = (id: number | string) => `/stories/${id}`
 export const toAuthorDetail = (id: number | string) => `/authors/${id}`
 export const toGenreDetail = (id: number | string) => `/genres/${id}`
