@@ -1,6 +1,7 @@
 import type { ReplyResponse } from '@/types'
 import { formatRelativeTime } from '@/utils/format'
 import { RichContent } from '@/components/common/RichContent'
+import { useAuth } from '@/hooks/useAuth'
 
 interface ReplyItemProps {
   reply: ReplyResponse
@@ -11,13 +12,29 @@ interface ReplyItemProps {
 }
 
 export function ReplyItem({ reply, parentUsername, onReply }: ReplyItemProps) {
+  const { user } = useAuth()
   const createdAt = reply.createdAt ?? reply.created_at
+  const isOwner = !!user && (user.id === (reply.userId ?? reply.user_id) || user.username === reply.username)
+  const userAvatar = isOwner
+    ? (user?.id ? localStorage.getItem(`user_avatar_${user.id}`) : null) ||
+      (user?.username ? localStorage.getItem(`user_avatar_${user.username}`) : null) ||
+      localStorage.getItem('user_avatar_current')
+    : null
+
   return (
     <div className="poem-comment">
       <div className="poem-comment-avatar">
-        <div className="w-[30px] h-[30px] rounded-full bg-amber-600 text-white flex items-center justify-center font-bold text-[11px]">
-          {reply.username.charAt(0).toUpperCase()}
-        </div>
+        {userAvatar ? (
+          <img
+            src={userAvatar}
+            alt={reply.username}
+            className="w-[30px] h-[30px] rounded-full object-cover border border-amber-500 shadow-sm"
+          />
+        ) : (
+          <div className="w-[30px] h-[30px] rounded-full bg-amber-600 text-white flex items-center justify-center font-bold text-[11px]">
+            {reply.username.charAt(0).toUpperCase()}
+          </div>
+        )}
       </div>
       <div className="flex-1 min-w-0 px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
         <div className="flex items-baseline flex-wrap gap-x-2">

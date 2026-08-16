@@ -31,13 +31,23 @@ export const feedbackService = {
   },
 
   async getFeedbacksByUser(userId: number, params?: { page?: number; size?: number }): Promise<PageResponse<FeedbackResponse>> {
-    const res = await oplearnClient.get<ResponseGeneral<PageResponse<FeedbackResponse>>>(`/feedbacks/user/${userId}`, {
+    const res = await oplearnClient.get<any>(`/feedbacks/user/${userId}`, {
       params: {
         page: params?.page ?? 0,
         size: params?.size ?? 10,
       },
     })
-    return res.data.data
+    const data = res.data?.data || res.data
+    if (data && Array.isArray(data.content)) {
+      return {
+        content: data.content,
+        amount: data.amount ?? data.totalElements ?? data.total_elements ?? data.content.length,
+      }
+    }
+    if (Array.isArray(data)) {
+      return { content: data, amount: data.length }
+    }
+    return { content: [], amount: 0 }
   },
 
   async getFeedbackById(id: number): Promise<FeedbackResponse> {

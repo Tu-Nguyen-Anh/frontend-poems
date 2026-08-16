@@ -225,5 +225,19 @@ export interface FeedbackRequest {
   content: string
 }
 
+// --- User Preferences & Recommendation ---
+export interface UserPreferences {
+  authorIds: number[]
+  genreIds: number[]
+  eras: string[]
+}
+
+export interface RandomPoemsParams {
+  authorIds?: number[]
+  genreIds?: number[]
+  eras?: string[]
+}
+
 // --- Reader Mode ---
 export type ReaderStyleMode = 'modern-light' | 'modern-dark' | 'classic-sepia'
+

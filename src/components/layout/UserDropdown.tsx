@@ -12,16 +12,26 @@ export function UserDropdown() {
 
   useEffect(() => {
     const updateAvatar = () => {
-      if (user?.id) {
-        const saved = localStorage.getItem(`user_avatar_${user.id}`)
-        setAvatarUrl(saved || (user as any).avatarUrl || (user as any).avatar_url || '')
+      const candidates = [
+        user?.id ? `user_avatar_${user.id}` : null,
+        user?.username ? `user_avatar_${user.username}` : null,
+        'user_avatar_current',
+      ].filter(Boolean) as string[]
+
+      for (const key of candidates) {
+        const val = localStorage.getItem(key)
+        if (val) {
+          setAvatarUrl(val)
+          return
+        }
       }
+      setAvatarUrl((user as any)?.avatarUrl || (user as any)?.avatar_url || '')
     }
     updateAvatar()
 
     window.addEventListener('avatar-changed', updateAvatar)
     return () => window.removeEventListener('avatar-changed', updateAvatar)
-  }, [user?.id, user])
+  }, [user?.id, user?.username, user])
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -81,7 +91,15 @@ export function UserDropdown() {
             onClick={() => setIsOpen(false)}
             className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-amber-50 dark:hover:bg-slate-700/50 transition-colors"
           >
-            Thông tin cá nhân
+            <span>👤</span> Thông tin cá nhân
+          </Link>
+
+          <Link
+            to={`${PATHS.PROFILE}#preferences`}
+            onClick={() => setIsOpen(false)}
+            className="flex items-center gap-2 px-4 py-2 text-sm text-amber-800 dark:text-amber-300 font-medium hover:bg-amber-50 dark:hover:bg-slate-700/50 transition-colors"
+          >
+            <span>✨</span> Sở thích & Gợi ý thơ
           </Link>
 
           <Link

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { poemService } from '@/services/poem.service'
 import { authorService } from '@/services/author.service'
@@ -12,8 +12,12 @@ import { poemDisplayTitle, poemAuthorName } from '@/features/poems/display'
 import { Seo } from '@/components/common/Seo'
 import { formatNumber } from '@/utils/format'
 import { AuthorAvatar } from '@/features/authors/components/AuthorAvatar'
+import { useAuth } from '@/hooks/useAuth'
+import { getUserPreferences, hasUserPreferences } from '@/utils/preferences'
 
 export default function HomePage() {
+  const { user, isAuthenticated } = useAuth()
+
   const [latestPoems, setLatestPoems] = useState<PoemResponse[]>([])
   const [randomPoems, setRandomPoems] = useState<PoemResponse[]>([])
   const [authors, setAuthors] = useState<AuthorResponse[]>([])
@@ -22,14 +26,38 @@ export default function HomePage() {
   const [totalAuthors, setTotalAuthors] = useState<number | null>(null)
   const [totalGenres, setTotalGenres] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
+  const [loadingRandom, setLoadingRandom] = useState(false)
+
+  const isPersonalized = isAuthenticated && user?.id && hasUserPreferences(user.id)
+
+  const loadRandomPoems = useCallback(async () => {
+    setLoadingRandom(true)
+    try {
+      if (isAuthenticated && user?.id && hasUserPreferences(user.id)) {
+        const prefs = getUserPreferences(user.id)
+        const poems = await poemService.getRandomPoems({
+          authorIds: prefs.authorIds,
+          genreIds: prefs.genreIds,
+          eras: prefs.eras,
+        })
+        setRandomPoems(poems || [])
+      } else {
+        const poems = await poemService.getRandomPoems()
+        setRandomPoems(poems || [])
+      }
+    } catch (err) {
+      console.error('Lỗi nạp bài thơ ngẫu nhiên', err)
+    } finally {
+      setLoadingRandom(false)
+    }
+  }, [isAuthenticated, user?.id])
 
   useEffect(() => {
     async function loadData() {
       setLoading(true)
       try {
-        const [latestRes, randomRes, authorsRes, genresRes] = await Promise.allSettled([
+        const [latestRes, authorsRes, genresRes] = await Promise.allSettled([
           poemService.getLatestPoems({ page: 0, size: 6 }),
-          poemService.getRandomPoems(),
           authorService.getTopAuthors({ page: 0, size: 6 }),
           genreService.getGenres({ page: 0, size: 8 }),
         ])
@@ -38,7 +66,6 @@ export default function HomePage() {
           setLatestPoems(latestRes.value.content || [])
           setTotalPoems(latestRes.value.amount ?? null)
         }
-        if (randomRes.status === 'fulfilled') setRandomPoems(randomRes.value || [])
         if (authorsRes.status === 'fulfilled') {
           setAuthors(authorsRes.value.content || [])
           setTotalAuthors(authorsRes.value.amount ?? null)
@@ -54,7 +81,8 @@ export default function HomePage() {
       }
     }
     loadData()
-  }, [])
+    loadRandomPoems()
+  }, [loadRandomPoems])
 
   return (
     <div className="space-y-14 py-4">
@@ -70,30 +98,80 @@ export default function HomePage() {
 
       <LatestPoemsSection poems={latestPoems} loading={loading} />
 
-      {randomPoems.length > 0 && (
-        <section className="space-y-6">
-          <SectionHeader title="Gợi ý ngẫu nhiên" description="Vài bài thơ để bắt đầu" />
+      {/* Random / Personalized Recommendations Section */}
+      <section className="space-y-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+          <SectionHeader
+            title={isPersonalized ? 'Gợi ý theo sở thích của bạn ✨' : 'Gợi ý ngẫu nhiên'}
+            description={
+              isPersonalized
+                ? 'Tuyển tập ngẫu nhiên dựa trên tác giả, thể loại và kỷ nguyên bạn yêu thích'
+                : 'Vài bài thơ để bắt đầu thưởng thức thi ca'
+            }
+          />
+
+          <div className="flex items-center gap-2">
+            {isAuthenticated ? (
+              <Link
+                to={PATHS.PROFILE}
+                className="text-xs text-amber-700 dark:text-amber-400 font-semibold hover:underline"
+              >
+                {isPersonalized ? '⚙️ Chỉnh sửa sở thích' : '✨ Cá nhân hóa sở thích'}
+              </Link>
+            ) : null}
+
+            <button
+              type="button"
+              onClick={loadRandomPoems}
+              disabled={loadingRandom}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 dark:bg-slate-800 dark:hover:bg-slate-700 text-amber-800 dark:text-amber-300 text-xs font-semibold border border-amber-200 dark:border-slate-700 transition-colors disabled:opacity-50"
+              title="Đổi gợi ý ngẫu nhiên khác"
+            >
+              <span className={loadingRandom ? 'animate-spin inline-block' : ''}>🎲</span>
+              <span>{loadingRandom ? 'Đang đổi...' : 'Đổi gợi ý'}</span>
+            </button>
+          </div>
+        </div>
+
+        {randomPoems.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {randomPoems.slice(0, 4).map((poem) => (
               <Link
                 key={poem.id}
                 to={toPoemSlug(poem)}
-                className="p-6 rounded-xl bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 hover:border-amber-300 dark:hover:border-amber-700/60 transition-colors"
+                className="group p-6 rounded-xl bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 hover:border-amber-300 dark:hover:border-amber-700/60 transition-colors flex flex-col justify-between"
               >
-                <h4 className="font-serif text-lg font-bold text-slate-900 dark:text-amber-100 mb-1">
-                  {poemDisplayTitle(poem)}
-                </h4>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">
-                  {poemAuthorName(poem)}
-                </p>
-                <p className="text-sm font-serif italic text-slate-600 dark:text-slate-300 line-clamp-2">
-                  {poem.content.split('\n')[0]}
-                </p>
+                <div>
+                  <div className="flex items-center justify-between gap-2 mb-1">
+                    <h4 className="font-serif text-lg font-bold text-slate-900 dark:text-amber-100 group-hover:text-amber-700 dark:group-hover:text-amber-400 transition-colors">
+                      {poemDisplayTitle(poem)}
+                    </h4>
+                    {poem.era && (
+                      <span className="text-[10px] font-medium px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
+                        {poem.era}
+                      </span>
+                    )}
+                  </div>
+
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">
+                    {poemAuthorName(poem)}
+                  </p>
+
+                  <p className="text-sm font-serif italic text-slate-600 dark:text-slate-300 line-clamp-2">
+                    {poem.content.split('\n')[0]}
+                  </p>
+                </div>
+
+                <div className="pt-3 flex justify-end">
+                  <span className="text-xs text-amber-700 dark:text-amber-400 font-medium group-hover:underline">
+                    Đọc toàn bài →
+                  </span>
+                </div>
               </Link>
             ))}
           </div>
-        </section>
-      )}
+        )}
+      </section>
 
       <section className="space-y-6">
         <SectionHeader

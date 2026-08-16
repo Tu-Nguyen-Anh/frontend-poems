@@ -72,17 +72,46 @@ export const commentService = {
     }
   },
 
-  async getCommentsByUser(userId: number, params?: { page?: number; size?: number }): Promise<PageResponse<CommentResponse>> {
+  async getCommentsByUser(
+    userId: number,
+    params?: { cursor?: number | null; size?: number }
+  ): Promise<CursorPageResponse<CommentResponse>> {
+    const queryParams: Record<string, any> = {
+      size: params?.size ?? 10,
+    }
+    if (params?.cursor !== undefined && params?.cursor !== null) {
+      queryParams.cursor = params.cursor
+    }
+
     const res = await oplearnClient.get<any>(`/comments/user/${userId}`, {
-      params: {
-        page: params?.page ?? 0,
-        size: params?.size ?? 50,
-      },
+      params: queryParams,
     })
     const data = res.data?.data || res.data
-    if (data && Array.isArray(data.content)) return data
-    if (Array.isArray(data)) return { content: data, amount: data.length }
-    return { content: [], amount: 0 }
+    if (data && typeof data === 'object') {
+      const content = Array.isArray(data.content) ? data.content : Array.isArray(data) ? data : []
+      const nextCursor = data.next_cursor ?? data.nextCursor ?? null
+      const hasNext = Boolean(data.has_next ?? data.hasNext ?? (nextCursor !== null && nextCursor !== undefined))
+      const totalElements = data.total_elements ?? data.totalElements ?? data.amount ?? null
+
+      return {
+        content,
+        next_cursor: nextCursor,
+        nextCursor,
+        has_next: hasNext,
+        hasNext,
+        total_elements: totalElements,
+        totalElements,
+      }
+    }
+    return {
+      content: [],
+      next_cursor: null,
+      nextCursor: null,
+      has_next: false,
+      hasNext: false,
+      total_elements: 0,
+      totalElements: 0,
+    }
   },
 
   async getCommentById(id: number): Promise<CommentResponse> {

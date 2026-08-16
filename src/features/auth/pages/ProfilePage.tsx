@@ -7,10 +7,12 @@ import { userService } from '@/services/user.service'
 import { fileService } from '@/services/file.service'
 import { useToast } from '@/contexts/ToastContext'
 import { getErrorMessage } from '@/utils/error'
+import { formatDate } from '@/utils/format'
 import type { CommentResponse, FeedbackResponse, UserResponse } from '@/types'
 import { PATHS, toPoemDetail } from '@/routes/paths'
 import { Seo } from '@/components/common/Seo'
 import { RichContent } from '@/components/common/RichContent'
+import { UserPreferencesSection } from '../components/UserPreferencesSection'
 
 export default function ProfilePage() {
   const { user, isAdmin, logout } = useAuth()
@@ -18,45 +20,177 @@ export default function ProfilePage() {
   const navigate = useNavigate()
 
   const [userInfo, setUserInfo] = useState<UserResponse | null>(null)
+
+  // Comments state with pagination
   const [userComments, setUserComments] = useState<CommentResponse[]>([])
+  const [commentsNextCursor, setCommentsNextCursor] = useState<number | null>(null)
+  const [hasMoreComments, setHasMoreComments] = useState(false)
+  const [totalCommentsCount, setTotalCommentsCount] = useState<number | null>(null)
+  const [loadingMoreComments, setLoadingMoreComments] = useState(false)
+
+  // Feedbacks state with pagination
   const [userFeedbacks, setUserFeedbacks] = useState<FeedbackResponse[]>([])
+  const [feedbacksPage, setFeedbacksPage] = useState(0)
+  const [hasMoreFeedbacks, setHasMoreFeedbacks] = useState(false)
+  const [totalFeedbacksCount, setTotalFeedbacksCount] = useState<number | null>(null)
+  const [loadingMoreFeedbacks, setLoadingMoreFeedbacks] = useState(false)
+
   const [loading, setLoading] = useState(true)
   const [avatarUrl, setAvatarUrl] = useState<string>('')
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
   const avatarInputRef = useRef<HTMLInputElement>(null)
 
-  useEffect(() => {
-    if (user?.id) {
-      const saved = localStorage.getItem(`user_avatar_${user.id}`)
-      if (saved) {
-        setAvatarUrl(saved)
-      } else if ((user as any).avatarUrl || (user as any).avatar_url) {
-        setAvatarUrl((user as any).avatarUrl || (user as any).avatar_url)
-      }
+  const userIdentifier = user?.id ? String(user.id) : user?.username || userInfo?.username || 'me'
+
+  const saveAvatar = (url: string) => {
+    setAvatarUrl(url)
+    if (user?.id) localStorage.setItem(`user_avatar_${user.id}`, url)
+    if (userInfo?.id) localStorage.setItem(`user_avatar_${userInfo.id}`, url)
+    if (user?.username) localStorage.setItem(`user_avatar_${user.username}`, url)
+    localStorage.setItem(`user_avatar_${userIdentifier}`, url)
+    localStorage.setItem('user_avatar_current', url)
+    window.dispatchEvent(new Event('avatar-changed'))
+  }
+
+  const loadSavedAvatar = () => {
+    const candidates = [
+      user?.id ? `user_avatar_${user.id}` : null,
+      userInfo?.id ? `user_avatar_${userInfo.id}` : null,
+      user?.username ? `user_avatar_${user.username}` : null,
+      `user_avatar_${userIdentifier}`,
+      'user_avatar_current',
+    ].filter(Boolean) as string[]
+
+    for (const key of candidates) {
+      const val = localStorage.getItem(key)
+      if (val) return val
     }
-  }, [user])
+    return (user as any)?.avatarUrl || (user as any)?.avatar_url || ''
+  }
+
+  useEffect(() => {
+    const found = loadSavedAvatar()
+    if (found) setAvatarUrl(found)
+  }, [user, userInfo])
+
+  useEffect(() => {
+    if (window.location.hash === '#preferences') {
+      setTimeout(() => {
+        const el = document.getElementById('preferences')
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth' })
+        }
+      }, 300)
+    }
+  }, [])
 
   useEffect(() => {
     async function fetchUserData() {
-      if (!user?.id) return
+      if (!user?.username && !user?.id) return
       setLoading(true)
       try {
-        const [commRes, feedRes, userRes] = await Promise.allSettled([
-          commentService.getCommentsByUser(user.id, { size: 10 }),
-          feedbackService.getFeedbacksByUser(user.id, { size: 10 }),
-          userService.getUserById(user.id),
-        ])
-        if (commRes.status === 'fulfilled') setUserComments(commRes.value.content || [])
-        if (feedRes.status === 'fulfilled') setUserFeedbacks(feedRes.value.content || [])
-        if (userRes.status === 'fulfilled') setUserInfo(userRes.value)
+        let currentUserId = user?.id
+        let currentUserInfo = userInfo
+
+        // If user.id is not yet available, fetch user by username
+        if (!currentUserId && user?.username) {
+          try {
+            const usersRes = await userService.getUsers({ keyword: user.username, isAll: true })
+            const found = (usersRes.content || []).find((u) => u.username === user.username)
+            if (found) {
+              currentUserId = found.id
+              currentUserInfo = found
+              setUserInfo(found)
+            }
+          } catch {
+            // Ignore error
+          }
+        } else if (currentUserId && !currentUserInfo) {
+          try {
+            const u = await userService.getUserById(currentUserId)
+            currentUserInfo = u
+            setUserInfo(u)
+          } catch {
+            // Ignore error
+          }
+        }
+
+        if (currentUserId) {
+          const [commRes, feedRes] = await Promise.allSettled([
+            commentService.getCommentsByUser(currentUserId, { size: 10 }),
+            feedbackService.getFeedbacksByUser(currentUserId, { page: 0, size: 10 }),
+          ])
+
+          if (commRes.status === 'fulfilled') {
+            const cData = commRes.value
+            const cList = cData.content || []
+            setUserComments(cList)
+            setCommentsNextCursor(cData.next_cursor ?? cData.nextCursor ?? null)
+            setHasMoreComments(Boolean(cData.has_next ?? cData.hasNext))
+            const totalC = cData.total_elements ?? cData.totalElements
+            setTotalCommentsCount(totalC !== null && totalC !== undefined ? totalC : cList.length)
+          }
+
+          if (feedRes.status === 'fulfilled') {
+            const fData = feedRes.value
+            const fList = fData.content || []
+            setUserFeedbacks(fList)
+            setFeedbacksPage(0)
+            const totalF = fData.amount
+            setTotalFeedbacksCount(totalF !== null && totalF !== undefined ? totalF : fList.length)
+            setHasMoreFeedbacks(totalF ? fList.length < totalF : false)
+          }
+        }
       } catch (err) {
-        console.error(err)
+        console.error('Lỗi nạp dữ liệu người dùng', err)
       } finally {
         setLoading(false)
       }
     }
     fetchUserData()
-  }, [user?.id])
+  }, [user?.username, user?.id])
+
+  const handleLoadMoreComments = async () => {
+    const targetUserId = user?.id ?? userInfo?.id
+    if (!targetUserId || commentsNextCursor === null || loadingMoreComments) return
+    setLoadingMoreComments(true)
+    try {
+      const res = await commentService.getCommentsByUser(targetUserId, {
+        cursor: commentsNextCursor,
+        size: 10,
+      })
+      const newComments = res.content || []
+      setUserComments((prev) => [...prev, ...newComments])
+      setCommentsNextCursor(res.next_cursor ?? res.nextCursor ?? null)
+      setHasMoreComments(Boolean(res.has_next ?? res.hasNext))
+    } catch (err) {
+      toast(`Không thể tải thêm bình luận: ${getErrorMessage(err)}`)
+    } finally {
+      setLoadingMoreComments(false)
+    }
+  }
+
+  const handleLoadMoreFeedbacks = async () => {
+    const targetUserId = user?.id ?? userInfo?.id
+    if (!targetUserId || loadingMoreFeedbacks || !hasMoreFeedbacks) return
+    const nextPage = feedbacksPage + 1
+    setLoadingMoreFeedbacks(true)
+    try {
+      const res = await feedbackService.getFeedbacksByUser(targetUserId, {
+        page: nextPage,
+        size: 10,
+      })
+      const newFeedbacks = res.content || []
+      setUserFeedbacks((prev) => [...prev, ...newFeedbacks])
+      setFeedbacksPage(nextPage)
+      const total = res.amount ?? totalFeedbacksCount ?? 0
+      setHasMoreFeedbacks(userFeedbacks.length + newFeedbacks.length < total)
+    } catch (err) {
+      toast(`Không thể tải thêm góp ý: ${getErrorMessage(err)}`)
+    } finally {
+      setLoadingMoreFeedbacks(false)
+    }
+  }
 
   const handleLogout = async () => {
     await logout()
@@ -104,22 +238,45 @@ export default function ProfilePage() {
   const email = userInfo?.email || user?.email
   const phoneNumber = getPhone(userInfo) || getPhone(user)
 
+  const [showUrlModal, setShowUrlModal] = useState(false)
+  const [customAvatarUrl, setCustomAvatarUrl] = useState('')
+
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve(reader.result as string)
+      reader.onerror = (err) => reject(err)
+      reader.readAsDataURL(file)
+    })
+  }
+
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (!file || !user?.id) return
+    if (!file) return
 
     if (!file.type.startsWith('image/')) {
-      toast('Vui lòng chọn file hình ảnh hợp lệ.')
+      toast('Vui lòng chọn file hình ảnh hợp lệ (JPG, PNG, WebP...).')
+      return
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast('Dung lượng ảnh đại diện tối đa là 10MB.')
       return
     }
 
     setUploadingAvatar(true)
     try {
-      const res = await fileService.uploadFile(file)
-      setAvatarUrl(res.url)
-      localStorage.setItem(`user_avatar_${user.id}`, res.url)
-      window.dispatchEvent(new Event('avatar-changed'))
-      toast('Đổi ảnh đại diện thành công!')
+      try {
+        const res = await fileService.uploadFile(file)
+        saveAvatar(res.url)
+        toast('Đổi ảnh đại diện thành công!')
+      } catch (uploadErr) {
+        // Fallback: If backend S3/MinIO is offline or fails, convert to base64 Data URL
+        console.warn('Backend file upload failed, falling back to local base64 avatar', uploadErr)
+        const base64Data = await fileToBase64(file)
+        saveAvatar(base64Data)
+        toast('Đổi ảnh đại diện thành công!')
+      }
     } catch (err) {
       toast(`Lỗi khi tải ảnh đại diện: ${getErrorMessage(err)}`)
     } finally {
@@ -128,12 +285,35 @@ export default function ProfilePage() {
     }
   }
 
+  const handleSaveCustomUrl = (e: React.FormEvent) => {
+    e.preventDefault()
+    const cleanUrl = customAvatarUrl.trim()
+    if (!cleanUrl) return
+    saveAvatar(cleanUrl)
+    toast('Đã cập nhật ảnh đại diện từ liên kết!')
+    setShowUrlModal(false)
+    setCustomAvatarUrl('')
+  }
+
+  const handleRemoveAvatar = () => {
+    setAvatarUrl('')
+    if (user?.id) localStorage.removeItem(`user_avatar_${user.id}`)
+    if (userInfo?.id) localStorage.removeItem(`user_avatar_${userInfo.id}`)
+    if (user?.username) localStorage.removeItem(`user_avatar_${user.username}`)
+    localStorage.removeItem(`user_avatar_${userIdentifier}`)
+    localStorage.removeItem('user_avatar_current')
+    window.dispatchEvent(new Event('avatar-changed'))
+    toast('Đã gỡ ảnh đại diện.')
+  }
+
   return (
     <div className="max-w-4xl mx-auto py-6 space-y-8">
       <Seo title="Trang cá nhân" noindex />
-      {/* Profile Card */}
-      <div className="p-8 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-        <div className="flex items-center gap-5">
+
+      {/* Profile Header Card */}
+      <div className="p-8 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+        <div className="flex items-center gap-6">
+          {/* Avatar with Hover Change Badge */}
           <div className="relative group flex-shrink-0">
             <input
               type="file"
@@ -146,11 +326,11 @@ export default function ProfilePage() {
               <img
                 src={avatarUrl}
                 alt={user?.username}
-                className="w-20 h-20 rounded-full object-cover border-2 border-amber-500 shadow-md"
+                className="w-24 h-24 rounded-full object-cover border-2 border-amber-500 shadow-md ring-4 ring-amber-500/20"
               />
             ) : (
-              <div className="w-20 h-20 rounded-full bg-amber-700 text-white flex items-center justify-center font-bold text-3xl">
-                {user?.username.charAt(0).toUpperCase()}
+              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-amber-600 to-amber-800 text-white flex items-center justify-center font-serif font-bold text-4xl shadow-md border-2 border-amber-400">
+                {user?.username?.charAt(0)?.toUpperCase() || 'U'}
               </div>
             )}
 
@@ -158,16 +338,26 @@ export default function ProfilePage() {
               type="button"
               onClick={() => avatarInputRef.current?.click()}
               disabled={uploadingAvatar}
-              className="absolute inset-0 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white text-[10px] font-medium"
-              title="Đổi ảnh đại diện"
+              className="absolute inset-0 rounded-full bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white text-[11px] font-medium backdrop-blur-[2px]"
+              title="Click để thay ảnh đại diện"
             >
               {uploadingAvatar ? (
-                <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
               ) : (
                 <>
-                  <svg className="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <svg className="w-6 h-6 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+                    />
                   </svg>
                   Đổi ảnh
                 </>
@@ -175,29 +365,58 @@ export default function ProfilePage() {
             </button>
           </div>
 
-          <div className="space-y-1">
-            <h1 className="text-2xl font-serif font-bold text-slate-900 dark:text-amber-100">
-              {user?.username}
-            </h1>
-            <p className="text-xs text-slate-400">Thành viên độc giả Tiểu Thi Hào</p>
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl md:text-3xl font-serif font-bold text-slate-900 dark:text-amber-100">
+                {user?.username}
+              </h1>
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700">
+                {user?.role || 'USER'}
+              </span>
+            </div>
+
+            <p className="text-xs text-slate-400 font-medium">Thành viên độc giả Tiểu Thi Hào</p>
+
             {email && (
-              <p className="text-xs text-slate-600 dark:text-slate-300 pt-0.5">
-                {email}
+              <p className="text-xs text-slate-600 dark:text-slate-300">
+                ✉️ {email}
               </p>
             )}
             {phoneNumber && (
-              <p className="text-xs text-amber-700 dark:text-amber-400 font-semibold pt-0.5">
-                SĐT: {phoneNumber}
+              <p className="text-xs text-amber-700 dark:text-amber-400 font-semibold">
+                📞 SĐT: {phoneNumber}
               </p>
             )}
-            <div className="flex gap-2 pt-1.5">
-              <span className="px-3 py-0.5 rounded-full text-xs font-bold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300">
-                {user?.role || 'USER'}
-              </span>
+
+            <div className="flex flex-wrap items-center gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => avatarInputRef.current?.click()}
+                disabled={uploadingAvatar}
+                className="px-3 py-1.5 bg-amber-700 hover:bg-amber-800 text-white text-xs font-semibold rounded-lg transition-colors inline-flex items-center gap-1.5 shadow-sm disabled:opacity-50"
+              >
+                <span>📷</span> {uploadingAvatar ? 'Đang tải...' : 'Tải ảnh từ máy'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowUrlModal(true)}
+                className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-lg transition-colors inline-flex items-center gap-1.5"
+              >
+                <span>🔗</span> Nhập link ảnh
+              </button>
+              {avatarUrl && (
+                <button
+                  type="button"
+                  onClick={handleRemoveAvatar}
+                  className="px-2.5 py-1.5 text-xs text-rose-600 hover:text-rose-700 dark:text-rose-400 hover:underline font-medium"
+                >
+                  Gỡ ảnh
+                </button>
+              )}
               {isAdmin && (
                 <Link
                   to={PATHS.ADMIN}
-                  className="px-3 py-0.5 rounded-full text-xs font-bold bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-200 hover:underline"
+                  className="px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-200 hover:underline ml-1"
                 >
                   Admin Dashboard
                 </Link>
@@ -208,84 +427,286 @@ export default function ProfilePage() {
 
         <button
           onClick={handleLogout}
-          className="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-medium text-sm rounded-md transition-colors"
+          className="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-medium text-sm rounded-xl transition-colors shadow-sm self-stretch md:self-auto text-center"
         >
           Đăng Xuất
         </button>
       </div>
 
-      {/* History of Comments */}
+      {/* User Quick Stats Banner */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="p-4 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm text-center space-y-1">
+          <p className="text-xs text-slate-400 font-medium uppercase tracking-wider">Bình Luận</p>
+          <p className="text-2xl font-bold font-serif text-amber-700 dark:text-amber-400">
+            {totalCommentsCount !== null ? totalCommentsCount : userComments.length}
+          </p>
+        </div>
+        <div className="p-4 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm text-center space-y-1">
+          <p className="text-xs text-slate-400 font-medium uppercase tracking-wider">Góp Ý</p>
+          <p className="text-2xl font-bold font-serif text-amber-700 dark:text-amber-400">
+            {totalFeedbacksCount !== null ? totalFeedbacksCount : userFeedbacks.length}
+          </p>
+        </div>
+        <Link
+          to={PATHS.FAVORITES}
+          className="p-4 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-rose-300 dark:hover:border-rose-700 shadow-sm text-center space-y-1 transition-all group"
+        >
+          <p className="text-xs text-slate-400 font-medium uppercase tracking-wider group-hover:text-rose-500">Yêu Thích</p>
+          <p className="text-2xl font-bold font-serif text-rose-600 dark:text-rose-400">♥</p>
+        </Link>
+        <Link
+          to={PATHS.HIGHLIGHTS}
+          className="p-4 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-amber-300 dark:hover:border-amber-700 shadow-sm text-center space-y-1 transition-all group"
+        >
+          <p className="text-xs text-slate-400 font-medium uppercase tracking-wider group-hover:text-amber-500">Ghi Chú</p>
+          <p className="text-2xl font-bold font-serif text-amber-600 dark:text-amber-400">✎</p>
+        </Link>
+      </div>
+
+      {/* Personalized Preferences & Recommendations Section */}
+      <div id="preferences">
+        <UserPreferencesSection
+          userId={user?.id ?? userInfo?.id ?? (user as any)?.userId ?? user?.username ?? 'user_default'}
+        />
+      </div>
+
+      {/* History of Comments Section */}
       <section className="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
-        <h2 className="text-xl font-serif font-bold text-slate-900 dark:text-amber-100">
-          Lịch Sử Bình Luận Của Tôi ({userComments.length})
-        </h2>
+        <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-700">
+          <h2 className="text-xl font-serif font-bold text-slate-900 dark:text-amber-100 flex items-center gap-2">
+            <span>💬</span> Lịch Sử Bình Luận Của Tôi (
+            {totalCommentsCount !== null ? totalCommentsCount : userComments.length})
+          </h2>
+          {totalCommentsCount !== null && (
+            <span className="text-xs text-slate-400">
+              Tổng cộng {totalCommentsCount} bình luận
+            </span>
+          )}
+        </div>
 
         {loading ? (
-          <p className="text-xs text-slate-400">Đang tải...</p>
+          <p className="text-xs text-slate-400 py-4">Đang tải lịch sử bình luận...</p>
         ) : userComments.length === 0 ? (
-          <p className="text-xs text-slate-400 italic">Bạn chưa để lại bình luận nào.</p>
+          <div className="py-8 text-center space-y-2">
+            <p className="text-sm font-serif italic text-slate-400">Bạn chưa để lại bình luận nào.</p>
+            <Link to={PATHS.POEMS} className="text-xs text-amber-700 dark:text-amber-400 font-semibold hover:underline">
+              Khám phá kho thơ và chia sẻ cảm nghĩ ngay →
+            </Link>
+          </div>
         ) : (
           <div className="space-y-3">
-            {userComments.map((c) => (
-              <div
-                key={c.id}
-                className="p-4 rounded-lg bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-700/60 text-xs space-y-1"
-              >
-                <div className="flex justify-between text-slate-400">
-                  <Link
-                    to={toPoemDetail(c.poemId ?? c.poem_id ?? 0)}
-                    className="text-amber-700 font-bold hover:underline"
-                  >
-                    Xem bài thơ #{c.poemId ?? c.poem_id} →
-                  </Link>
-                  {(c.createdAt ?? c.created_at) && (
-                    <span>{new Date(c.createdAt ?? c.created_at ?? '').toLocaleDateString('vi-VN')}</span>
-                  )}
+            {userComments.map((c) => {
+              const poemId = c.poemId ?? c.poem_id ?? 0
+              const dateStr = c.createdAt ?? c.created_at
+              return (
+                <div
+                  key={c.id}
+                  className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-700/60 text-xs space-y-2"
+                >
+                  <div className="flex justify-between items-center text-slate-400">
+                    <Link
+                      to={toPoemDetail(poemId)}
+                      className="text-amber-800 dark:text-amber-400 font-bold hover:underline inline-flex items-center gap-1"
+                    >
+                      <span>📖 Xem bài thơ #{poemId}</span>
+                      <span>→</span>
+                    </Link>
+                    {dateStr && (
+                      <span className="text-[11px] text-slate-400">
+                        {formatDate(dateStr)}
+                      </span>
+                    )}
+                  </div>
+                  <RichContent content={c.content} className="font-serif text-sm pt-1" />
                 </div>
-                <RichContent content={c.content} className="font-serif text-sm pt-1" />
+              )
+            })}
+
+            {hasMoreComments && (
+              <div className="text-center pt-3">
+                <button
+                  type="button"
+                  onClick={handleLoadMoreComments}
+                  disabled={loadingMoreComments}
+                  className="px-5 py-2 text-xs font-semibold rounded-lg bg-amber-50 hover:bg-amber-100 dark:bg-slate-700/60 dark:hover:bg-slate-700 text-amber-800 dark:text-amber-300 transition-colors disabled:opacity-50 inline-flex items-center gap-2"
+                >
+                  {loadingMoreComments ? (
+                    <>
+                      <span className="w-3.5 h-3.5 border-2 border-amber-600 border-t-transparent rounded-full animate-spin inline-block" />
+                      <span>Đang tải thêm...</span>
+                    </>
+                  ) : (
+                    'Xem thêm bình luận cũ hơn'
+                  )}
+                </button>
               </div>
-            ))}
+            )}
           </div>
         )}
       </section>
 
-      {/* History of Feedbacks */}
+      {/* History of Feedbacks Section */}
       <section className="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
-        <h2 className="text-xl font-serif font-bold text-slate-900 dark:text-amber-100">
-          Lịch Sử Góp Ý Của Tôi ({userFeedbacks.length})
-        </h2>
+        <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-700">
+          <h2 className="text-xl font-serif font-bold text-slate-900 dark:text-amber-100 flex items-center gap-2">
+            <span>📝</span> Lịch Sử Góp Ý Của Tôi (
+            {totalFeedbacksCount !== null ? totalFeedbacksCount : userFeedbacks.length})
+          </h2>
+          {totalFeedbacksCount !== null && (
+            <span className="text-xs text-slate-400">
+              Tổng cộng {totalFeedbacksCount} lượt góp ý
+            </span>
+          )}
+        </div>
 
         {loading ? (
-          <p className="text-xs text-slate-400">Đang tải...</p>
+          <p className="text-xs text-slate-400 py-4">Đang tải lịch sử góp ý...</p>
         ) : userFeedbacks.length === 0 ? (
-          <p className="text-xs text-slate-400 italic">Bạn chưa gửi góp ý nào.</p>
+          <div className="py-8 text-center space-y-2">
+            <p className="text-sm font-serif italic text-slate-400">Bạn chưa gửi góp ý nào.</p>
+            <p className="text-xs text-slate-400">
+              Khi đọc thơ, nếu phát hiện sai sót, bạn có thể gửi góp ý kèm tư liệu đính kèm ở dưới mỗi bài thơ.
+            </p>
+          </div>
         ) : (
           <div className="space-y-3">
-            {userFeedbacks.map((f) => (
-              <div
-                key={f.id}
-                className="p-4 rounded-lg bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-700/60 text-xs space-y-1"
-              >
-                <div className="flex justify-between items-center">
-                  <span className="text-amber-700 font-bold">Bài thơ #{f.poemId}</span>
-                  <span
-                    className={`px-2 py-0.5 rounded-full font-bold ${
-                      f.status === 'APPROVED'
-                        ? 'bg-emerald-100 text-emerald-800'
-                        : f.status === 'REJECTED'
-                        ? 'bg-rose-100 text-rose-800'
-                        : 'bg-amber-100 text-amber-800'
-                    }`}
-                  >
-                    {f.status}
-                  </span>
+            {userFeedbacks.map((f) => {
+              const isResolved =
+                f.status === 'APPROVED' || f.status === 'RESOLVED'
+              const isRejected = f.status === 'REJECTED'
+              return (
+                <div
+                  key={f.id}
+                  className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-700/60 text-xs space-y-2"
+                >
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                      <Link
+                        to={toPoemDetail(f.poemId)}
+                        className="text-amber-800 dark:text-amber-400 font-bold hover:underline"
+                      >
+                        Bài thơ #{f.poemId} →
+                      </Link>
+                      {f.createdAt && (
+                        <span className="text-[11px] text-slate-400">
+                          · {formatDate(f.createdAt)}
+                        </span>
+                      )}
+                    </div>
+                    <span
+                      className={`px-2.5 py-0.5 rounded-full font-bold text-[11px] ${
+                        isResolved
+                          ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200'
+                          : isRejected
+                          ? 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-200'
+                          : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-200'
+                      }`}
+                    >
+                      {isResolved ? 'Đã duyệt / xử lý' : isRejected ? 'Từ chối' : 'Đang chờ duyệt'}
+                    </span>
+                  </div>
+                  <RichContent content={f.content} className="text-sm pt-1" />
                 </div>
-                <RichContent content={f.content} className="text-sm pt-1" />
+              )
+            })}
+
+            {hasMoreFeedbacks && (
+              <div className="text-center pt-3">
+                <button
+                  type="button"
+                  onClick={handleLoadMoreFeedbacks}
+                  disabled={loadingMoreFeedbacks}
+                  className="px-5 py-2 text-xs font-semibold rounded-lg bg-amber-50 hover:bg-amber-100 dark:bg-slate-700/60 dark:hover:bg-slate-700 text-amber-800 dark:text-amber-300 transition-colors disabled:opacity-50 inline-flex items-center gap-2"
+                >
+                  {loadingMoreFeedbacks ? (
+                    <>
+                      <span className="w-3.5 h-3.5 border-2 border-amber-600 border-t-transparent rounded-full animate-spin inline-block" />
+                      <span>Đang tải thêm...</span>
+                    </>
+                  ) : (
+                    'Xem thêm góp ý cũ hơn'
+                  )}
+                </button>
               </div>
-            ))}
+            )}
           </div>
         )}
       </section>
+
+      {/* URL Avatar Modal */}
+      {showUrlModal && (
+        <div
+          onClick={() => setShowUrlModal(false)}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-md bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 shadow-2xl space-y-4"
+          >
+            <div className="flex items-center justify-between">
+              <h3 className="text-base font-serif font-bold text-slate-900 dark:text-amber-100">
+                🔗 Đặt ảnh đại diện qua link ảnh (URL)
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowUrlModal(false)}
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+              >
+                ✕
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Dán đường dẫn trực tiếp tới hình ảnh (bắt đầu bằng https://...):
+            </p>
+
+            <form onSubmit={handleSaveCustomUrl} className="space-y-4">
+              <input
+                type="url"
+                placeholder="https://example.com/avatar.jpg"
+                value={customAvatarUrl}
+                onChange={(e) => setCustomAvatarUrl(e.target.value)}
+                autoFocus
+                required
+                className="w-full px-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/40"
+              />
+
+              {customAvatarUrl.trim() && (
+                <div className="flex items-center gap-3 p-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
+                  <img
+                    src={customAvatarUrl}
+                    alt="Xem trước"
+                    onError={(e) => {
+                      ;(e.target as HTMLElement).style.display = 'none'
+                    }}
+                    className="w-12 h-12 rounded-full object-cover border border-amber-500 flex-shrink-0"
+                  />
+                  <div className="min-w-0 flex-1 text-xs text-slate-500 dark:text-slate-400">
+                    Xem trước ảnh đại diện
+                  </div>
+                </div>
+              )}
+
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowUrlModal(false)}
+                  className="px-4 py-2 text-xs font-medium rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"
+                >
+                  Hủy
+                </button>
+                <button
+                  type="submit"
+                  disabled={!customAvatarUrl.trim()}
+                  className="px-5 py-2 text-xs font-bold rounded-lg bg-amber-700 hover:bg-amber-800 text-white transition-colors disabled:opacity-50"
+                >
+                  Lưu ảnh
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

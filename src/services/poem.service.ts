@@ -1,5 +1,5 @@
 import { oplearnClient } from './oplearnClient'
-import type { ResponseGeneral, PageResponse, PoemResponse, PoemRequest, FacetItem } from '@/types'
+import type { ResponseGeneral, PageResponse, PoemResponse, PoemRequest, FacetItem, RandomPoemsParams } from '@/types'
 
 /** Đường dẫn duyệt phân cấp: chiều nào chưa chọn thì bỏ trống. */
 export interface BrowsePath {
@@ -77,10 +77,29 @@ export const poemService = {
     return res.data.data
   },
 
-  async getRandomPoems(): Promise<PoemResponse[]> {
-    const res = await oplearnClient.get<ResponseGeneral<PoemResponse[]>>('/poems/random')
-    return res.data.data
+  async getRandomPoems(params?: RandomPoemsParams): Promise<PoemResponse[]> {
+    const queryParams = new URLSearchParams()
+    if (params?.authorIds && params.authorIds.length > 0) {
+      params.authorIds.slice(0, 3).forEach((id) => queryParams.append('authorIds', String(id)))
+    }
+    if (params?.genreIds && params.genreIds.length > 0) {
+      params.genreIds.slice(0, 3).forEach((id) => queryParams.append('genreIds', String(id)))
+    }
+    if (params?.eras && params.eras.length > 0) {
+      params.eras.slice(0, 3).forEach((era) => queryParams.append('eras', era))
+    }
+
+    const res = await oplearnClient.get<ResponseGeneral<PageResponse<PoemResponse> | PoemResponse[]>>('/poems/random', {
+      params: queryParams,
+    })
+    const data = res.data?.data || res.data
+    if (Array.isArray(data)) return data
+    if (data && Array.isArray((data as PageResponse<PoemResponse>).content)) {
+      return (data as PageResponse<PoemResponse>).content
+    }
+    return []
   },
+
 
   async createPoem(data: PoemRequest): Promise<PoemResponse> {
     const authorId = data.authorId ?? (data as any).author_id ?? null

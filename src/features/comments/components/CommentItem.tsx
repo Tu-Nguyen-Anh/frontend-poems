@@ -67,13 +67,27 @@ export function CommentItem({
     setIsEditing(false)
   }
 
+  const userAvatar = isOwner
+    ? (user?.id ? localStorage.getItem(`user_avatar_${user.id}`) : null) ||
+      (user?.username ? localStorage.getItem(`user_avatar_${user.username}`) : null) ||
+      localStorage.getItem('user_avatar_current')
+    : null
+
   return (
     <div className="poem-comment-thread">
       <div className="poem-comment">
         <div className="poem-comment-avatar">
-          <div className="w-9 h-9 rounded-full bg-amber-600 text-white flex items-center justify-center font-bold text-xs">
-            {comment.username.charAt(0).toUpperCase()}
-          </div>
+          {userAvatar ? (
+            <img
+              src={userAvatar}
+              alt={comment.username}
+              className="w-9 h-9 rounded-full object-cover border border-amber-500 shadow-sm"
+            />
+          ) : (
+            <div className="w-9 h-9 rounded-full bg-amber-600 text-white flex items-center justify-center font-bold text-xs">
+              {comment.username.charAt(0).toUpperCase()}
+            </div>
+          )}
         </div>
 
         {/* Bubble */}
