@@ -23,5 +23,13 @@
     "oxlint": "^1.71.0",
     "typescript": "~6.0.2",
     "vite": "^8.1.1"
-  }
+  },
+  "browserslist": [
+    "chrome >= 90",
+    "firefox >= 103",
+    "safari >= 14",
+    "edge >= 90",
+    "ios_saf >= 14",
+    "not dead"
+  ]
 }

@@ -1,5 +1,5 @@
 import { oplearnClient } from './oplearnClient'
-import type { ResponseGeneral, PageResponse, PoemResponse, PoemRequest, FacetItem, RandomPoemsParams } from '@/types'
+import type { ResponseGeneral, PageResponse, PoemResponse, PoemRequest, FacetItem, RandomPoemsParams, LibraryStats } from '@/types'
 
 /** Đường dẫn duyệt phân cấp: chiều nào chưa chọn thì bỏ trống. */
 export interface BrowsePath {
@@ -62,6 +62,11 @@ export const poemService = {
     return res.data.data || []
   },
 
+  async getStats(): Promise<LibraryStats> {
+    const res = await oplearnClient.get<ResponseGeneral<LibraryStats>>('/poems/stats')
+    return res.data.data
+  },
+
   async getPoemById(id: number): Promise<PoemResponse> {
     const res = await oplearnClient.get<ResponseGeneral<PoemResponse>>(`/poems/${id}`)
     return res.data.data
@@ -99,7 +104,6 @@ export const poemService = {
     }
     return []
   },
-
 
   async createPoem(data: PoemRequest): Promise<PoemResponse> {
     const authorId = data.authorId ?? (data as any).author_id ?? null

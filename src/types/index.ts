@@ -80,6 +80,15 @@ export interface PoemTranslation {
   sort_order?: number
 }
 
+export interface LibraryStats {
+  total_poems: number
+  total_authors: number
+  total_countries: number
+  viet_count: number
+  han_count: number
+  foreign_count: number
+}
+
 export interface PoemResponse {
   id: number
   name: string

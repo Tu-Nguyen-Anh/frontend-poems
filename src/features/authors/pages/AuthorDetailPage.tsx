@@ -129,12 +129,12 @@ export default function AuthorDetailPage() {
           </div>
           {bio ? (
             <div className="pt-3 border-t border-slate-100 dark:border-slate-700">
-              <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-line">
+              <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-line text-left">
                 {bio}
               </p>
             </div>
           ) : author.achievement ? (
-            <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed pt-2 border-t border-slate-100 dark:border-slate-700">
+            <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed pt-2 border-t border-slate-100 dark:border-slate-700 text-left">
               <strong>Thành tựu &amp; Tiểu sử:</strong> {author.achievement}
             </p>
           ) : null}

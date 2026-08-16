@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { poemService } from '@/services/poem.service'
 import { authorService } from '@/services/author.service'
 import { genreService } from '@/services/genre.service'
-import type { PoemResponse, AuthorResponse, GenreResponse } from '@/types'
+import type { PoemResponse, AuthorResponse, GenreResponse, LibraryStats } from '@/types'
 import { PATHS, toAuthorDetail, toGenreDetail, toPoemSlug } from '@/routes/paths'
 import { HeroBanner } from '../components/HeroBanner'
 import { LatestPoemsSection } from '../components/LatestPoemsSection'
@@ -25,6 +25,7 @@ export default function HomePage() {
   const [totalPoems, setTotalPoems] = useState<number | null>(null)
   const [totalAuthors, setTotalAuthors] = useState<number | null>(null)
   const [totalGenres, setTotalGenres] = useState<number | null>(null)
+  const [stats, setStats] = useState<LibraryStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [loadingRandom, setLoadingRandom] = useState(false)
 
@@ -56,20 +57,28 @@ export default function HomePage() {
     async function loadData() {
       setLoading(true)
       try {
-        const [latestRes, authorsRes, genresRes] = await Promise.allSettled([
+        const [latestRes, featuredRes, topRes, genresRes, statsRes] = await Promise.allSettled([
           poemService.getLatestPoems({ page: 0, size: 6 }),
-          authorService.getTopAuthors({ page: 0, size: 6 }),
+          authorService.getFeaturedAuthors(),
+          authorService.getTopAuthors({ page: 0, size: 1 }),
           genreService.getGenres({ page: 0, size: 8 }),
+          poemService.getStats(),
         ])
+        if (statsRes.status === 'fulfilled') setStats(statsRes.value)
 
         if (latestRes.status === 'fulfilled') {
           setLatestPoems(latestRes.value.content || [])
           setTotalPoems(latestRes.value.amount ?? null)
         }
-        if (authorsRes.status === 'fulfilled') {
-          setAuthors(authorsRes.value.content || [])
-          setTotalAuthors(authorsRes.value.amount ?? null)
+
+        // Tổng số tác giả (cho hero + mô tả) lấy từ /top; danh sách hiển thị dùng /featured (ghim tay).
+        if (topRes.status === 'fulfilled') setTotalAuthors(topRes.value.amount ?? null)
+        if (featuredRes.status === 'fulfilled' && featuredRes.value.length > 0) {
+          setAuthors(featuredRes.value)
+        } else if (topRes.status === 'fulfilled') {
+          setAuthors(topRes.value.content || [])
         }
+
         if (genresRes.status === 'fulfilled') {
           setGenres(genresRes.value.content || [])
           setTotalGenres(genresRes.value.amount ?? null)
@@ -84,6 +93,15 @@ export default function HomePage() {
     loadRandomPoems()
   }, [loadRandomPoems])
 
+  // Bốc lại khi người dùng quay lại tab (F5 đã tự gọi ở lần mount đầu).
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') loadRandomPoems()
+    }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => document.removeEventListener('visibilitychange', onVisible)
+  }, [loadRandomPoems])
+
   return (
     <div className="space-y-14 py-4">
       <Seo
@@ -94,9 +112,7 @@ export default function HomePage() {
             : undefined
         }
       />
-      <HeroBanner totalPoems={totalPoems} totalAuthors={totalAuthors} totalGenres={totalGenres} />
-
-      <LatestPoemsSection poems={latestPoems} loading={loading} />
+      <HeroBanner totalPoems={totalPoems} totalAuthors={totalAuthors} totalGenres={totalGenres} stats={stats} />
 
       {/* Random / Personalized Recommendations Section */}
       <section className="space-y-6">
@@ -134,8 +150,8 @@ export default function HomePage() {
         </div>
 
         {randomPoems.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {randomPoems.slice(0, 4).map((poem) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {randomPoems.slice(0, 6).map((poem) => (
               <Link
                 key={poem.id}
                 to={toPoemSlug(poem)}
@@ -173,18 +189,20 @@ export default function HomePage() {
         )}
       </section>
 
+      <LatestPoemsSection poems={latestPoems} loading={loading} />
+
       <section className="space-y-6">
         <SectionHeader
           title="Tác giả tiêu biểu"
           description={
             totalAuthors
-              ? `${formatNumber(totalAuthors)} nhà thơ trong kho — xếp theo số bài thơ`
-              : 'Các nhà thơ trong kho'
+              ? `Những tên tuổi lớn của thi ca Việt — trong kho ${formatNumber(totalAuthors)} nhà thơ`
+              : 'Những tên tuổi lớn của thi ca Việt'
           }
           linkTo={PATHS.AUTHORS}
           linkLabel="Tất cả tác giả"
         />
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
           {authors.map((author) => (
             <Link
               key={author.id}

@@ -8,6 +8,7 @@ import type { PoemResponse, GenreResponse } from '@/types'
 import { toPoemSlug } from '@/routes/paths'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { Pagination } from '@/components/ui/Pagination'
+import { PageSizeSelect } from '@/components/ui/PageSizeSelect'
 import { IconSearch, IconList, IconGrid } from '@/components/ui/icons'
 import { poemDisplayTitle, poemAuthorName, poemGenreName } from '@/features/poems/display'
 import { Seo } from '@/components/common/Seo'
@@ -24,7 +25,7 @@ export default function PoemsPage() {
   const [keyword, setKeyword] = useState(urlKeyword)
   const debouncedKeyword = useDebounce(keyword, 300)
   const [page, setPage] = useState(0)
-  const size = 9
+  const [size, setSize] = useState(10)
 
   const [poems, setPoems] = useState<PoemResponse[]>([])
   const [totalAmount, setTotalAmount] = useState(0)
@@ -119,7 +120,7 @@ export default function PoemsPage() {
     }
     fetchPoems()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debouncedKeyword, selectedGenre?.id, selectedEra, selectedLanguage, selectedAuthor?.id, page])
+  }, [debouncedKeyword, selectedGenre?.id, selectedEra, selectedLanguage, selectedAuthor?.id, page, size])
 
   const totalPages = Math.ceil(totalAmount / size) || 1
 
@@ -239,6 +240,8 @@ export default function PoemsPage() {
             {totalAmount.toLocaleString('vi-VN')} bài thơ
             {totalPages > 1 && <span className="text-slate-400"> · Trang {page + 1}/{totalPages.toLocaleString('vi-VN')}</span>}
           </p>
+          <div className="flex items-center gap-3">
+          <PageSizeSelect value={size} onChange={(s) => { setSize(s); setPage(0) }} />
           <div className="flex items-center gap-0.5 p-0.5 rounded-md border border-slate-200 dark:border-slate-700">
             <button
               onClick={() => setView('list')}
@@ -264,6 +267,7 @@ export default function PoemsPage() {
             >
               <IconGrid size={16} />
             </button>
+          </div>
           </div>
         </div>
 

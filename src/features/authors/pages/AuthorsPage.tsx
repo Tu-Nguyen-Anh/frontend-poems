@@ -8,6 +8,7 @@ import { Skeleton } from '@/components/ui/Skeleton'
 import { IconSearch } from '@/components/ui/icons'
 import { Seo } from '@/components/common/Seo'
 import { Pagination } from '@/components/ui/Pagination'
+import { PageSizeSelect } from '@/components/ui/PageSizeSelect'
 import { AuthorAvatar } from '@/features/authors/components/AuthorAvatar'
 
 export default function AuthorsPage() {
@@ -16,7 +17,7 @@ export default function AuthorsPage() {
   const [keyword, setKeyword] = useState('')
   const debouncedKeyword = useDebounce(keyword, 300)
   const [page, setPage] = useState(0)
-  const size = 24
+  const [size, setSize] = useState(24)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -37,7 +38,7 @@ export default function AuthorsPage() {
       }
     }
     fetchAuthors()
-  }, [debouncedKeyword, page])
+  }, [debouncedKeyword, page, size])
 
   const totalPages = Math.ceil(totalAmount / size) || 1
 
@@ -62,20 +63,23 @@ export default function AuthorsPage() {
         </p>
       </div>
 
-      <div className="max-w-md relative">
-        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
-          <IconSearch size={16} />
-        </span>
-        <input
-          type="text"
-          placeholder={`Tìm trong ${totalAmount.toLocaleString('vi-VN')} tác giả…`}
-          value={keyword}
-          onChange={(e) => {
-            setKeyword(e.target.value)
-            setPage(0)
-          }}
-          className="w-full pl-9 pr-4 py-2.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/30"
-        />
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between">
+        <div className="max-w-md relative w-full">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+            <IconSearch size={16} />
+          </span>
+          <input
+            type="text"
+            placeholder={`Tìm trong ${totalAmount.toLocaleString('vi-VN')} tác giả…`}
+            value={keyword}
+            onChange={(e) => {
+              setKeyword(e.target.value)
+              setPage(0)
+            }}
+            className="w-full pl-9 pr-4 py-2.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/30"
+          />
+        </div>
+        <PageSizeSelect value={size} onChange={(s) => { setSize(s); setPage(0) }} unit="tác giả" options={[24, 48, 96]} />
       </div>
 
       {loading ? (
