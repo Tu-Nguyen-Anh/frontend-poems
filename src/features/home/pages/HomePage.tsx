@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { poemService } from '@/services/poem.service'
 import { authorService } from '@/services/author.service'
 import { genreService } from '@/services/genre.service'
+import { storyService } from '@/services/story.service'
 import type { PoemResponse, AuthorResponse, GenreResponse, LibraryStats } from '@/types'
 import { PATHS, toAuthorDetail, toGenreDetail, toPoemSlug } from '@/routes/paths'
 import { HeroBanner } from '../components/HeroBanner'
@@ -25,6 +26,9 @@ export default function HomePage() {
   const [totalPoems, setTotalPoems] = useState<number | null>(null)
   const [totalAuthors, setTotalAuthors] = useState<number | null>(null)
   const [totalGenres, setTotalGenres] = useState<number | null>(null)
+  const [totalStories, setTotalStories] = useState<number | null>(null)
+  const [storyAuthors, setStoryAuthors] = useState<number | null>(null)
+  const [storyCollections, setStoryCollections] = useState<number | null>(null)
   const [stats, setStats] = useState<LibraryStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [loadingRandom, setLoadingRandom] = useState(false)
@@ -57,22 +61,29 @@ export default function HomePage() {
     async function loadData() {
       setLoading(true)
       try {
-        const [latestRes, featuredRes, topRes, genresRes, statsRes] = await Promise.allSettled([
+        const [latestRes, featuredRes, topRes, genresRes, statsRes, storiesRes, poemAuthorsRes, storyAuthorsRes, storyCollectionsRes] = await Promise.allSettled([
           poemService.getLatestPoems({ page: 0, size: 6 }),
           authorService.getFeaturedAuthors(),
           authorService.getTopAuthors({ page: 0, size: 1 }),
           genreService.getGenres({ page: 0, size: 8 }),
           poemService.getStats(),
+          storyService.getStories({ page: 0, size: 1 }),
+          authorService.getAuthors({ type: 'poem', page: 0, size: 1 }),
+          authorService.getAuthors({ type: 'story', page: 0, size: 1 }),
+          storyService.getCollections(),
         ])
         if (statsRes.status === 'fulfilled') setStats(statsRes.value)
+        if (storiesRes.status === 'fulfilled') setTotalStories(storiesRes.value.amount ?? null)
+        if (storyAuthorsRes.status === 'fulfilled') setStoryAuthors(storyAuthorsRes.value.amount ?? null)
+        if (storyCollectionsRes.status === 'fulfilled') setStoryCollections(storyCollectionsRes.value.length || null)
 
         if (latestRes.status === 'fulfilled') {
           setLatestPoems(latestRes.value.content || [])
           setTotalPoems(latestRes.value.amount ?? null)
         }
 
-        // Tổng số tác giả (cho hero + mô tả) lấy từ /top; danh sách hiển thị dùng /featured (ghim tay).
-        if (topRes.status === 'fulfilled') setTotalAuthors(topRes.value.amount ?? null)
+        // Số tác giả THƠ (type=poem) cho dải thống kê + mô tả; danh sách hiển thị dùng /featured (ghim tay), fallback /top.
+        if (poemAuthorsRes.status === 'fulfilled') setTotalAuthors(poemAuthorsRes.value.amount ?? null)
         if (featuredRes.status === 'fulfilled' && featuredRes.value.length > 0) {
           setAuthors(featuredRes.value)
         } else if (topRes.status === 'fulfilled') {
@@ -112,7 +123,15 @@ export default function HomePage() {
             : undefined
         }
       />
-      <HeroBanner totalPoems={totalPoems} totalAuthors={totalAuthors} totalGenres={totalGenres} stats={stats} />
+      <HeroBanner
+        totalPoems={totalPoems}
+        totalStories={totalStories}
+        totalAuthors={totalAuthors}
+        storyAuthors={storyAuthors}
+        totalGenres={totalGenres}
+        storyCollections={storyCollections}
+        stats={stats}
+      />
 
       {/* Random / Personalized Recommendations Section */}
       <section className="space-y-6">

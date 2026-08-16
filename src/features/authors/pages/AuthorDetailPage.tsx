@@ -1,18 +1,22 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { authorService } from '@/services/author.service'
 import { poemService } from '@/services/poem.service'
+import { storyService } from '@/services/story.service'
 import { useDebounce } from '@/hooks/useDebounce'
-import type { AuthorResponse, PoemResponse } from '@/types'
+import type { AuthorResponse, PoemResponse, StoryResponse } from '@/types'
 import { PATHS, toPoemSlug } from '@/routes/paths'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { Pagination } from '@/components/ui/Pagination'
 import { IconSearch } from '@/components/ui/icons'
 import { poemDisplayTitle } from '@/features/poems/display'
+import { StoryCard } from '@/features/stories/components/StoryCard'
 import { Seo } from '@/components/common/Seo'
 import { env } from '@/config/env'
 
 const PAGE_SIZE = 12
+
+type Tab = 'poem' | 'story'
 
 export default function AuthorDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -22,42 +26,74 @@ export default function AuthorDetailPage() {
   const [loading, setLoading] = useState(true)
   const [avatarError, setAvatarError] = useState(false)
 
+  const [tab, setTab] = useState<Tab>('poem')
   const [poems, setPoems] = useState<PoemResponse[]>([])
-  const [totalPoems, setTotalPoems] = useState(0)
+  const [stories, setStories] = useState<StoryResponse[]>([])
+  const [total, setTotal] = useState(0)
   const [page, setPage] = useState(0)
   const [keyword, setKeyword] = useState('')
   const debouncedKeyword = useDebounce(keyword, 300)
-  const [poemsLoading, setPoemsLoading] = useState(true)
+  const [listLoading, setListLoading] = useState(true)
 
-  // Tác giả tải riêng (không phụ thuộc danh sách bài -> tránh vỡ trang nếu bài lỗi).
+  const poemCount = author?.poem_count ?? author?.poemCount ?? 0
+  const storyCount = author?.story_count ?? author?.storyCount ?? 0
+
+  // Tác giả tải riêng (không phụ thuộc danh sách tác phẩm).
   useEffect(() => {
     if (!authorId) return
     setLoading(true)
     authorService
       .getAuthorById(authorId)
-      .then(setAuthor)
+      .then((a) => {
+        setAuthor(a)
+        // Mở tab có tác phẩm: ưu tiên Thơ, nếu không có thơ mà có văn thì mở Văn.
+        const pc = a.poem_count ?? a.poemCount ?? 0
+        const sc = a.story_count ?? a.storyCount ?? 0
+        setTab(pc === 0 && sc > 0 ? 'story' : 'poem')
+      })
       .catch((err) => console.error('Lỗi tải thông tin tác giả:', err))
       .finally(() => setLoading(false))
   }, [authorId])
 
-  // Danh sách bài: phân trang + tìm kiếm trong thơ của tác giả.
+  // Reset trang + từ khoá khi đổi tab.
+  useEffect(() => {
+    setPage(0)
+    setKeyword('')
+  }, [tab])
+
+  // Danh sách tác phẩm theo tab (phân trang + tìm kiếm).
   useEffect(() => {
     if (!authorId) return
-    setPoemsLoading(true)
-    poemService
-      .browsePoems({ authorId, keyword: debouncedKeyword || undefined, page, size: PAGE_SIZE })
-      .then((res) => {
-        setPoems(res.content || [])
-        setTotalPoems(res.amount || 0)
-      })
-      .catch((err) => {
-        console.error('Lỗi tải bài thơ của tác giả:', err)
-        setPoems([])
-      })
-      .finally(() => setPoemsLoading(false))
-  }, [authorId, debouncedKeyword, page])
+    setListLoading(true)
+    if (tab === 'poem') {
+      poemService
+        .browsePoems({ authorId, keyword: debouncedKeyword || undefined, page, size: PAGE_SIZE })
+        .then((res) => {
+          setPoems(res.content || [])
+          setTotal(res.amount || 0)
+        })
+        .catch(() => setPoems([]))
+        .finally(() => setListLoading(false))
+    } else {
+      storyService
+        .getStories({ authorId, keyword: debouncedKeyword || undefined, page, size: PAGE_SIZE })
+        .then((res) => {
+          setStories(res.content || [])
+          setTotal(res.amount || 0)
+        })
+        .catch(() => setStories([]))
+        .finally(() => setListLoading(false))
+    }
+  }, [authorId, tab, debouncedKeyword, page])
 
-  const totalPages = Math.ceil(totalPoems / PAGE_SIZE) || 1
+  const totalPages = Math.ceil(total / PAGE_SIZE) || 1
+  const hasBoth = poemCount > 0 && storyCount > 0
+
+  const avatarLocal = author?.avatar_local ?? author?.avatarLocal
+  const avatarUrl = useMemo(
+    () => (avatarLocal ? `${env.AVATAR_BASE_URL}/${avatarLocal}` : (author?.avatar_url ?? author?.avatarUrl)),
+    [avatarLocal, author],
+  )
 
   if (loading) {
     return (
@@ -81,19 +117,21 @@ export default function AuthorDetailPage() {
     )
   }
 
-  // Ưu tiên ảnh tự crawl trên RustFS (avatar_local); fallback URL gốc thivien (avatar_url).
-  const avatarLocal = author.avatar_local ?? author.avatarLocal
-  const avatarUrl = avatarLocal
-    ? `${env.AVATAR_BASE_URL}/${avatarLocal}`
-    : (author.avatar_url ?? author.avatarUrl)
   const bio = author.bio?.trim()
   const country = author.country
+
+  const tabClass = (active: boolean) =>
+    `px-4 py-2 text-sm font-semibold rounded-md transition-colors ${
+      active
+        ? 'bg-amber-100 text-amber-900 dark:bg-amber-950/60 dark:text-amber-200'
+        : 'text-slate-600 hover:text-amber-700 dark:text-slate-300 dark:hover:text-amber-300'
+    }`
 
   return (
     <div className="max-w-4xl mx-auto py-6 space-y-8">
       <Seo
-        title={`Thơ ${author.name}`}
-        description={`Tuyển tập thơ của ${author.name}${author.hometown ? ` (${author.hometown})` : ''} — đọc toàn bộ tác phẩm, tiểu sử và thành tựu.`}
+        title={author.name}
+        description={`Tác phẩm của ${author.name}${author.hometown ? ` (${author.hometown})` : ''} — thơ và văn xuôi, tiểu sử và thành tựu.`}
         path={`/authors/${author.id}`}
       />
       <Link
@@ -122,6 +160,18 @@ export default function AuthorDetailPage() {
           <h1 className="text-3xl font-serif font-bold text-slate-900 dark:text-amber-100">
             {author.name}
           </h1>
+          <div className="flex flex-wrap gap-2 justify-center md:justify-start">
+            {poemCount > 0 && (
+              <span className="text-xs px-2.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 font-semibold">
+                {poemCount.toLocaleString('vi-VN')} bài thơ
+              </span>
+            )}
+            {storyCount > 0 && (
+              <span className="text-xs px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-semibold">
+                {storyCount.toLocaleString('vi-VN')} tác phẩm văn
+              </span>
+            )}
+          </div>
           <div className="flex flex-wrap gap-4 text-xs font-semibold text-amber-800 dark:text-amber-300">
             {author.birthYear && <span>Năm sinh: {author.birthYear}</span>}
             {country && <span>Quốc gia: {country}</span>}
@@ -143,16 +193,27 @@ export default function AuthorDetailPage() {
 
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <h2 className="text-2xl font-serif font-bold text-slate-900 dark:text-amber-100">
-            Bài thơ của tác giả ({totalPoems.toLocaleString('vi-VN')})
-          </h2>
+          {hasBoth ? (
+            <div className="flex gap-1 bg-slate-100 dark:bg-slate-900 p-1 rounded-lg">
+              <button className={tabClass(tab === 'poem')} onClick={() => setTab('poem')}>
+                Thơ ({poemCount.toLocaleString('vi-VN')})
+              </button>
+              <button className={tabClass(tab === 'story')} onClick={() => setTab('story')}>
+                Văn xuôi ({storyCount.toLocaleString('vi-VN')})
+              </button>
+            </div>
+          ) : (
+            <h2 className="text-2xl font-serif font-bold text-slate-900 dark:text-amber-100">
+              {tab === 'story' ? 'Văn xuôi' : 'Bài thơ'} của tác giả ({total.toLocaleString('vi-VN')})
+            </h2>
+          )}
           <div className="relative w-full sm:w-72">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
               <IconSearch size={16} />
             </span>
             <input
               type="text"
-              placeholder="Tìm trong thơ của tác giả…"
+              placeholder={tab === 'story' ? 'Tìm trong văn của tác giả…' : 'Tìm trong thơ của tác giả…'}
               value={keyword}
               onChange={(e) => {
                 setKeyword(e.target.value)
@@ -163,17 +224,30 @@ export default function AuthorDetailPage() {
           </div>
         </div>
 
-        {poemsLoading ? (
+        {listLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {[1, 2, 3, 4].map((i) => (
               <Skeleton key={i} className="h-40 rounded-xl" />
             ))}
           </div>
+        ) : tab === 'story' ? (
+          stories.length === 0 ? (
+            <p className="text-slate-400 text-sm italic py-4">
+              {debouncedKeyword ? 'Không tìm thấy tác phẩm khớp từ khoá.' : 'Chưa có tác phẩm văn xuôi nào.'}
+            </p>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {stories.map((s) => (
+                  <StoryCard key={s.id} story={s} />
+                ))}
+              </div>
+              <Pagination page={page} totalPages={totalPages} onChange={setPage} totalItems={total} itemLabel="tác phẩm" />
+            </>
+          )
         ) : poems.length === 0 ? (
           <p className="text-slate-400 text-sm italic py-4">
-            {debouncedKeyword
-              ? 'Không tìm thấy bài thơ khớp từ khoá.'
-              : 'Chưa có bài thơ nào của tác giả này trong hệ thống.'}
+            {debouncedKeyword ? 'Không tìm thấy bài thơ khớp từ khoá.' : 'Chưa có bài thơ nào của tác giả này trong hệ thống.'}
           </p>
         ) : (
           <>
@@ -196,13 +270,7 @@ export default function AuthorDetailPage() {
                 </Link>
               ))}
             </div>
-            <Pagination
-              page={page}
-              totalPages={totalPages}
-              onChange={setPage}
-              totalItems={totalPoems}
-              itemLabel="bài thơ"
-            />
+            <Pagination page={page} totalPages={totalPages} onChange={setPage} totalItems={total} itemLabel="bài thơ" />
           </>
         )}
       </div>

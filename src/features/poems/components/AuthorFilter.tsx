@@ -4,7 +4,6 @@ import { useDebounce } from '@/hooks/useDebounce'
 import type { AuthorResponse } from '@/types'
 import type { Ref } from '@/features/browse/browseContext'
 
-const countOf = (a: AuthorResponse) => a.poemCount ?? a.poem_count
 const PAGE = 30
 
 /**
@@ -15,10 +14,15 @@ const PAGE = 30
 export function AuthorFilter({
   value,
   onChange,
+  type = 'poem',
 }: {
   value: Ref | null
   onChange: (author: Ref | null) => void
+  /** 'poem' (mặc định) lọc theo tác giả thơ; 'story' lọc theo tác giả văn. */
+  type?: 'poem' | 'story'
 }) {
+  const countOf = (a: AuthorResponse) =>
+    type === 'story' ? (a.storyCount ?? a.story_count) : (a.poemCount ?? a.poem_count)
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
   const debounced = useDebounce(query, 300)
@@ -42,9 +46,12 @@ export function AuthorFilter({
     (pageN: number, reset: boolean) => {
       setLoading(true)
       const q = debounced.trim()
-      const req = q
-        ? authorService.getAuthors({ keyword: q, page: pageN, size: PAGE })
-        : authorService.getTopAuthors({ page: pageN, size: PAGE })
+      const req =
+        type === 'story'
+          ? authorService.getAuthors({ type: 'story', keyword: q || undefined, page: pageN, size: PAGE })
+          : q
+            ? authorService.getAuthors({ keyword: q, type: 'poem', page: pageN, size: PAGE })
+            : authorService.getTopAuthors({ page: pageN, size: PAGE })
       req
         .then((res) => {
           pageRef.current = pageN
@@ -54,7 +61,7 @@ export function AuthorFilter({
         .catch(() => reset && setOptions([]))
         .finally(() => setLoading(false))
     },
-    [debounced],
+    [debounced, type],
   )
 
   useEffect(() => {

@@ -162,7 +162,7 @@ export default function PoemsPage() {
   return (
     <div className="flex gap-6 py-4">
       {/* Cây điều hướng — bê từ trang Duyệt sang */}
-      <aside className="thin-scrollbar hidden lg:block w-60 flex-shrink-0 self-start sticky top-20 max-h-[calc(100vh-6rem)] overflow-y-auto border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900">
+      <aside className="thin-scrollbar hidden lg:block w-60 flex-shrink-0 self-start sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900">
         <BrowseContext.Provider value={browseValue}>
           <BrowseTree />
         </BrowseContext.Provider>
