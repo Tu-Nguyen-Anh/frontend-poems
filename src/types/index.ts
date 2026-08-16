@@ -43,10 +43,13 @@ export interface UserResponse {
   username: string
   email: string
   phoneNumber?: string
+  phone_number?: string
   phone?: string
   role: UserRole | string
   createdAt?: string
+  created_at?: string
   updatedAt?: string
+  updated_at?: string
 }
 
 export interface TokenResponse {
@@ -199,6 +202,9 @@ export interface ReplyResponse {
   username: string
   createdAt?: string
   contentComment?: string
+  content_comment?: string
+  poemId?: number
+  poem_id?: number
   /** API trả snake_case, không có transform ở client */
   comment_id?: number
   user_id?: number
@@ -222,10 +228,13 @@ export enum FeedbackStatus {
 export interface FeedbackResponse {
   id: number
   content: string
-  userId: number
-  poemId: number
+  userId?: number
+  user_id?: number
+  poemId?: number
+  poem_id?: number
   username: string
-  createdAt: string
+  createdAt?: string
+  created_at?: string
   status: FeedbackStatus | string
 }
 

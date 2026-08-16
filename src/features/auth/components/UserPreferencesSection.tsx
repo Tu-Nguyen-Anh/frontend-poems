@@ -182,14 +182,14 @@ export function UserPreferencesSection({ userId }: UserPreferencesSectionProps) 
     preferences.eras.length > 0
 
   return (
-    <section className="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-8">
+    <section className="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-2xl border border-slate-200/80 dark:border-slate-700 shadow-sm space-y-8">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-slate-100 dark:border-slate-700">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-slate-200/70 dark:border-slate-700">
         <div>
           <h2 className="text-xl font-serif font-bold text-slate-900 dark:text-amber-100 flex items-center gap-2">
             <span>✨</span> Cá Nhân Hóa Sở Thích Đọc Thơ
           </h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
             Chọn tối đa 3 tác giả, 3 thể loại và 3 kỷ nguyên bạn yêu thích nhất để nhận gợi ý bài thơ ngẫu nhiên phù hợp.
           </p>
         </div>
@@ -208,7 +208,7 @@ export function UserPreferencesSection({ userId }: UserPreferencesSectionProps) 
             type="button"
             onClick={handleSavePreferences}
             disabled={savingPreferences}
-            className="px-4 py-2 bg-amber-700 hover:bg-amber-800 text-white font-medium text-xs rounded-lg transition-colors shadow-sm disabled:opacity-50"
+            className="px-4 py-2 bg-amber-700 hover:bg-amber-800 text-white font-medium text-xs rounded-xl transition-colors shadow-sm disabled:opacity-50"
           >
             {savingPreferences ? 'Đang lưu...' : 'Lưu sở thích'}
           </button>
@@ -272,7 +272,7 @@ export function UserPreferencesSection({ userId }: UserPreferencesSectionProps) 
                     setAuthorDropdownOpen(true)
                   }}
                   onFocus={() => setAuthorDropdownOpen(true)}
-                  className="w-full px-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/40"
+                  className="w-full px-3.5 py-2 text-xs bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/30"
                 />
 
                 {authorDropdownOpen && (
@@ -281,7 +281,7 @@ export function UserPreferencesSection({ userId }: UserPreferencesSectionProps) 
                       className="fixed inset-0 z-10"
                       onClick={() => setAuthorDropdownOpen(false)}
                     />
-                    <div className="absolute left-0 right-0 top-full mt-1 max-h-48 overflow-y-auto bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl z-20 py-1 divide-y divide-slate-100 dark:divide-slate-700">
+                    <div className="absolute left-0 right-0 top-full mt-1.5 max-h-48 overflow-y-auto bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl z-20 py-1 divide-y divide-slate-100 dark:divide-slate-700/50">
                       {filteredAuthors
                         .filter((a) => !preferences.authorIds.includes(a.id))
                         .slice(0, 15)
@@ -290,7 +290,7 @@ export function UserPreferencesSection({ userId }: UserPreferencesSectionProps) 
                             key={author.id}
                             type="button"
                             onClick={() => handleAddAuthor(author.id)}
-                            className="w-full text-left px-3 py-1.5 text-xs text-slate-800 dark:text-slate-200 hover:bg-amber-50 dark:hover:bg-slate-700/80 transition-colors flex items-center justify-between"
+                            className="w-full text-left px-3.5 py-2 text-xs text-slate-800 dark:text-slate-200 hover:bg-amber-50/70 dark:hover:bg-slate-700 transition-colors flex items-center justify-between"
                           >
                             <span className="font-medium">{author.name}</span>
                             {author.hometown && (
@@ -331,10 +331,10 @@ export function UserPreferencesSection({ userId }: UserPreferencesSectionProps) 
                     key={genre.id}
                     type="button"
                     onClick={() => handleToggleGenre(genre.id)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                    className={`px-3.5 py-1.5 rounded-xl text-xs font-medium transition-all ${
                       isSelected
-                        ? 'bg-amber-700 text-white shadow-sm ring-2 ring-amber-500/40'
-                        : 'bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-amber-400'
+                        ? 'bg-amber-700 text-white shadow-sm ring-2 ring-amber-500/30 font-semibold'
+                        : 'bg-slate-50 dark:bg-slate-900/60 text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700 hover:border-amber-400 dark:hover:border-amber-600 hover:bg-amber-50/60 dark:hover:bg-slate-800'
                     }`}
                   >
                     {isSelected && <span className="mr-1">✓</span>}
@@ -366,10 +366,10 @@ export function UserPreferencesSection({ userId }: UserPreferencesSectionProps) 
                     key={era}
                     type="button"
                     onClick={() => handleToggleEra(era)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                    className={`px-3.5 py-1.5 rounded-xl text-xs font-medium transition-all ${
                       isSelected
-                        ? 'bg-amber-700 text-white shadow-sm ring-2 ring-amber-500/40'
-                        : 'bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-amber-400'
+                        ? 'bg-amber-700 text-white shadow-sm ring-2 ring-amber-500/30 font-semibold'
+                        : 'bg-slate-50 dark:bg-slate-900/60 text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700 hover:border-amber-400 dark:hover:border-amber-600 hover:bg-amber-50/60 dark:hover:bg-slate-800'
                     }`}
                   >
                     {isSelected && <span className="mr-1">✓</span>}
@@ -383,7 +383,7 @@ export function UserPreferencesSection({ userId }: UserPreferencesSectionProps) 
       )}
 
       {/* Recommended Random Poems Section */}
-      <div className="pt-6 border-t border-slate-100 dark:border-slate-700 space-y-4">
+      <div className="pt-6 border-t border-slate-200/70 dark:border-slate-700 space-y-4">
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-base font-serif font-bold text-slate-900 dark:text-amber-100 flex items-center gap-2">
@@ -400,7 +400,7 @@ export function UserPreferencesSection({ userId }: UserPreferencesSectionProps) 
             type="button"
             onClick={() => fetchRecommendations()}
             disabled={loadingRecommendations}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 dark:bg-slate-700/60 dark:hover:bg-slate-700 text-amber-800 dark:text-amber-300 text-xs font-semibold transition-colors disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-amber-100/70 hover:bg-amber-200/70 dark:bg-slate-900 dark:hover:bg-slate-700 text-amber-900 dark:text-amber-200 text-xs font-semibold border border-amber-200/80 dark:border-slate-700 transition-colors disabled:opacity-50"
             title="Lấy danh sách ngẫu nhiên mới"
           >
             <span className={loadingRecommendations ? 'animate-spin inline-block' : ''}>🎲</span>
@@ -411,7 +411,7 @@ export function UserPreferencesSection({ userId }: UserPreferencesSectionProps) 
         {loadingRecommendations ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {[1, 2, 3, 4].map((n) => (
-              <div key={n} className="p-4 rounded-xl border border-slate-200 dark:border-slate-700 animate-pulse space-y-2">
+              <div key={n} className="p-4 rounded-2xl border border-slate-200/80 dark:border-slate-700 animate-pulse space-y-2 bg-slate-50/50 dark:bg-slate-900/30">
                 <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-3/4" />
                 <div className="h-3 bg-slate-200 dark:bg-slate-700 rounded w-1/2" />
                 <div className="h-8 bg-slate-100 dark:bg-slate-800 rounded w-full" />
@@ -419,7 +419,7 @@ export function UserPreferencesSection({ userId }: UserPreferencesSectionProps) 
             ))}
           </div>
         ) : recommendedPoems.length === 0 ? (
-          <div className="p-6 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 text-center space-y-2">
+          <div className="p-6 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-700 text-center space-y-2">
             <p className="text-sm font-serif italic text-slate-500 dark:text-slate-400">
               Không tìm thấy bài thơ nào khớp chính xác với tất cả tiêu chí sở thích đã chọn.
             </p>
@@ -433,7 +433,7 @@ export function UserPreferencesSection({ userId }: UserPreferencesSectionProps) 
               <Link
                 key={poem.id}
                 to={toPoemSlug(poem)}
-                className="group p-5 rounded-xl bg-slate-50/70 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-700 hover:border-amber-400 dark:hover:border-amber-600 transition-all space-y-2 flex flex-col justify-between"
+                className="group p-5 rounded-2xl bg-slate-50/70 dark:bg-slate-900/50 border border-slate-200/80 dark:border-slate-700/80 hover:border-amber-400/80 dark:hover:border-amber-600/80 hover:shadow-sm transition-all space-y-2 flex flex-col justify-between"
               >
                 <div className="space-y-1">
                   <div className="flex items-center justify-between gap-2">

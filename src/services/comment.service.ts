@@ -128,22 +128,31 @@ export const commentService = {
     }
     if (poemId) payload.poem = { id: poemId }
 
+    let result: any
     try {
       const res = await oplearnClient.post<any>('/comments', payload, { params: { poemId, poem_id: poemId } })
-      return res.data?.data || res.data
+      result = res.data?.data || res.data
     } catch (err1: any) {
       try {
         const res = await oplearnClient.post<any>(`/comments/poem/${poemId}`, payload, { params: { poemId, poem_id: poemId } })
-        return res.data?.data || res.data
+        result = res.data?.data || res.data
       } catch (err2: any) {
         try {
           const res = await oplearnClient.post<any>(`/poems/${poemId}/comments`, payload, { params: { poemId, poem_id: poemId } })
-          return res.data?.data || res.data
+          result = res.data?.data || res.data
         } catch {
           throw err1
         }
       }
     }
+
+    const uId = result?.userId ?? result?.user_id
+    const uName = result?.username
+    if (uId && uName) {
+      localStorage.setItem(`user_id_${uName}`, String(uId))
+      localStorage.setItem('last_known_user_id', String(uId))
+    }
+    return result
   },
 
   async updateComment(id: number, content: string): Promise<CommentResponse> {

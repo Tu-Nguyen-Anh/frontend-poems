@@ -20,9 +20,14 @@ export const genreService = {
     return res.data.data
   },
 
-  async getPoemsByGenre(genreId: number): Promise<PoemResponse[]> {
-    const res = await oplearnClient.get<ResponseGeneral<PageResponse<PoemResponse> | PoemResponse[]>>(`/genres/${genreId}/poems`)
-    const data = res.data.data
+  async getPoemsByGenre(genreId: number, params?: { page?: number; size?: number }): Promise<PoemResponse[]> {
+    const res = await oplearnClient.get<ResponseGeneral<PageResponse<PoemResponse> | PoemResponse[]>>(`/genres/${genreId}/poems`, {
+      params: {
+        page: params?.page ?? 0,
+        size: params?.size ?? 100,
+      },
+    })
+    const data = res.data?.data || res.data
     if (Array.isArray(data)) return data
     if (data && Array.isArray((data as PageResponse<PoemResponse>).content)) {
       return (data as PageResponse<PoemResponse>).content

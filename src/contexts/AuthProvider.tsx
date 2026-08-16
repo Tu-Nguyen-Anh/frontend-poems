@@ -26,10 +26,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       role = UserRole.ADMIN
     }
 
-    const userId = claims?.userId ?? (claims as any)?.id ?? tokensData?.userId ?? tokensData?.id ?? tokensData?.user?.id
+    const userId =
+      claims?.userId ??
+      (claims as any)?.user_id ??
+      (claims as any)?.id ??
+      tokensData?.userId ??
+      tokensData?.user_id ??
+      tokensData?.id ??
+      tokensData?.user?.id
 
     const nextUser: AuthUser = {
-      id: userId ? Number(userId) : undefined,
+      id: userId !== undefined && userId !== null ? Number(userId) : undefined,
       username: claims?.sub ?? (claims as any)?.username ?? tokensData?.username ?? usernameFallback,
       email: (claims as any)?.email ?? tokensData?.email ?? tokensData?.user?.email,
       phoneNumber: (claims as any)?.phoneNumber ?? (claims as any)?.phone ?? tokensData?.phoneNumber ?? tokensData?.phone ?? tokensData?.user?.phoneNumber,

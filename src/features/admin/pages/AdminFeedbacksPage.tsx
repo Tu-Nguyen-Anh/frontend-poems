@@ -136,10 +136,10 @@ export default function AdminFeedbacksPage() {
                 return (
                   <tr key={f.id} className="hover:bg-slate-800/50 transition-colors">
                     <td className="px-6 py-4 font-mono text-xs text-slate-500">#{f.id}</td>
-                    <td className="px-6 py-4 font-bold text-slate-100">{f.username || `User #${f.userId}`}</td>
+                    <td className="px-6 py-4 font-bold text-slate-100">{f.username || `User #${f.userId ?? f.user_id}`}</td>
                     <td className="px-6 py-4">
-                      <Link to={toPoemDetail(f.poemId)} className="text-amber-400 hover:underline">
-                        Bài thơ #{f.poemId}
+                      <Link to={toPoemDetail(f.poemId ?? f.poem_id ?? '')} className="text-amber-400 hover:underline">
+                        Bài thơ #{f.poemId ?? f.poem_id}
                       </Link>
                     </td>
                     <td className="px-6 py-4 text-slate-200 min-w-[280px]">

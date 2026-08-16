@@ -115,8 +115,8 @@ export default function AdminPoemsPage() {
                 <tr key={poem.id} className="hover:bg-slate-800/50 transition-colors">
                   <td className="px-6 py-4 font-mono text-xs text-slate-500">#{poem.id}</td>
                   <td className="px-6 py-4 font-bold text-slate-100">{poem.name}</td>
-                  <td className="px-6 py-4 text-amber-400">{poem.authorName || 'Vô danh'}</td>
-                  <td className="px-6 py-4">{poem.genreName || '—'}</td>
+                  <td className="px-6 py-4 text-amber-400">{poem.authorName || poem.author_name || 'Vô danh'}</td>
+                  <td className="px-6 py-4">{poem.genreName || poem.genre_name || '—'}</td>
                   <td className="px-6 py-4 font-mono text-xs">{poem.year || '—'}</td>
                   <td className="px-6 py-4 text-right space-x-2">
                     <button

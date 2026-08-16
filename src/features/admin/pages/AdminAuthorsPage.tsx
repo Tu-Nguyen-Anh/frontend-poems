@@ -104,7 +104,7 @@ export default function AdminAuthorsPage() {
                 <tr key={author.id} className="hover:bg-slate-800/50 transition-colors">
                   <td className="px-6 py-4 font-mono text-xs text-slate-500">#{author.id}</td>
                   <td className="px-6 py-4 font-bold text-slate-100">{author.name}</td>
-                  <td className="px-6 py-4 font-mono text-xs">{author.birthYear || '—'}</td>
+                  <td className="px-6 py-4 font-mono text-xs">{author.birthYear || (author as any).birth_year || '—'}</td>
                   <td className="px-6 py-4">{author.hometown || '—'}</td>
                   <td className="px-6 py-4 truncate max-w-xs text-slate-400">
                     {author.achievement || '—'}

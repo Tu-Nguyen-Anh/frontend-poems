@@ -23,14 +23,42 @@ let refreshPromise: Promise<string> | null = null
 
 async function refreshAccessToken(): Promise<string> {
   const refreshToken = tokenStorage.getRefreshToken()
-  if (!refreshToken) throw new Error('Chưa đăng nhập')
+  if (!refreshToken) throw new Error('Chưa đăng nhập hoặc không tìm thấy refresh token')
 
-  const { data } = await axios.post<ResponseGeneral<TokenResponse>>(
+  // Backend dùng Jackson SNAKE_CASE nên gửi cả refresh_token và refreshToken để tương thích 100%
+  const res = await axios.post<any>(
     `${env.OPLEARN_API_URL}/auth/refresh`,
-    { refreshToken },
+    {
+      refresh_token: refreshToken,
+      refreshToken: refreshToken,
+    },
+    {
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept-Language': 'vi',
+      },
+    },
   )
-  tokenStorage.saveTokens(data.data)
-  return data.data.accessToken || (data.data as any).access_token
+
+  const tokenData = res.data?.data ?? res.data
+  if (!tokenData) {
+    throw new Error('Dữ liệu phản hồi token không hợp lệ')
+  }
+
+  tokenStorage.saveTokens(tokenData)
+
+  const newAccessToken =
+    tokenData.accessToken ||
+    tokenData.access_token ||
+    tokenData.token ||
+    tokenData.data?.accessToken ||
+    tokenData.data?.access_token
+
+  if (!newAccessToken) {
+    throw new Error('Không trích xuất được access token mới')
+  }
+
+  return newAccessToken
 }
 
 interface RetriableConfig extends InternalAxiosRequestConfig {
@@ -49,7 +77,8 @@ oplearnClient.interceptors.response.use(
 
     config._retried = true
 
-    if (!tokenStorage.getRefreshToken()) {
+    const currentRefreshToken = tokenStorage.getRefreshToken()
+    if (!currentRefreshToken) {
       throw error
     }
 
@@ -60,9 +89,11 @@ oplearnClient.interceptors.response.use(
       const accessToken = await refreshPromise
       if (config.headers) {
         config.headers.Authorization = `Bearer ${accessToken}`
+        config.headers['Authorization'] = `Bearer ${accessToken}`
       }
       return oplearnClient(config)
     } catch (refreshError) {
+      console.warn('Làm mới access token thất bại, chuyển hướng đăng nhập:', refreshError)
       tokenStorage.clear()
       window.location.href = PATHS.LOGIN
       throw refreshError

@@ -36,13 +36,26 @@ export const userService = {
   },
 
   async createUser(data: CreateUserPayload): Promise<UserResponse> {
-    const res = await oplearnClient.post<ResponseGeneral<UserResponse>>('/users', data)
-    return res.data.data
+    const payload = {
+      username: data.username,
+      email: data.email,
+      password: data.password,
+      phone_number: data.phoneNumber ?? '',
+      phoneNumber: data.phoneNumber ?? '',
+      role: data.role,
+    }
+    const res = await oplearnClient.post<any>('/users', payload)
+    return res.data?.data || res.data
   },
 
   async updateUser(id: number, data: UpdateUserPayload): Promise<UserResponse> {
-    const res = await oplearnClient.put<ResponseGeneral<UserResponse>>(`/users/${id}`, data)
-    return res.data.data
+    const payload: any = { ...data }
+    if (data.phoneNumber !== undefined) {
+      payload.phone_number = data.phoneNumber
+      payload.phoneNumber = data.phoneNumber
+    }
+    const res = await oplearnClient.put<any>(`/users/${id}`, payload)
+    return res.data?.data || res.data
   },
 
   async deleteUser(id: number): Promise<void> {

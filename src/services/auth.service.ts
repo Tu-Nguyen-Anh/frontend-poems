@@ -29,7 +29,10 @@ export const authService = {
     const refreshToken = tokenStorage.getRefreshToken()
     if (refreshToken) {
       try {
-        await oplearnClient.post('/auth/logout', { refreshToken })
+        await oplearnClient.post('/auth/logout', {
+          refresh_token: refreshToken,
+          refreshToken: refreshToken,
+        })
       } catch (err) {
         console.error('Logout request failed', err)
       }
