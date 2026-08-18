@@ -9,6 +9,9 @@ export function getErrorMessage(error: unknown): string {
       // ResponseGeneral lỗi: message thật nằm ở data.detail (Error{code,detail});
       // resData.message chỉ là reason phrase chung chung ("Bad Request"…) nên xét sau.
       if (resData.data?.detail && typeof resData.data.detail === 'string') {
+        if (resData.data.detail === 'Invalid username or password') {
+          return 'Tên đăng nhập hoặc mật khẩu không chính xác.'
+        }
         return resData.data.detail
       }
       if (resData.data?.message && typeof resData.data.message === 'string') {
@@ -24,12 +27,16 @@ export function getErrorMessage(error: unknown): string {
       if (resData.data && (resData.data as any).detail) return (resData.data as any).detail
     }
     if (typeof resData === 'string') return resData
-    if (status === 401) return 'Phiên đăng nhập hết hạn hoặc không tìm thấy Bearer Token (401).'
+    if (status === 401) return 'Tên đăng nhập hoặc mật khẩu không chính xác (401).'
     if (status === 403) return 'Tài khoản không có quyền Admin để thực hiện thao tác này (403).'
     if (status === 404) return `API backend không tồn tại (404: ${error.config?.url}).`
     if (status === 500) return 'Lỗi hệ thống máy chủ backend (500).'
+    if (error.code === 'ERR_NETWORK' || error.message?.includes('Network Error')) {
+      return 'Không thể kết nối đến máy chủ backend (Network Error). Vui lòng kiểm tra backend có đang chạy không.'
+    }
     return error.message || 'Lỗi kết nối máy chủ.'
   }
   if (error instanceof Error) return error.message
   return 'Đã có lỗi xảy ra, vui lòng thử lại sau.'
 }
+

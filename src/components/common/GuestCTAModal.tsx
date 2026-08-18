@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { useGuestCTAModal } from '@/contexts/GuestCTAModalContext'
 import { PATHS } from '@/routes/paths'
+import { GoogleLoginButton } from '@/components/auth/GoogleLoginButton'
 
 export function GuestCTAModal() {
   const { isOpen, actionName, closeModal } = useGuestCTAModal()
@@ -47,7 +48,7 @@ export function GuestCTAModal() {
           Đăng nhập để <strong>{actionName}</strong>, bình luận và gửi phản hồi cho tác giả.
         </p>
 
-        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+        <div className="flex flex-col sm:flex-row gap-3 justify-center mb-4">
           <button
             onClick={handleLogin}
             className="w-full sm:w-1/2 py-2.5 px-4 bg-amber-700 hover:bg-amber-800 text-white font-medium rounded-md transition-colors"
@@ -60,6 +61,18 @@ export function GuestCTAModal() {
           >
             Đăng ký
           </button>
+        </div>
+
+        <div className="pt-3 border-t border-slate-200 dark:border-slate-700/80">
+          <p className="text-[11px] uppercase tracking-wider text-slate-400 mb-2.5 font-medium">
+            Hoặc đăng nhập nhanh
+          </p>
+          <GoogleLoginButton
+            onSuccess={closeModal}
+            text="signin_with"
+            shape="rectangular"
+            size="medium"
+          />
         </div>
       </div>
     </div>

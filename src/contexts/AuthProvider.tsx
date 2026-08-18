@@ -52,6 +52,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     processTokens(tokens, username)
   }
 
+  const loginWithGoogle = async (googleToken: string) => {
+    const tokens = await authService.loginWithGoogle(googleToken)
+    processTokens(tokens, 'Google User')
+  }
+
   const register = async (username: string, email: string, password: string, phoneNumber?: string) => {
     const tokens = await authService.register({
       username,
@@ -76,7 +81,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   )
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated: user !== null, isAdmin, login, register, logout }}>
+    <AuthContext.Provider value={{ user, isAuthenticated: user !== null, isAdmin, login, loginWithGoogle, register, logout }}>
       {children}
     </AuthContext.Provider>
   )

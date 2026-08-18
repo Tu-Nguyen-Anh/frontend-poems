@@ -25,6 +25,13 @@ export const authService = {
     return tokenData
   },
 
+  async loginWithGoogle(token: string): Promise<TokenResponse> {
+    const res = await oplearnClient.post<any>('/auth/login/google', { token })
+    const tokenData = res.data?.data || res.data
+    tokenStorage.saveTokens(tokenData)
+    return tokenData
+  },
+
   async logout(): Promise<void> {
     const refreshToken = tokenStorage.getRefreshToken()
     if (refreshToken) {

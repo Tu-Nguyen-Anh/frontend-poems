@@ -75,6 +75,10 @@ export interface RefreshTokenRequest {
   refreshToken: string
 }
 
+export interface GoogleLoginRequest {
+  token: string
+}
+
 // --- Poem ---
 
 export interface PoemTranslation {

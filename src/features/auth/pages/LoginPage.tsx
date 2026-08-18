@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { Button, Input } from '@/components/ui'
+import { GoogleLoginButton } from '@/components/auth/GoogleLoginButton'
 import { useAuth } from '@/hooks/useAuth'
 import { PATHS } from '@/routes/paths'
 import { getErrorMessage } from '@/utils/error'
@@ -40,9 +41,9 @@ export default function LoginPage() {
     setLoading(true)
     try {
       if (mode === 'login') {
-        await login(username, password)
+        await login(username.trim(), password)
       } else {
-        await register(username, email, password, phoneNumber)
+        await register(username.trim(), email.trim(), password, phoneNumber.trim())
       }
       navigate(from ?? PATHS.HOME, { replace: true })
     } catch (err) {
@@ -50,6 +51,10 @@ export default function LoginPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleGoogleSuccess = () => {
+    navigate(from ?? PATHS.HOME, { replace: true })
   }
 
   return (
@@ -149,7 +154,23 @@ export default function LoginPage() {
             )}
           </p>
         </form>
+
+        {/* Google Sign-in Section */}
+        <div className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-700">
+          <div className="relative flex items-center justify-center mb-4">
+            <span className="bg-white dark:bg-slate-800 px-3 text-xs font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+              Hoặc tiếp tục với
+            </span>
+          </div>
+          <GoogleLoginButton
+            onSuccess={handleGoogleSuccess}
+            text={mode === 'login' ? 'signin_with' : 'signup_with'}
+            shape="rectangular"
+            size="large"
+          />
+        </div>
       </div>
     </div>
   )
 }
+
