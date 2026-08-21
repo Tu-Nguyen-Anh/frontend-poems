@@ -58,9 +58,10 @@ export function HighlightableContent({ content, poemId, storyChapterId, enabled,
   const containerRef = useRef<HTMLDivElement>(null)
   const [highlights, setHighlights] = useState<Highlight[]>([])
 
-  // Vùng đang bôi đen (điều khiển THANH công cụ nổi ở đáy). Cập nhật liên tục khi
-  // kéo handle trên điện thoại → kéo dài xong bấm nút vẫn lấy đúng đoạn.
+  // Vùng đang bôi đen (điều khiển THANH công cụ nổi ở đáy).
   const [sel, setSel] = useState<SelInfo | null>(null)
+  // Bản ổn định của vùng chọn cuối (nút dùng, tránh race khi tap làm mất selection).
+  const lastSelRef = useRef<SelInfo | null>(null)
   // Menu chuột phải (desktop) tại con trỏ.
   const [ctx, setCtx] = useState<(PopoverPos & { overlap: Highlight[] }) | null>(null)
   // Ô nhập ghi chú (mở từ nút "Ghi chú"); giữ lại đoạn đã chọn để tô kèm ghi chú.
@@ -110,17 +111,32 @@ export function HighlightableContent({ content, poemId, storyChapterId, enabled,
     return { start, end, text, overlap }
   }, [])
 
-  // Theo dõi bôi đen (cả chuột lẫn chạm) → cập nhật thanh nổi. selectionchange là
-  // event chuẩn chạy trong lúc kéo handle trên điện thoại. Debounce nhẹ cho mượt.
+  // Hiện thanh khi KẾT THÚC bôi đen (nhả chuột/tay). KHÔNG dùng selectionchange
+  // (fire liên tục lúc kéo handle → re-render giữa chừng làm MẤT vùng chọn trên
+  // điện thoại, không kéo dài được). Bắt đầu chạm/kéo mới thì ẨN thanh để kéo thoải mái.
   useEffect(() => {
     let t = 0
-    const onChange = () => {
+    const showAfterGesture = () => {
       window.clearTimeout(t)
-      t = window.setTimeout(() => setSel(computeSelection()), 120)
+      t = window.setTimeout(() => {
+        const info = computeSelection()
+        if (info) lastSelRef.current = info
+        setSel(info)
+      }, 50)
     }
-    document.addEventListener('selectionchange', onChange)
+    const hideOnStart = (e: Event) => {
+      const target = e.target as HTMLElement | null
+      if (target && typeof target.closest === 'function' && target.closest('[data-hl-bar]')) return
+      window.clearTimeout(t)
+      setSel(null)
+    }
+    document.addEventListener('mouseup', showAfterGesture)
+    document.addEventListener('touchend', showAfterGesture)
+    document.addEventListener('pointerdown', hideOnStart)
     return () => {
-      document.removeEventListener('selectionchange', onChange)
+      document.removeEventListener('mouseup', showAfterGesture)
+      document.removeEventListener('touchend', showAfterGesture)
+      document.removeEventListener('pointerdown', hideOnStart)
       window.clearTimeout(t)
     }
   }, [computeSelection])
@@ -129,6 +145,7 @@ export function HighlightableContent({ content, poemId, storyChapterId, enabled,
     window.getSelection()?.removeAllRanges()
     setSel(null)
     setCtx(null)
+    lastSelRef.current = null
   }
 
   // Chuột phải (desktop) trên vùng bôi đen → menu tại con trỏ (Tô màu/Ghi chú/Copy).
@@ -148,8 +165,8 @@ export function HighlightableContent({ content, poemId, storyChapterId, enabled,
     clearSelection()
   }
 
-  // Đoạn dùng cho hành động: ưu tiên đọc mới (kéo dài xong), fallback state gần nhất.
-  const currentSel = (): SelInfo | null => computeSelection() ?? sel
+  // Đoạn dùng cho hành động: ưu tiên đọc selection sống, fallback bản ổn định cuối.
+  const currentSel = (): SelInfo | null => computeSelection() ?? lastSelRef.current
 
   const highlightSelection = async () => {
     const info = currentSel()
@@ -314,10 +331,10 @@ export function HighlightableContent({ content, poemId, storyChapterId, enabled,
           onMouseDown/onTouchStart preventDefault để chạm nút không xoá vùng chọn. */}
       {showBar && (
         <div
+          data-hl-bar
           className="fixed left-1/2 -translate-x-1/2 bottom-4 z-50 flex items-center gap-1 p-1 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-lg text-slate-700 dark:text-slate-200"
           style={{ maxWidth: 'calc(100vw - 24px)' }}
           onMouseDown={(e) => e.preventDefault()}
-          onTouchStart={(e) => e.preventDefault()}
         >
           {enabled && sel.overlap.length > 0 && (
             <button disabled={busy} onClick={removeOverlapping} className={`${barBtn} text-rose-600 dark:text-rose-400`}>
