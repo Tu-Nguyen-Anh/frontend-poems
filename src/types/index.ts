@@ -181,23 +181,59 @@ export interface GenreRequest {
   name: string
 }
 
+// --- Poem Composition (Góc Sáng Tác) ---
+
+export type PoemCompositionStatus = 'PUBLISHED' | 'DRAFT' | 'PRIVATE'
+
+export interface PoemCompositionResponse {
+  id: number
+  userId?: number
+  user_id?: number
+  username?: string
+  content: string
+  penName?: string
+  pen_name?: string
+  title: string
+  genreId?: number
+  genre_id?: number
+  genreName?: string
+  genre_name?: string
+  status: PoemCompositionStatus
+  createdAt?: string
+  created_at?: string
+}
+
+export interface PoemCompositionRequest {
+  title: string
+  content: string
+  penName?: string
+  pen_name?: string
+  genreId?: number
+  genre_id?: number
+  status?: PoemCompositionStatus
+}
+
 // --- Comment & Reply ---
 
 export interface CommentResponse {
   id: number
   content: string
   poemId?: number
+  poem_id?: number
+  poemCompositionId?: number
+  poem_composition_id?: number
   userId?: number
+  user_id?: number
   username: string
   createdAt?: string
-  /** API trả snake_case, không có transform ở client */
-  poem_id?: number
-  user_id?: number
   created_at?: string
 }
 
 export interface CommentRequest {
-  poemId: number
+  poemId?: number
+  poem_id?: number
+  poemCompositionId?: number
+  poem_composition_id?: number
   content: string
 }
 

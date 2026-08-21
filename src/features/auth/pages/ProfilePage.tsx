@@ -4,16 +4,19 @@ import { useAuth } from '@/hooks/useAuth'
 import { commentService } from '@/services/comment.service'
 import { replyService } from '@/services/reply.service'
 import { feedbackService } from '@/services/feedback.service'
+import { compositionService } from '@/services/composition.service'
 import { userService } from '@/services/user.service'
 import { fileService } from '@/services/file.service'
 import { useToast } from '@/contexts/ToastContext'
 import { getErrorMessage } from '@/utils/error'
 import { formatDate } from '@/utils/format'
-import type { CommentResponse, ReplyResponse, FeedbackResponse, UserResponse } from '@/types'
+import type { CommentResponse, ReplyResponse, FeedbackResponse, UserResponse, PoemCompositionResponse } from '@/types'
 import { PATHS, toPoemDetail } from '@/routes/paths'
 import { Seo } from '@/components/common/Seo'
 import { RichContent } from '@/components/common/RichContent'
 import { UserPreferencesSection } from '../components/UserPreferencesSection'
+import { CompositionCard } from '@/features/compositions/components/CompositionCard'
+import { CompositionModalForm } from '@/features/compositions/components/CompositionModalForm'
 
 export default function ProfilePage() {
   const { user, isAdmin, logout } = useAuth()
@@ -42,6 +45,15 @@ export default function ProfilePage() {
   const [hasMoreFeedbacks, setHasMoreFeedbacks] = useState(false)
   const [totalFeedbacksCount, setTotalFeedbacksCount] = useState<number | null>(null)
   const [loadingMoreFeedbacks, setLoadingMoreFeedbacks] = useState(false)
+
+  // Compositions state with pagination
+  const [userCompositions, setUserCompositions] = useState<PoemCompositionResponse[]>([])
+  const [compositionsPage, setCompositionsPage] = useState(0)
+  const [hasMoreCompositions, setHasMoreCompositions] = useState(false)
+  const [totalCompositionsCount, setTotalCompositionsCount] = useState<number | null>(null)
+  const [loadingMoreCompositions, setLoadingMoreCompositions] = useState(false)
+  const [isCompModalOpen, setIsCompModalOpen] = useState(false)
+  const [editingComposition, setEditingComposition] = useState<PoemCompositionResponse | null>(null)
 
   const [loading, setLoading] = useState(true)
   const [avatarUrl, setAvatarUrl] = useState<string>('')
@@ -172,10 +184,11 @@ export default function ProfilePage() {
       }
 
         if (currentUserId) {
-          const [commRes, replyRes, feedRes] = await Promise.allSettled([
+          const [commRes, replyRes, feedRes, compRes] = await Promise.allSettled([
             commentService.getCommentsByUser(currentUserId, { size: 10 }),
             replyService.getRepliesByUser(currentUserId, { size: 10 }),
             feedbackService.getFeedbacksByUser(currentUserId, { page: 0, size: 10 }),
+            compositionService.getByUser(currentUserId, 0, 10),
           ])
 
           if (commRes.status === 'fulfilled') {
@@ -206,6 +219,16 @@ export default function ProfilePage() {
             const totalF = fData.amount
             setTotalFeedbacksCount(totalF !== null && totalF !== undefined ? totalF : fList.length)
             setHasMoreFeedbacks(totalF ? fList.length < totalF : false)
+          }
+
+          if (compRes.status === 'fulfilled') {
+            const cpData = compRes.value
+            const cpList = cpData.content || []
+            setUserCompositions(cpList)
+            setCompositionsPage(0)
+            const totalCP = cpData.totalElements
+            setTotalCompositionsCount(totalCP !== null && totalCP !== undefined ? totalCP : cpList.length)
+            setHasMoreCompositions(totalCP ? cpList.length < totalCP : false)
           }
         }
       } catch (err) {
@@ -282,6 +305,51 @@ export default function ProfilePage() {
       toast(`Không thể tải thêm góp ý: ${getErrorMessage(err)}`)
     } finally {
       setLoadingMoreFeedbacks(false)
+    }
+  }
+
+  const handleLoadMoreCompositions = async () => {
+    const targetUserId = user?.id ?? userInfo?.id
+    if (!targetUserId || loadingMoreCompositions || !hasMoreCompositions) return
+    const nextPage = compositionsPage + 1
+    setLoadingMoreCompositions(true)
+    try {
+      const res = await compositionService.getByUser(targetUserId, nextPage, 10)
+      const newItems = res.content || []
+      setUserCompositions((prev) => [...prev, ...newItems])
+      setCompositionsPage(nextPage)
+      const total = res.totalElements ?? totalCompositionsCount ?? 0
+      setHasMoreCompositions(userCompositions.length + newItems.length < total)
+    } catch (err) {
+      toast(`Không thể tải thêm bài sáng tác: ${getErrorMessage(err)}`)
+    } finally {
+      setLoadingMoreCompositions(false)
+    }
+  }
+
+  const handleDeleteComposition = async (id: number) => {
+    if (!window.confirm('Bạn có chắc chắn muốn xóa bài thơ sáng tác này không?')) return
+    try {
+      await compositionService.delete(id)
+      setUserCompositions((prev) => prev.filter((c) => c.id !== id))
+      setTotalCompositionsCount((prev) => (prev !== null ? Math.max(0, prev - 1) : 0))
+      toast('Đã xóa bài thơ thành công!')
+    } catch (err) {
+      toast(`Không thể xóa bài thơ: ${getErrorMessage(err)}`)
+    }
+  }
+
+  const handleEditComposition = (item: PoemCompositionResponse) => {
+    setEditingComposition(item)
+    setIsCompModalOpen(true)
+  }
+
+  const handleCompModalSuccess = (saved: PoemCompositionResponse) => {
+    if (editingComposition) {
+      setUserCompositions((prev) => prev.map((p) => (p.id === saved.id ? saved : p)))
+    } else {
+      setUserCompositions((prev) => [saved, ...prev])
+      setTotalCompositionsCount((prev) => (prev !== null ? prev + 1 : 1))
     }
   }
 
@@ -527,7 +595,13 @@ export default function ProfilePage() {
       </div>
 
       {/* User Quick Stats Banner */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div className="p-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 shadow-sm text-center space-y-1">
+          <p className="text-xs text-slate-400 font-medium uppercase tracking-wider">Sáng Tác</p>
+          <p className="text-2xl font-bold font-serif text-amber-700 dark:text-amber-400">
+            {totalCompositionsCount !== null ? totalCompositionsCount : userCompositions.length}
+          </p>
+        </div>
         <div className="p-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 shadow-sm text-center space-y-1">
           <p className="text-xs text-slate-400 font-medium uppercase tracking-wider">Bình Luận</p>
           <p className="text-2xl font-bold font-serif text-amber-700 dark:text-amber-400">
@@ -568,6 +642,83 @@ export default function ProfilePage() {
           userId={user?.id ?? userInfo?.id ?? (user as any)?.userId ?? user?.username ?? 'user_default'}
         />
       </div>
+
+      {/* Sáng Tác Của Tôi (My Compositions) Section */}
+      <section className="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-slate-100 dark:border-slate-700">
+          <div>
+            <h2 className="text-xl font-serif font-bold text-slate-900 dark:text-amber-100 flex items-center gap-2">
+              <span>✍️</span> Tác Phẩm Sáng Tác Của Tôi (
+              {totalCompositionsCount !== null ? totalCompositionsCount : userCompositions.length})
+            </h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              Quản lý các bài thơ tự sáng tác của bạn (bao gồm Bản nháp, Riêng tư và Công khai)
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setEditingComposition(null)
+              setIsCompModalOpen(true)
+            }}
+            className="px-4 py-2 bg-amber-700 hover:bg-amber-800 text-white font-semibold text-xs rounded-xl shadow-sm transition-colors flex items-center gap-1.5 self-start sm:self-auto"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            <span>Sáng tác bài mới</span>
+          </button>
+        </div>
+
+        {loading ? (
+          <p className="text-xs text-slate-400 py-4">Đang tải danh sách bài thơ sáng tác...</p>
+        ) : userCompositions.length === 0 ? (
+          <div className="py-8 text-center space-y-2">
+            <p className="text-sm font-serif italic text-slate-400">Bạn chưa đăng bài thơ sáng tác nào.</p>
+            <button
+              type="button"
+              onClick={() => {
+                setEditingComposition(null)
+                setIsCompModalOpen(true)
+              }}
+              className="text-xs text-amber-700 dark:text-amber-400 font-semibold hover:underline"
+            >
+              Gieo những vần thơ đầu tiên ngay →
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {userCompositions.map((comp) => (
+              <CompositionCard
+                key={comp.id}
+                composition={comp}
+                onEdit={handleEditComposition}
+                onDelete={handleDeleteComposition}
+              />
+            ))}
+
+            {hasMoreCompositions && (
+              <div className="text-center pt-3">
+                <button
+                  type="button"
+                  onClick={handleLoadMoreCompositions}
+                  disabled={loadingMoreCompositions}
+                  className="px-5 py-2 text-xs font-semibold rounded-lg bg-amber-50 hover:bg-amber-100 dark:bg-slate-700/60 dark:hover:bg-slate-700 text-amber-800 dark:text-amber-300 transition-colors disabled:opacity-50 inline-flex items-center gap-2"
+                >
+                  {loadingMoreCompositions ? (
+                    <>
+                      <span className="w-3.5 h-3.5 border-2 border-amber-600 border-t-transparent rounded-full animate-spin inline-block" />
+                      <span>Đang tải thêm...</span>
+                    </>
+                  ) : (
+                    'Xem thêm bài thơ sáng tác'
+                  )}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+      </section>
 
       {/* History of Comments Section */}
       <section className="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
@@ -890,6 +1041,17 @@ export default function ProfilePage() {
           </div>
         </div>
       )}
+
+      {/* Composition Modal Form */}
+      <CompositionModalForm
+        isOpen={isCompModalOpen}
+        onClose={() => {
+          setIsCompModalOpen(false)
+          setEditingComposition(null)
+        }}
+        onSuccess={handleCompModalSuccess}
+        editComposition={editingComposition}
+      />
     </div>
   )
 }

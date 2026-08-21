@@ -16,6 +16,8 @@ const FavoritesPage = lazy(() => import('@/features/poems/pages/FavoritesPage'))
 const MyHighlightsPage = lazy(() => import('@/features/poems/pages/MyHighlightsPage'))
 const AuthorsPage = lazy(() => import('@/features/authors/pages/AuthorsPage'))
 const AuthorDetailPage = lazy(() => import('@/features/authors/pages/AuthorDetailPage'))
+const CompositionsPage = lazy(() => import('@/features/compositions/pages/CompositionsPage'))
+const CompositionDetailPage = lazy(() => import('@/features/compositions/pages/CompositionDetailPage'))
 const GenresPage = lazy(() => import('@/features/genres/pages/GenresPage'))
 const GenreDetailPage = lazy(() => import('@/features/genres/pages/GenreDetailPage'))
 const LoginPage = lazy(() => import('@/features/auth/pages/LoginPage'))
@@ -47,6 +49,8 @@ const router = createBrowserRouter([
       { path: PATHS.STORY_DETAIL, element: <StoryDetailPage /> },
       { path: PATHS.AUTHORS, element: <AuthorsPage /> },
       { path: PATHS.AUTHOR_DETAIL, element: <AuthorDetailPage /> },
+      { path: PATHS.COMPOSITIONS, element: <CompositionsPage /> },
+      { path: PATHS.COMPOSITION_DETAIL, element: <CompositionDetailPage /> },
       { path: PATHS.GENRES, element: <GenresPage /> },
       { path: PATHS.GENRE_DETAIL, element: <GenreDetailPage /> },
       { path: PATHS.LOGIN, element: <LoginPage /> },

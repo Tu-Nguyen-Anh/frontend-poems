@@ -12,6 +12,7 @@ const NAV_LINKS = [
   { to: PATHS.POEMS, label: 'Kho thơ', end: false },
   { to: PATHS.STORIES, label: 'Truyện ngắn', end: false },
   { to: PATHS.AUTHORS, label: 'Tác giả', end: false },
+  { to: PATHS.COMPOSITIONS, label: 'Góc Sáng Tác', end: false },
   { to: PATHS.GENRES, label: 'Thể loại', end: false },
 ]
 

@@ -7,6 +7,8 @@ export const PATHS = {
   POEM_SLUG: '/:slug',
   AUTHORS: '/authors',
   AUTHOR_DETAIL: '/authors/:id',
+  COMPOSITIONS: '/compositions',
+  COMPOSITION_DETAIL: '/compositions/:id',
   GENRES: '/genres',
   GENRE_DETAIL: '/genres/:id',
   LOGIN: '/login',
@@ -97,3 +99,4 @@ export const toPoemDetail = (id: number | string) => `/poems/${id}`
 export const toStoryDetail = (id: number | string) => `/stories/${id}`
 export const toAuthorDetail = (id: number | string) => `/authors/${id}`
 export const toGenreDetail = (id: number | string) => `/genres/${id}`
+export const toCompositionDetail = (id: number | string) => `/compositions/${id}`

@@ -12,12 +12,23 @@ export function getErrorMessage(error: unknown): string {
         if (resData.data.detail === 'Invalid username or password') {
           return 'Tên đăng nhập hoặc mật khẩu không chính xác.'
         }
+        if (resData.data.detail.toLowerCase().includes('too many requests')) {
+          return 'Bạn đang thao tác quá nhanh. Vui lòng thử lại sau 1 phút (tối đa 5 lượt/phút).'
+        }
         return resData.data.detail
       }
       if (resData.data?.message && typeof resData.data.message === 'string') {
+        if (resData.data.message.toLowerCase().includes('too many requests')) {
+          return 'Bạn đang thao tác quá nhanh. Vui lòng thử lại sau 1 phút (tối đa 5 lượt/phút).'
+        }
         return resData.data.message
       }
-      if (resData.message) return resData.message
+      if (resData.message) {
+        if (typeof resData.message === 'string' && resData.message.toLowerCase().includes('too many requests')) {
+          return 'Bạn đang thao tác quá nhanh. Vui lòng thử lại sau 1 phút (tối đa 5 lượt/phút).'
+        }
+        return resData.message
+      }
       if (resData.error && typeof resData.error === 'string') return resData.error
       if (Array.isArray(resData.errors)) return resData.errors.join(', ')
       if (resData.errors && typeof resData.errors === 'object') {
