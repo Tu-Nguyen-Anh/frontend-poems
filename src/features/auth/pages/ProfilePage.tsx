@@ -60,38 +60,37 @@ export default function ProfilePage() {
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
   const avatarInputRef = useRef<HTMLInputElement>(null)
 
-  const userIdentifier = user?.id ? String(user.id) : user?.username || userInfo?.username || 'me'
+  const userIdentifier = user?.id ? String(user.id) : user?.username || userInfo?.username || ''
 
   const saveAvatar = (url: string) => {
     setAvatarUrl(url)
     if (user?.id) localStorage.setItem(`user_avatar_${user.id}`, url)
     if (userInfo?.id) localStorage.setItem(`user_avatar_${userInfo.id}`, url)
     if (user?.username) localStorage.setItem(`user_avatar_${user.username}`, url)
-    localStorage.setItem(`user_avatar_${userIdentifier}`, url)
-    localStorage.setItem('user_avatar_current', url)
+    if (userIdentifier) localStorage.setItem(`user_avatar_${userIdentifier}`, url)
     window.dispatchEvent(new Event('avatar-changed'))
   }
 
   const loadSavedAvatar = () => {
+    if (!user && !userInfo) return ''
     const candidates = [
       user?.id ? `user_avatar_${user.id}` : null,
       userInfo?.id ? `user_avatar_${userInfo.id}` : null,
       user?.username ? `user_avatar_${user.username}` : null,
-      `user_avatar_${userIdentifier}`,
-      'user_avatar_current',
+      userIdentifier ? `user_avatar_${userIdentifier}` : null,
     ].filter(Boolean) as string[]
 
     for (const key of candidates) {
       const val = localStorage.getItem(key)
       if (val) return val
     }
-    return (user as any)?.avatarUrl || (user as any)?.avatar_url || ''
+    return (userInfo as any)?.avatarUrl || (userInfo as any)?.avatar_url || (user as any)?.avatarUrl || (user as any)?.avatar_url || ''
   }
 
   useEffect(() => {
     const found = loadSavedAvatar()
-    if (found) setAvatarUrl(found)
-  }, [user, userInfo])
+    setAvatarUrl(found || '')
+  }, [user?.id, user?.username, userInfo?.id, userInfo?.username])
 
   useEffect(() => {
     if (window.location.hash === '#preferences') {

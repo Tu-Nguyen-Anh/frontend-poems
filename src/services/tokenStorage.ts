@@ -44,5 +44,11 @@ export const tokenStorage = {
     storage.remove(STORAGE_KEYS.ACCESS_TOKEN)
     storage.remove(STORAGE_KEYS.REFRESH_TOKEN)
     storage.remove(STORAGE_KEYS.USER)
+    try {
+      localStorage.removeItem('user_avatar_current')
+      localStorage.removeItem('last_known_user_id')
+    } catch {
+      // Ignore storage errors
+    }
   },
 }

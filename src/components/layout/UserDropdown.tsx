@@ -12,10 +12,13 @@ export function UserDropdown() {
 
   useEffect(() => {
     const updateAvatar = () => {
+      if (!user) {
+        setAvatarUrl('')
+        return
+      }
       const candidates = [
-        user?.id ? `user_avatar_${user.id}` : null,
-        user?.username ? `user_avatar_${user.username}` : null,
-        'user_avatar_current',
+        user.id ? `user_avatar_${user.id}` : null,
+        user.username ? `user_avatar_${user.username}` : null,
       ].filter(Boolean) as string[]
 
       for (const key of candidates) {

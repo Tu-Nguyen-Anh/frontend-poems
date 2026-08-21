@@ -70,8 +70,12 @@ export function CommentItem({
   const userAvatar = isOwner
     ? (user?.id ? localStorage.getItem(`user_avatar_${user.id}`) : null) ||
       (user?.username ? localStorage.getItem(`user_avatar_${user.username}`) : null) ||
-      localStorage.getItem('user_avatar_current')
-    : null
+      (user as any)?.avatarUrl ||
+      (user as any)?.avatar_url ||
+      null
+    : (commentUserId ? localStorage.getItem(`user_avatar_${commentUserId}`) : null) ||
+      (comment.username ? localStorage.getItem(`user_avatar_${comment.username}`) : null) ||
+      null
 
   return (
     <div className="poem-comment-thread">

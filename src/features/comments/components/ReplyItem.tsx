@@ -14,12 +14,17 @@ interface ReplyItemProps {
 export function ReplyItem({ reply, parentUsername, onReply }: ReplyItemProps) {
   const { user } = useAuth()
   const createdAt = reply.createdAt ?? reply.created_at
-  const isOwner = !!user && (user.id === (reply.userId ?? reply.user_id) || user.username === reply.username)
+  const replyUserId = reply.userId ?? reply.user_id
+  const isOwner = !!user && (user.id === replyUserId || user.username === reply.username)
   const userAvatar = isOwner
     ? (user?.id ? localStorage.getItem(`user_avatar_${user.id}`) : null) ||
       (user?.username ? localStorage.getItem(`user_avatar_${user.username}`) : null) ||
-      localStorage.getItem('user_avatar_current')
-    : null
+      (user as any)?.avatarUrl ||
+      (user as any)?.avatar_url ||
+      null
+    : (replyUserId ? localStorage.getItem(`user_avatar_${replyUserId}`) : null) ||
+      (reply.username ? localStorage.getItem(`user_avatar_${reply.username}`) : null) ||
+      null
 
   return (
     <div className="poem-comment">
