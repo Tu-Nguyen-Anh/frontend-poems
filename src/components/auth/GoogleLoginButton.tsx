@@ -149,7 +149,7 @@ export function GoogleLoginButton({
       setIsRendered(true)
 
       if (enableOneTap) {
-        window.google.accounts.id.prompt()
+        window.google.accounts.id.prompt?.()
       }
     } catch (e) {
       console.error('Lỗi khi render nút Google Sign-In:', e)
@@ -178,7 +178,7 @@ export function GoogleLoginButton({
           disabled={loading}
           onClick={() => {
             if (window.google?.accounts?.id) {
-              window.google.accounts.id.prompt()
+              window.google.accounts.id.prompt?.()
             } else {
               toast('Đang tải dịch vụ Google Sign-In, vui lòng thử lại sau giây lát...', 'info')
             }

@@ -44,15 +44,23 @@ export const highlightService = {
     return (res.data.data || []).map(mapHighlight)
   },
 
+  /** Highlight của 1 chương truyện (user hiện tại). */
+  async listByStoryChapter(storyChapterId: number): Promise<Highlight[]> {
+    const res = await oplearnClient.get<ResponseGeneral<any[]>>(`/highlights/story-chapter/${storyChapterId}`)
+    return (res.data.data || []).map(mapHighlight)
+  },
+
   async create(input: {
-    poemId: number
+    poemId?: number
+    storyChapterId?: number
     startOffset: number
     endOffset: number
     selectedText: string
     note?: string
   }): Promise<Highlight> {
     const res = await oplearnClient.post<ResponseGeneral<any>>('/highlights', {
-      poem_id: input.poemId,
+      poem_id: input.poemId ?? null,
+      story_chapter_id: input.storyChapterId ?? null,
       start_offset: input.startOffset,
       end_offset: input.endOffset,
       selected_text: input.selectedText,

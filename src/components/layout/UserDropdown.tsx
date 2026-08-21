@@ -52,25 +52,28 @@ export function UserDropdown() {
     navigate(PATHS.HOME)
   }
 
+  // Ưu tiên tên hiển thị (vd tên thật từ Google) thay vì username/email
+  const displayName = (user?.displayName || user?.username || '').trim()
+
   return (
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 p-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors border border-amber-500/20"
+        className="flex items-center gap-2 p-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
       >
         {avatarUrl ? (
           <img
             src={avatarUrl}
-            alt={user?.username}
+            alt={displayName}
             className="w-8 h-8 rounded-full object-cover border border-amber-500"
           />
         ) : (
           <div className="w-8 h-8 rounded-full bg-amber-600 text-white flex items-center justify-center font-bold text-sm">
-            {user?.username.charAt(0).toUpperCase()}
+            {displayName.charAt(0).toUpperCase()}
           </div>
         )}
         <span className="hidden sm:inline text-sm font-medium text-slate-700 dark:text-slate-200">
-          {user?.username}
+          {displayName}
         </span>
         <span className="text-xs text-slate-400">▼</span>
       </button>
@@ -80,7 +83,7 @@ export function UserDropdown() {
           <div className="px-4 py-2 border-b border-slate-100 dark:border-slate-700">
             <p className="text-xs text-slate-400">Tài khoản</p>
             <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate">
-              {user?.username}
+              {displayName}
             </p>
             {isAdmin && (
               <span className="inline-block mt-1 px-2 py-0.5 text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-200 rounded-full">

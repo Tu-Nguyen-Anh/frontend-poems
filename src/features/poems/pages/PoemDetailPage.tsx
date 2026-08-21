@@ -1,9 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useLocation, useNavigate, Link } from 'react-router-dom'
 import { poemService } from '@/services/poem.service'
 import { commentService } from '@/services/comment.service'
 import { replyService } from '@/services/reply.service'
-import { useReaderMode } from '@/contexts/ReaderModeContext'
 import { useToast } from '@/contexts/ToastContext'
 import type { PoemResponse, CommentResponse, ReplyResponse } from '@/types'
 import { PATHS, poemIdFromSlug, toPoemSlug, toAuthorDetail } from '@/routes/paths'
@@ -16,6 +15,7 @@ import { useLocalStorage } from '@/hooks/useLocalStorage'
 import { poemDisplayTitle, poemAuthorName, poemGenreName } from '@/features/poems/display'
 import { FavoriteButton } from '@/features/poems/components/FavoriteButton'
 import { HighlightableContent } from '@/features/poems/components/HighlightableContent'
+import { ExcerptImageModal } from '@/features/poems/components/ExcerptImageModal'
 import { useAuth } from '@/hooks/useAuth'
 import { languageLabel } from '@/features/browse/labels'
 import { Seo } from '@/components/common/Seo'
@@ -31,7 +31,6 @@ export default function PoemDetailPage() {
 
   const location = useLocation()
   const navigate = useNavigate()
-  const { mode, toggleMode } = useReaderMode()
   const { toast } = useToast()
   const { isAuthenticated } = useAuth()
 
@@ -47,6 +46,40 @@ export default function PoemDetailPage() {
   const [fontIdx, setFontIdx] = useLocalStorage('poems_reader_font', 1)
   const [leadingIdx, setLeadingIdx] = useLocalStorage('poems_reader_leading', 1)
   const [copied, setCopied] = useState<'' | 'poem' | 'link'>('')
+
+  // Tạo ảnh đoạn trích: giữ đoạn thơ đang bôi đen (trong khung bài) để tạo ảnh.
+  const poemCardRef = useRef<HTMLDivElement>(null)
+  const excerptSelectionRef = useRef('')
+  const [excerptOpen, setExcerptOpen] = useState(false)
+  const [excerptText, setExcerptText] = useState('')
+  const [excerptTranslator, setExcerptTranslator] = useState<string | undefined>(undefined)
+
+  // Lắng nghe bôi đen văn bản trong khung bài → lưu lại đoạn được chọn.
+  useEffect(() => {
+    const onSelectionChange = () => {
+      const sel = window.getSelection()
+      const card = poemCardRef.current
+      if (!sel || sel.rangeCount === 0 || sel.isCollapsed || !card) return
+      const range = sel.getRangeAt(0)
+      if (!card.contains(range.startContainer) || !card.contains(range.endContainer)) return
+      const text = sel.toString().trim()
+      if (text) excerptSelectionRef.current = text
+    }
+    document.addEventListener('selectionchange', onSelectionChange)
+    return () => document.removeEventListener('selectionchange', onSelectionChange)
+  }, [])
+
+  // Mở modal tạo ảnh với đoạn text + (tuỳ chọn) dịch giả nếu trích từ bản dịch.
+  const openExcerpt = (text: string, translator?: string) => {
+    setExcerptText(text || (poem?.content ?? ''))
+    setExcerptTranslator(translator)
+    setExcerptOpen(true)
+  }
+
+  // Nút "Tạo ảnh trích" trên thanh công cụ: dùng đoạn bôi đen trong khung bài, hoặc cả bài.
+  const openExcerptImage = () => {
+    openExcerpt(excerptSelectionRef.current.trim() || (poem?.content ?? ''))
+  }
 
   const copyToClipboard = (text: string, kind: 'poem' | 'link') => {
     navigator.clipboard?.writeText(text).then(() => {
@@ -234,12 +267,12 @@ export default function PoemDetailPage() {
         }}
       />
       {/* Top Toolbar */}
-      <div className="flex items-center justify-between gap-4 border-b border-slate-200/60 dark:border-slate-800/60 pb-4">
+      <div className="flex items-center justify-between gap-2 border-b border-slate-200/60 dark:border-slate-800/60 pb-3">
         <Link
           to={PATHS.POEMS}
-          className="text-sm text-slate-500 hover:text-amber-700 dark:hover:text-amber-400 font-medium flex items-center gap-1 transition-colors"
+          className="text-sm text-slate-500 hover:text-amber-700 dark:hover:text-amber-400 font-medium flex items-center gap-1 whitespace-nowrap shrink-0 transition-colors"
         >
-          ← Trở về danh sách
+          ← <span className="hidden sm:inline">Trở về danh sách</span><span className="sm:hidden">Danh sách</span>
         </Link>
 
         {/* Cài đặt đọc */}
@@ -271,16 +304,17 @@ export default function PoemDetailPage() {
             Giãn dòng
           </button>
           <button
-            onClick={toggleMode}
-            className="px-3 h-7 rounded-md bg-amber-100 dark:bg-slate-800 text-amber-900 dark:text-amber-200 text-xs font-medium hover:bg-amber-200 dark:hover:bg-slate-700 transition-colors border border-amber-200 dark:border-slate-700"
+            onClick={openExcerptImage}
+            aria-label="Tạo ảnh đoạn trích"
+            className="px-2.5 h-7 rounded-md bg-amber-100 dark:bg-slate-800 text-amber-900 dark:text-amber-200 text-xs font-medium hover:bg-amber-200 dark:hover:bg-slate-700 transition-colors border border-amber-200 dark:border-slate-700"
           >
-            {mode === 'classic-sepia' ? 'Cổ điển' : mode === 'modern-light' ? 'Sáng' : 'Tối'}
+            Tạo ảnh trích
           </button>
         </div>
       </div>
 
       {/* Main Poem Display Card */}
-      <div className="poem-container p-8 md:p-12 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm transition-colors">
+      <div ref={poemCardRef} className="poem-container p-4 sm:p-8 md:p-12 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm transition-colors">
         {/* Header */}
         <div className="text-left space-y-3 mb-8 pb-6 border-b border-amber-900/10 dark:border-slate-700/50">
           {/* Chỉ mục phân cấp: Ngôn ngữ › Thời kỳ › Thể loại */}
@@ -341,10 +375,10 @@ export default function PoemDetailPage() {
 
         {/* Tabs: Nguyên tác / Phiên âm / Dịch nghĩa (chỉ hiện khi có phần tương ứng) */}
         {(poem.transliteration || poem.meaning) && (
-          <div className="flex flex-wrap justify-start gap-2 mb-8">
+          <div className="flex flex-nowrap justify-start gap-1.5 sm:gap-2 mb-8">
             <button
               onClick={() => setActiveTab('content')}
-              className={`px-4 py-1.5 rounded-md text-xs font-medium transition-colors ${
+              className={`px-2.5 sm:px-4 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition-colors ${
                 activeTab === 'content'
                   ? 'bg-amber-700 text-white'
                   : 'bg-amber-100/50 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
@@ -355,19 +389,19 @@ export default function PoemDetailPage() {
             {poem.transliteration && (
               <button
                 onClick={() => setActiveTab('transliteration')}
-                className={`px-4 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                className={`px-2.5 sm:px-4 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition-colors ${
                   activeTab === 'transliteration'
                     ? 'bg-amber-700 text-white'
                     : 'bg-amber-100/50 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
                 }`}
               >
-                Phiên âm Hán Việt
+                Phiên âm<span className="hidden sm:inline"> Hán Việt</span>
               </button>
             )}
             {poem.meaning && (
               <button
                 onClick={() => setActiveTab('meaning')}
-                className={`px-4 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                className={`px-2.5 sm:px-4 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition-colors ${
                   activeTab === 'meaning'
                     ? 'bg-amber-700 text-white'
                     : 'bg-amber-100/50 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
@@ -382,19 +416,23 @@ export default function PoemDetailPage() {
         {/* Content Body — căn trái trong khổ hẹp, giữ nguyên hình khổ thơ.
             Tab "Nguyên tác": bôi đen để tô màu + ghi chú (cần đăng nhập). */}
         {(() => {
-          const contentClass = `max-w-[36rem] text-left font-serif tracking-wide whitespace-pre-line my-6 text-slate-800 dark:text-slate-100 ${FONT_STEPS[fontIdx]} ${LEADING_STEPS[leadingIdx]}`
+          const contentClass = `max-w-full sm:max-w-[36rem] text-left font-serif tracking-wide whitespace-pre-line break-words my-6 text-slate-800 dark:text-slate-100 ${FONT_STEPS[fontIdx]} ${LEADING_STEPS[leadingIdx]}`
           return activeTab === 'content' ? (
             <HighlightableContent
               content={poem.content}
               poemId={poem.id}
               enabled={isAuthenticated}
               className={contentClass}
+              onCreateExcerpt={(t) => openExcerpt(t)}
             />
           ) : (
-            <div className={contentClass}>
-              {activeTab === 'transliteration' && poem.transliteration}
-              {activeTab === 'meaning' && poem.meaning}
-            </div>
+            <HighlightableContent
+              content={(activeTab === 'transliteration' ? poem.transliteration : poem.meaning) || ''}
+              poemId={poem.id}
+              enabled={false}
+              className={contentClass}
+              onCreateExcerpt={(t) => openExcerpt(t)}
+            />
           )
         })()}
 
@@ -422,9 +460,13 @@ export default function PoemDetailPage() {
                     Bản dịch của {t.translator}
                   </p>
                 )}
-                <div className="font-serif whitespace-pre-line leading-loose text-slate-800 dark:text-slate-100">
-                  {t.content}
-                </div>
+                <HighlightableContent
+                  content={t.content}
+                  poemId={poem.id}
+                  enabled={false}
+                  className="font-serif whitespace-pre-line break-words leading-loose text-slate-800 dark:text-slate-100"
+                  onCreateExcerpt={(text) => openExcerpt(text, t.translator)}
+                />
               </div>
             ))}
           </div>
@@ -482,6 +524,16 @@ export default function PoemDetailPage() {
 
       {/* Feedback Form Component */}
       <FeedbackForm poemId={poem.id} />
+
+      <ExcerptImageModal
+        isOpen={excerptOpen}
+        onClose={() => setExcerptOpen(false)}
+        title={poemDisplayTitle(poem)}
+        authorName={poemAuthorName(poem)}
+        authorId={poem.authorId ?? poem.author_id}
+        translator={excerptTranslator}
+        initialText={excerptText}
+      />
     </div>
   )
 }

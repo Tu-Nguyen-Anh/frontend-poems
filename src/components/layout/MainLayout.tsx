@@ -20,7 +20,7 @@ export function MainLayout() {
   const { mode } = useReaderMode()
 
   return (
-    <div className={`min-h-screen flex flex-col transition-colors duration-300 mode-${mode}`}>
+    <div className={`min-h-screen flex flex-col overflow-x-hidden transition-colors duration-300 mode-${mode}`}>
       <ScrollToTop />
       <Header />
       <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">

@@ -33,16 +33,17 @@ export const authService = {
   },
 
   async logout(): Promise<void> {
-    const refreshToken = tokenStorage.getRefreshToken()
-    if (refreshToken) {
-      try {
-        await oplearnClient.post('/auth/logout', {
-          refresh_token: refreshToken,
-          refreshToken: refreshToken,
-        })
-      } catch (err) {
-        console.error('Logout request failed', err)
-      }
+    // Refresh token nằm ở cookie HttpOnly (withCredentials tự gửi) → luôn gọi
+    // endpoint để BE thu hồi token + xoá cookie. Kèm token cũ ở body nếu còn
+    // sót trong localStorage (user chưa migrate).
+    try {
+      const legacy = tokenStorage.getRefreshToken()
+      await oplearnClient.post(
+        '/auth/logout',
+        legacy ? { refresh_token: legacy, refreshToken: legacy } : {},
+      )
+    } catch (err) {
+      console.error('Logout request failed', err)
     }
     tokenStorage.clear()
   },

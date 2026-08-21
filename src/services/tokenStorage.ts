@@ -40,6 +40,11 @@ export const tokenStorage = {
     storage.set(STORAGE_KEYS.USER, user)
   },
 
+  /** Dọn refresh token cũ còn sót ở localStorage sau khi đã chuyển sang cookie HttpOnly. */
+  removeRefreshToken(): void {
+    storage.remove(STORAGE_KEYS.REFRESH_TOKEN)
+  },
+
   clear(): void {
     storage.remove(STORAGE_KEYS.ACCESS_TOKEN)
     storage.remove(STORAGE_KEYS.REFRESH_TOKEN)

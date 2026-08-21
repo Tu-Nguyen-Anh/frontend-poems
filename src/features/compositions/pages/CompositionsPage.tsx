@@ -247,58 +247,42 @@ export default function CompositionsPage() {
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-8">
         {/* Top Hero Section */}
-        <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-amber-800 via-amber-900 to-amber-950 text-white p-6 sm:p-10 shadow-xl">
-          <div className="relative z-10 max-w-2xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/20 text-amber-200 border border-amber-400/30 text-xs font-semibold mb-4">
-              <span>✍️</span>
-              <span>Góc Thơ Tự Sáng Tác</span>
-            </div>
-            <h1 className="font-serif text-2xl sm:text-4xl font-bold tracking-tight leading-tight text-white mb-3">
-              Nơi Hội Ngộ Của Những Tâm Hồn Yêu Thơ
-            </h1>
-            <p className="text-amber-100/90 text-sm sm:text-base leading-relaxed mb-6">
-              Mỗi bài thơ là một mảnh ghép tâm hồn. Hãy chia sẻ cảm xúc, trải lòng qua từng con chữ và cùng thưởng thức những sáng tác mới nhất từ cộng đồng độc giả.
+        <section className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 border-b border-slate-200/70 dark:border-slate-800/70 pb-6">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-amber-700 dark:text-amber-500 mb-1">
+              Góc thơ tự sáng tác
             </p>
-            <div className="flex flex-wrap items-center gap-3">
-              <button
-                type="button"
-                onClick={handleOpenCreateModal}
-                className="px-5 py-3 rounded-2xl bg-amber-400 hover:bg-amber-300 text-amber-950 font-bold text-sm shadow-lg hover:shadow-amber-400/20 transition-all flex items-center gap-2"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-                <span>Đăng bài thơ mới</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  changeTab('random')
-                  fetchRandomPoems()
-                }}
-                className="px-4 py-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white border border-white/20 font-medium text-sm transition-colors flex items-center gap-2 backdrop-blur-sm"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                  />
-                </svg>
-                <span>Khám phá ngẫu nhiên</span>
-              </button>
-            </div>
+            <h1 className="text-3xl font-serif font-bold text-slate-900 dark:text-amber-100">
+              Góc Sáng Tác
+            </h1>
+            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400 max-w-2xl leading-relaxed">
+              Nơi hội ngộ của những tâm hồn yêu thơ. Hãy chia sẻ cảm xúc, trải lòng qua từng con chữ
+              và cùng thưởng thức những sáng tác mới nhất từ cộng đồng độc giả.
+            </p>
           </div>
-          {/* Subtle background decoration */}
-          <div className="absolute right-0 bottom-0 translate-x-8 translate-y-8 text-amber-700/20 dark:text-amber-600/10 pointer-events-none select-none font-serif text-[180px] font-bold">
-            詩
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <button
+              type="button"
+              onClick={handleOpenCreateModal}
+              className="px-4 py-2 rounded-md bg-amber-700 hover:bg-amber-800 text-white font-semibold text-sm transition-colors"
+            >
+              Đăng bài thơ mới
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                changeTab('random')
+                fetchRandomPoems()
+              }}
+              className="px-4 py-2 rounded-md border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-medium text-sm hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            >
+              Khám phá ngẫu nhiên
+            </button>
           </div>
         </section>
 
         {/* Filter & Search Toolbar */}
-        <section className="bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-3">
+        <section className="bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-xl border border-slate-200 dark:border-slate-700 space-y-3">
           <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
             {/* Search Input */}
             <div className="md:col-span-8 relative">
@@ -346,13 +330,13 @@ export default function CompositionsPage() {
               <button
                 type="button"
                 onClick={() => changeTab('latest')}
-                className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
+                className={`px-4 py-2 rounded-md text-xs sm:text-sm font-semibold transition-colors ${
                   activeTab === 'latest'
-                    ? 'bg-amber-100 text-amber-900 dark:bg-amber-950/60 dark:text-amber-200 shadow-sm'
+                    ? 'bg-amber-700 text-white'
                     : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
                 }`}
               >
-                ✨ Mới nhất
+                Mới nhất
               </button>
 
               <button
@@ -361,18 +345,18 @@ export default function CompositionsPage() {
                   changeTab('random')
                   if (randomList.length === 0) fetchRandomPoems()
                 }}
-                className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
+                className={`px-4 py-2 rounded-md text-xs sm:text-sm font-semibold transition-colors ${
                   activeTab === 'random'
-                    ? 'bg-amber-100 text-amber-900 dark:bg-amber-950/60 dark:text-amber-200 shadow-sm'
+                    ? 'bg-amber-700 text-white'
                     : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
                 }`}
               >
-                🎲 Khám phá ngẫu nhiên
+                Khám phá ngẫu nhiên
               </button>
 
               {activeTab === 'search' && (
-                <span className="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300">
-                  🔍 Kết quả tìm kiếm ({searchTotal ?? searchList.length})
+                <span className="px-4 py-2 rounded-md text-xs sm:text-sm font-semibold bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300">
+                  Kết quả tìm kiếm ({searchTotal ?? searchList.length})
                 </span>
               )}
             </div>
@@ -423,14 +407,13 @@ export default function CompositionsPage() {
 
               {latestLoading && (
                 <div className="space-y-4 pt-2">
-                  <Skeleton className="h-44 w-full rounded-2xl" />
-                  <Skeleton className="h-44 w-full rounded-2xl" />
+                  <Skeleton className="h-44 w-full rounded-xl" />
+                  <Skeleton className="h-44 w-full rounded-xl" />
                 </div>
               )}
 
               {!latestLoading && latestList.length === 0 && (
-                <div className="text-center py-16 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-8">
-                  <span className="text-4xl mb-3 block">📜</span>
+                <div className="text-center py-16 bg-white dark:bg-slate-800/50 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 p-8">
                   <h3 className="font-serif text-lg font-bold text-slate-800 dark:text-slate-200 mb-1">
                     Chưa có bài thơ sáng tác nào
                   </h3>
@@ -452,7 +435,7 @@ export default function CompositionsPage() {
 
               {!latestHasMore && latestList.length > 0 && (
                 <p className="text-center text-xs text-slate-400 py-6">
-                  Bạn đã xem hết các bài thơ mới nhất ✨
+                  Bạn đã xem hết các bài thơ mới nhất.
                 </p>
               )}
             </div>
@@ -463,12 +446,12 @@ export default function CompositionsPage() {
             <div className="space-y-6">
               {randomLoading ? (
                 <div className="space-y-4">
-                  <Skeleton className="h-44 w-full rounded-2xl" />
-                  <Skeleton className="h-44 w-full rounded-2xl" />
-                  <Skeleton className="h-44 w-full rounded-2xl" />
+                  <Skeleton className="h-44 w-full rounded-xl" />
+                  <Skeleton className="h-44 w-full rounded-xl" />
+                  <Skeleton className="h-44 w-full rounded-xl" />
                 </div>
               ) : randomList.length === 0 ? (
-                <div className="text-center py-16 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-8">
+                <div className="text-center py-16 bg-white dark:bg-slate-800/50 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 p-8">
                   <p className="text-slate-500 text-sm mb-4">Chưa có bài thơ nào trong danh sách ngẫu nhiên.</p>
                   <button
                     type="button"
@@ -495,7 +478,7 @@ export default function CompositionsPage() {
                     <button
                       type="button"
                       onClick={fetchRandomPoems}
-                      className="px-6 py-3 rounded-2xl bg-amber-700 hover:bg-amber-800 text-white text-sm font-semibold shadow-md transition-colors inline-flex items-center gap-2"
+                      className="px-6 py-3 rounded-xl bg-amber-700 hover:bg-amber-800 text-white text-sm font-semibold transition-colors inline-flex items-center gap-2"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path
@@ -531,13 +514,13 @@ export default function CompositionsPage() {
 
               {searchLoading && (
                 <div className="space-y-4 pt-2">
-                  <Skeleton className="h-44 w-full rounded-2xl" />
-                  <Skeleton className="h-44 w-full rounded-2xl" />
+                  <Skeleton className="h-44 w-full rounded-xl" />
+                  <Skeleton className="h-44 w-full rounded-xl" />
                 </div>
               )}
 
               {!searchLoading && searchList.length === 0 && (
-                <div className="text-center py-16 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-8">
+                <div className="text-center py-16 bg-white dark:bg-slate-800/50 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 p-8">
                   <p className="text-slate-500 text-sm">
                     Không tìm thấy bài thơ nào phù hợp với từ khóa & bộ lọc đã chọn.
                   </p>

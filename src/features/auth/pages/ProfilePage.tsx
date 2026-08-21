@@ -7,8 +7,11 @@ import { feedbackService } from '@/services/feedback.service'
 import { compositionService } from '@/services/composition.service'
 import { userService } from '@/services/user.service'
 import { fileService } from '@/services/file.service'
+import { highlightService } from '@/services/highlight.service'
+import { tokenStorage } from '@/services/tokenStorage'
 import { useToast } from '@/contexts/ToastContext'
 import { getErrorMessage } from '@/utils/error'
+import { decodeJwt } from '@/utils/jwt'
 import { formatDate } from '@/utils/format'
 import type { CommentResponse, ReplyResponse, FeedbackResponse, UserResponse, PoemCompositionResponse } from '@/types'
 import { PATHS, toPoemDetail } from '@/routes/paths'
@@ -138,7 +141,6 @@ export default function ProfilePage() {
           const found = (usersRes.content || []).find((u) => u.username === user.username)
           if (found) {
             currentUserId = found.id
-            currentUserInfo = found
             setUserInfo(found)
           }
         } catch {
@@ -166,7 +168,6 @@ export default function ProfilePage() {
             const u = await userService.getUserById(pid)
             if (u && (u.username === user?.username || u.id === pid)) {
               currentUserId = u.id
-              currentUserInfo = u
               setUserInfo(u)
               break
             }

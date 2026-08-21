@@ -8,6 +8,7 @@ import { PATHS } from '@/routes/paths'
 import { useAuth } from '@/hooks/useAuth'
 import { useToast } from '@/contexts/ToastContext'
 import { formatRelativeTime, formatDate } from '@/utils/format'
+import { getErrorMessage } from '@/utils/error'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { Seo } from '@/components/common/Seo'
 import { useLocalStorage } from '@/hooks/useLocalStorage'
@@ -94,8 +95,8 @@ export default function CompositionDetailPage() {
     return (
       <div className="max-w-4xl mx-auto px-4 py-10 space-y-6">
         <Skeleton className="h-6 w-1/4 rounded-xl" />
-        <Skeleton className="h-12 w-3/4 rounded-2xl" />
-        <Skeleton className="h-80 w-full rounded-3xl" />
+        <Skeleton className="h-12 w-3/4 rounded-xl" />
+        <Skeleton className="h-80 w-full rounded-xl" />
       </div>
     )
   }
@@ -103,7 +104,6 @@ export default function CompositionDetailPage() {
   if (errorStatus === 404 || !composition) {
     return (
       <div className="max-w-xl mx-auto text-center py-20 px-4">
-        <span className="text-5xl block mb-4">🔍</span>
         <h2 className="text-2xl font-serif font-bold text-slate-800 dark:text-slate-100 mb-2">
           Không tìm thấy bài thơ
         </h2>
@@ -123,7 +123,6 @@ export default function CompositionDetailPage() {
   if (errorStatus === 401 || errorStatus === 403) {
     return (
       <div className="max-w-xl mx-auto text-center py-20 px-4">
-        <span className="text-5xl block mb-4">🔒</span>
         <h2 className="text-2xl font-serif font-bold text-slate-800 dark:text-slate-100 mb-2">
           Bài thơ riêng tư
         </h2>
@@ -170,11 +169,11 @@ export default function CompositionDetailPage() {
         </nav>
 
         {/* Poem Article Card */}
-        <article className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 sm:p-10 shadow-sm relative overflow-hidden">
+        <article className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-6 sm:p-10 shadow-sm relative overflow-hidden">
           {/* Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-100 dark:border-slate-800">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-100 dark:border-slate-700">
             <div className="flex items-center gap-3.5">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-500 to-amber-700 text-white flex items-center justify-center font-bold text-lg flex-shrink-0 shadow-md">
+              <div className="w-12 h-12 rounded-full bg-amber-600 text-white flex items-center justify-center font-bold text-lg flex-shrink-0">
                 {authorName.charAt(0).toUpperCase()}
               </div>
               <div>
@@ -263,7 +262,7 @@ export default function CompositionDetailPage() {
           </div>
 
           {/* Reader Controls Toolbar */}
-          <div className="flex items-center justify-between gap-3 py-2.5 px-4 mb-6 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700 text-xs text-slate-600 dark:text-slate-300">
+          <div className="flex items-center justify-between gap-3 py-2.5 px-4 mb-6 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 text-xs text-slate-600 dark:text-slate-300">
             <div className="flex items-center gap-4">
               {/* Font Size */}
               <div className="flex items-center gap-1.5">
@@ -294,7 +293,7 @@ export default function CompositionDetailPage() {
                   onClick={() => setLeadingIdx((leadingIdx + 1) % LEADING_STEPS.length)}
                   className="px-2.5 py-0.5 rounded bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 font-mono"
                 >
-                  ↕ {leadingIdx === 0 ? 'Vừa' : leadingIdx === 1 ? 'Rộng' : 'Rất rộng'}
+                  {leadingIdx === 0 ? 'Vừa' : leadingIdx === 1 ? 'Rộng' : 'Rất rộng'}
                 </button>
               </div>
             </div>
@@ -341,10 +340,7 @@ export default function CompositionDetailPage() {
             {composition.content}
           </div>
 
-          {/* Bottom decorative divider */}
-          <div className="flex items-center justify-center my-6 text-amber-600/40 dark:text-amber-400/30">
-            <span className="text-xl">❦ ❦ ❦</span>
-          </div>
+          <div className="border-t border-slate-100 dark:border-slate-700 my-6" />
 
           {/* Comments and Discussion */}
           <CompositionCommentSection compositionId={composition.id} />
