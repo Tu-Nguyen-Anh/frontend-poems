@@ -111,32 +111,29 @@ export function HighlightableContent({ content, poemId, storyChapterId, enabled,
     return { start, end, text, overlap }
   }, [])
 
-  // Hiện thanh khi KẾT THÚC bôi đen (nhả chuột/tay). KHÔNG dùng selectionchange
-  // (fire liên tục lúc kéo handle → re-render giữa chừng làm MẤT vùng chọn trên
-  // điện thoại, không kéo dài được). Bắt đầu chạm/kéo mới thì ẨN thanh để kéo thoải mái.
+  // Cập nhật thanh CHỈ khi KẾT THÚC thao tác chạm/chuột (mouseup/touchend) —
+  // KHÔNG bao giờ setState trong lúc đang bôi đen/kéo handle (re-render giữa chừng
+  // làm huỷ vùng chọn trên điện thoại). Nhờ vậy: chọn 1 từ → nhả (thanh hiện) →
+  // kéo handle mở rộng (thanh vẫn hiện ở đáy, KHÔNG che, KHÔNG re-render) → nhả →
+  // thanh cập nhật theo đoạn đã mở rộng. Selection rỗng → ẩn thanh.
   useEffect(() => {
     let t = 0
-    const showAfterGesture = () => {
+    const syncAfterGesture = (e: Event) => {
+      // Chạm vào chính thanh (bấm nút) → đừng đồng bộ/ẩn kẻo gỡ nút trước onClick.
+      const target = e.target as HTMLElement | null
+      if (target && typeof target.closest === 'function' && target.closest('[data-hl-bar]')) return
       window.clearTimeout(t)
       t = window.setTimeout(() => {
         const info = computeSelection()
         if (info) lastSelRef.current = info
         setSel(info)
-      }, 50)
+      }, 60)
     }
-    const hideOnStart = (e: Event) => {
-      const target = e.target as HTMLElement | null
-      if (target && typeof target.closest === 'function' && target.closest('[data-hl-bar]')) return
-      window.clearTimeout(t)
-      setSel(null)
-    }
-    document.addEventListener('mouseup', showAfterGesture)
-    document.addEventListener('touchend', showAfterGesture)
-    document.addEventListener('pointerdown', hideOnStart)
+    document.addEventListener('mouseup', syncAfterGesture)
+    document.addEventListener('touchend', syncAfterGesture)
     return () => {
-      document.removeEventListener('mouseup', showAfterGesture)
-      document.removeEventListener('touchend', showAfterGesture)
-      document.removeEventListener('pointerdown', hideOnStart)
+      document.removeEventListener('mouseup', syncAfterGesture)
+      document.removeEventListener('touchend', syncAfterGesture)
       window.clearTimeout(t)
     }
   }, [computeSelection])
