@@ -3,6 +3,9 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { storyService } from '@/services/story.service'
 import { PATHS, toAuthorDetail, toStorySlug, storyIdFromSlug } from '@/routes/paths'
 import type { StoryResponse, StoryChapterResponse } from '@/types'
+import { useAuth } from '@/hooks/useAuth'
+import { HighlightableContent } from '@/features/poems/components/HighlightableContent'
+import { ExcerptImageModal } from '@/features/poems/components/ExcerptImageModal'
 
 const FONT_STEPS = [16, 18, 20, 22, 24]
 
@@ -30,6 +33,33 @@ export default function StoryDetailPage() {
   })
   const contentRef = useRef<HTMLDivElement>(null)
   const scrollBoxRef = useRef<HTMLDivElement>(null)
+  const { isAuthenticated } = useAuth()
+  const [excerptOpen, setExcerptOpen] = useState(false)
+  const [excerptText, setExcerptText] = useState('')
+  const excerptSelRef = useRef('')
+  const openExcerpt = (text: string) => {
+    setExcerptText(text)
+    setExcerptOpen(true)
+  }
+
+  // Lưu đoạn văn đang bôi đen trong khung đọc để nút "Tạo ảnh trích" dùng.
+  useEffect(() => {
+    const onSel = () => {
+      const s = window.getSelection()
+      const box = scrollBoxRef.current
+      if (!s || s.rangeCount === 0 || s.isCollapsed || !box) return
+      const r = s.getRangeAt(0)
+      if (!box.contains(r.startContainer) || !box.contains(r.endContainer)) return
+      const t = s.toString().trim()
+      if (t) excerptSelRef.current = t
+    }
+    document.addEventListener('selectionchange', onSel)
+    return () => document.removeEventListener('selectionchange', onSel)
+  }, [])
+
+  const openExcerptFromToolbar = () => {
+    openExcerpt(excerptSelRef.current.trim() || chapter?.content || '')
+  }
 
   const chapters = story?.chapters || []
   const isMulti = chapters.length > 1
@@ -179,6 +209,12 @@ export default function StoryDetailPage() {
         <div className="flex items-center gap-1 flex-shrink-0">
           <button onClick={() => changeFont(-1)} className="w-7 h-7 rounded border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-sm" aria-label="Giảm cỡ chữ">A−</button>
           <button onClick={() => changeFont(1)} className="w-7 h-7 rounded border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-sm" aria-label="Tăng cỡ chữ">A+</button>
+          <button
+            onClick={openExcerptFromToolbar}
+            className="ml-1 px-2.5 h-7 rounded-md bg-amber-100 dark:bg-slate-800 text-amber-900 dark:text-amber-200 text-xs font-medium hover:bg-amber-200 dark:hover:bg-slate-700 transition-colors border border-amber-200 dark:border-slate-700"
+          >
+            Tạo ảnh trích
+          </button>
         </div>
       </div>
 
@@ -222,12 +258,14 @@ export default function StoryDetailPage() {
               {loadingChapter ? (
                 <p className="text-center text-slate-400 py-10">Đang tải chương…</p>
               ) : chapter ? (
-                <div
+                <HighlightableContent
+                  content={chapter.content}
+                  storyChapterId={chapter.id}
+                  enabled={isAuthenticated}
                   className="font-serif text-slate-800 dark:text-slate-200 whitespace-pre-line leading-loose max-w-prose mx-auto"
                   style={{ fontSize: FONT_STEPS[fontIdx] }}
-                >
-                  {chapter.content}
-                </div>
+                  onCreateExcerpt={openExcerpt}
+                />
               ) : (
                 <p className="text-center text-slate-400 py-10">Chương này chưa có nội dung.</p>
               )}
@@ -240,6 +278,15 @@ export default function StoryDetailPage() {
           </article>
         </div>
       </div>
+
+      <ExcerptImageModal
+        isOpen={excerptOpen}
+        onClose={() => setExcerptOpen(false)}
+        title={story.title}
+        authorName={story.author || 'Khuyết danh'}
+        authorId={story.author_id}
+        initialText={excerptText}
+      />
     </div>
   )
 }

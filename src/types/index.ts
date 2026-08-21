@@ -329,6 +329,7 @@ export interface StoryResponse {
 }
 
 export interface StoryChapterResponse {
+  id?: number
   story_id: number
   seq: number
   title?: string

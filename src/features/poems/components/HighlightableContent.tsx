@@ -1,16 +1,22 @@
-import { useMemo, useRef, useState, useEffect } from 'react'
+import { useMemo, useRef, useState, useEffect, useCallback } from 'react'
 import { highlightService, type Highlight } from '@/services/highlight.service'
 import { useToast } from '@/contexts/ToastContext'
 
 interface Props {
   content: string
-  poemId: number
-  /** Chỉ bật tô/ghi chú khi đã đăng nhập. */
+  /** Highlight thuộc bài thơ (poemId) HOẶC chương truyện (storyChapterId). */
+  poemId?: number
+  storyChapterId?: number
+  /** Chỉ bật tô/ghi chú khi đã đăng nhập (Copy + Tạo ảnh vẫn dùng được kể cả khách). */
   enabled: boolean
   className?: string
+  style?: React.CSSProperties
+  /** Bấm "Tạo ảnh" trên vùng bôi đen → mở modal tạo ảnh với đoạn đã chọn. */
+  onCreateExcerpt?: (text: string) => void
 }
 
 type Segment = { text: string; h?: Highlight }
+type SelInfo = { start: number; end: number; text: string; overlap: Highlight[] }
 
 /** Vị trí ký tự của (node, offset) so với đầu container — đo bằng Range, bền
  *  bất kể nội dung đã bị chẻ thành nhiều <mark>/<span> hay chưa. */
@@ -47,18 +53,20 @@ interface PopoverPos {
 /** Focus KHÔNG kéo trang (tránh popup làm trang tự nhảy). */
 const focusNoScroll = (el: HTMLTextAreaElement | null) => el?.focus({ preventScroll: true })
 
-export function HighlightableContent({ content, poemId, enabled, className }: Props) {
+export function HighlightableContent({ content, poemId, storyChapterId, enabled, className, style, onCreateExcerpt }: Props) {
   const { toast } = useToast()
   const containerRef = useRef<HTMLDivElement>(null)
   const [highlights, setHighlights] = useState<Highlight[]>([])
 
-  // Chuột phải trên vùng bôi đen: 'menu' = menu chọn; 'note' = ô nhập ghi chú
-  const [pending, setPending] = useState<
-    (PopoverPos & { start: number; end: number; text: string; overlap: Highlight[] }) | null
-  >(null)
-  const [pendingMode, setPendingMode] = useState<'menu' | 'note'>('menu')
+  // Vùng đang bôi đen (điều khiển THANH công cụ nổi ở đáy). Cập nhật liên tục khi
+  // kéo handle trên điện thoại → kéo dài xong bấm nút vẫn lấy đúng đoạn.
+  const [sel, setSel] = useState<SelInfo | null>(null)
+  // Menu chuột phải (desktop) tại con trỏ.
+  const [ctx, setCtx] = useState<(PopoverPos & { overlap: Highlight[] }) | null>(null)
+  // Ô nhập ghi chú (mở từ nút "Ghi chú"); giữ lại đoạn đã chọn để tô kèm ghi chú.
+  const [pending, setPending] = useState<(PopoverPos & SelInfo) | null>(null)
   const [pendingNote, setPendingNote] = useState('')
-  // Click vào highlight có sẵn → ô xem/sửa ghi chú
+  // Chạm vào highlight có sẵn → ô xem/sửa ghi chú
   const [active, setActive] = useState<(PopoverPos & { h: Highlight }) | null>(null)
   const [activeNote, setActiveNote] = useState('')
   const [busy, setBusy] = useState(false)
@@ -69,51 +77,155 @@ export function HighlightableContent({ content, poemId, enabled, className }: Pr
       return
     }
     let alive = true
-    highlightService
-      .listByPoem(poemId)
-      .then((hs) => alive && setHighlights(hs))
-      .catch(() => {})
+    const load = storyChapterId
+      ? highlightService.listByStoryChapter(storyChapterId)
+      : poemId != null
+        ? highlightService.listByPoem(poemId)
+        : Promise.resolve([])
+    load.then((hs) => alive && setHighlights(hs)).catch(() => {})
     return () => {
       alive = false
     }
-  }, [poemId, enabled])
+  }, [poemId, storyChapterId, enabled])
 
   const segments = useMemo(() => buildSegments(content, highlights), [content, highlights])
 
-  const cancelPending = () => {
-    setPending(null)
-    setPendingMode('menu')
-    window.getSelection()?.removeAllRanges()
-  }
+  const highlightsRef = useRef(highlights)
+  useEffect(() => {
+    highlightsRef.current = highlights
+  }, [highlights])
 
-  // Chuột phải trên đoạn đang bôi đen → menu Tô màu / Ghi chú / Copy (hoặc Bỏ tô).
-  const onContextMenu = (e: React.MouseEvent) => {
-    if (!enabled) return
-    const sel = window.getSelection()
+  /** Đọc vùng chọn hiện tại nếu nằm trong khung bài; null nếu không hợp lệ. */
+  const computeSelection = useCallback((): SelInfo | null => {
+    const s = window.getSelection()
     const c = containerRef.current
-    if (!sel || sel.rangeCount === 0 || sel.isCollapsed || !c) return
-    const range = sel.getRangeAt(0)
-    if (!c.contains(range.startContainer) || !c.contains(range.endContainer)) return
-
+    if (!s || s.rangeCount === 0 || s.isCollapsed || !c) return null
+    const range = s.getRangeAt(0)
+    if (!c.contains(range.startContainer) || !c.contains(range.endContainer)) return null
     const start = offsetOf(c, range.startContainer, range.startOffset)
     const text = range.toString()
     const end = start + text.length
-    if (end <= start || !text.trim()) return
+    if (end <= start || !text.trim()) return null
+    const overlap = highlightsRef.current.filter((h) => start < h.endOffset && end > h.startOffset)
+    return { start, end, text, overlap }
+  }, [])
 
-    e.preventDefault() // chặn menu chuột phải mặc định
-    const overlap = highlights.filter((h) => start < h.endOffset && end > h.startOffset)
-    setActive(null)
-    setPendingNote('')
-    setPendingMode('menu')
-    setPending({ start, end, text, overlap, top: e.clientY, left: e.clientX })
+  // Theo dõi bôi đen (cả chuột lẫn chạm) → cập nhật thanh nổi. selectionchange là
+  // event chuẩn chạy trong lúc kéo handle trên điện thoại. Debounce nhẹ cho mượt.
+  useEffect(() => {
+    let t = 0
+    const onChange = () => {
+      window.clearTimeout(t)
+      t = window.setTimeout(() => setSel(computeSelection()), 120)
+    }
+    document.addEventListener('selectionchange', onChange)
+    return () => {
+      document.removeEventListener('selectionchange', onChange)
+      window.clearTimeout(t)
+    }
+  }, [computeSelection])
+
+  const clearSelection = () => {
+    window.getSelection()?.removeAllRanges()
+    setSel(null)
+    setCtx(null)
   }
 
-  const savePending = async () => {
+  // Chuột phải (desktop) trên vùng bôi đen → menu tại con trỏ (Tô màu/Ghi chú/Copy).
+  const onContextMenu = (e: React.MouseEvent) => {
+    const info = computeSelection()
+    if (!info) return
+    e.preventDefault()
+    setSel(null)
+    setActive(null)
+    setPending(null)
+    setCtx({ top: e.clientY, left: e.clientX, overlap: info.overlap })
+  }
+
+  const cancelPending = () => {
+    setPending(null)
+    setPendingNote('')
+    clearSelection()
+  }
+
+  // Đoạn dùng cho hành động: ưu tiên đọc mới (kéo dài xong), fallback state gần nhất.
+  const currentSel = (): SelInfo | null => computeSelection() ?? sel
+
+  const highlightSelection = async () => {
+    const info = currentSel()
+    if (!info || busy) return
+    setBusy(true)
+    try {
+      const h = await highlightService.create({
+        ...(storyChapterId ? { storyChapterId } : { poemId }),
+        startOffset: info.start,
+        endOffset: info.end,
+        selectedText: info.text,
+      })
+      setHighlights((prev) => [...prev, h])
+      clearSelection()
+      toast('Đã tô', 'success')
+    } catch {
+      toast('Không lưu được, thử lại sau')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const removeOverlapping = async () => {
+    const info = currentSel()
+    if (!info || busy || info.overlap.length === 0) return
+    setBusy(true)
+    try {
+      const ids = info.overlap.map((h) => h.id)
+      await Promise.all(ids.map((id) => highlightService.remove(id)))
+      setHighlights((prev) => prev.filter((h) => !ids.includes(h.id)))
+      clearSelection()
+      toast('Đã bỏ tô', 'success')
+    } catch {
+      toast('Không bỏ được, thử lại sau')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const copySelection = async () => {
+    const info = currentSel()
+    if (!info) return
+    try {
+      await navigator.clipboard.writeText(info.text)
+      toast('Đã copy', 'success')
+    } catch {
+      toast('Không copy được')
+    }
+    clearSelection()
+  }
+
+  const createExcerpt = () => {
+    const info = currentSel()
+    if (!info || !onCreateExcerpt) return
+    const text = info.text
+    clearSelection()
+    onCreateExcerpt(text)
+  }
+
+  const openNoteEditor = () => {
+    const info = currentSel()
+    if (!info) return
+    setSel(null)
+    setPendingNote('')
+    // Ô ghi chú đặt gần giữa trên màn hình cho dễ thao tác mọi thiết bị.
+    const vw = typeof window !== 'undefined' ? window.innerWidth : 1000
+    const vh = typeof window !== 'undefined' ? window.innerHeight : 800
+    setPending({ ...info, top: Math.round(vh * 0.28), left: Math.round(vw / 2 - 144) })
+  }
+
+  const saveNoteHighlight = async () => {
     if (!pending || busy) return
     setBusy(true)
     try {
       const h = await highlightService.create({
-        poemId,
+        ...(storyChapterId ? { storyChapterId } : { poemId }),
         startOffset: pending.start,
         endOffset: pending.end,
         selectedText: pending.text,
@@ -129,36 +241,10 @@ export function HighlightableContent({ content, poemId, enabled, className }: Pr
     }
   }
 
-  const removeOverlapping = async () => {
-    if (!pending || busy || pending.overlap.length === 0) return
-    setBusy(true)
-    try {
-      const ids = pending.overlap.map((h) => h.id)
-      await Promise.all(ids.map((id) => highlightService.remove(id)))
-      setHighlights((prev) => prev.filter((h) => !ids.includes(h.id)))
-      cancelPending()
-      toast('Đã bỏ tô', 'success')
-    } catch {
-      toast('Không bỏ được, thử lại sau')
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  const copyPending = async () => {
-    if (!pending) return
-    const text = pending.text
-    try {
-      await navigator.clipboard.writeText(text)
-      toast('Đã copy', 'success')
-    } catch {
-      toast('Không copy được')
-    }
-    cancelPending()
-  }
-
   const openHighlight = (h: Highlight, el: HTMLElement) => {
     const rect = el.getBoundingClientRect()
+    setSel(null)
+    setCtx(null)
     setPending(null)
     setActiveNote(h.note || '')
     setActive({ h, top: rect.bottom + 6, left: rect.left })
@@ -194,12 +280,19 @@ export function HighlightableContent({ content, poemId, enabled, className }: Pr
     }
   }
 
-  const menuItemClass =
-    'w-full flex items-center gap-2 px-3 py-1.5 text-sm text-left rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-60'
+  const barBtn =
+    'flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-60 transition-colors'
+
+  const showBar = !!sel && !ctx && !pending && !active
 
   return (
     <>
-      <div ref={containerRef} className={className} onContextMenu={onContextMenu}>
+      <div
+        ref={containerRef}
+        className={className}
+        onContextMenu={onContextMenu}
+        style={{ userSelect: 'text', WebkitUserSelect: 'text', ...style }}
+      >
         {segments.map((seg, i) =>
           seg.h ? (
             <mark
@@ -216,38 +309,84 @@ export function HighlightableContent({ content, poemId, enabled, className }: Pr
         )}
       </div>
 
-      {/* Menu chuột phải */}
-      {pending && pendingMode === 'menu' && (
+      {/* Thanh công cụ nổi ở ĐÁY màn hình khi có vùng chọn — KHÔNG che chữ/handle
+          nên trên điện thoại vẫn kéo dài vùng chọn được; bấm nút mới thực thi.
+          onMouseDown/onTouchStart preventDefault để chạm nút không xoá vùng chọn. */}
+      {showBar && (
+        <div
+          className="fixed left-1/2 -translate-x-1/2 bottom-4 z-50 flex items-center gap-1 p-1 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-lg text-slate-700 dark:text-slate-200"
+          style={{ maxWidth: 'calc(100vw - 24px)' }}
+          onMouseDown={(e) => e.preventDefault()}
+          onTouchStart={(e) => e.preventDefault()}
+        >
+          {enabled && sel.overlap.length > 0 && (
+            <button disabled={busy} onClick={removeOverlapping} className={`${barBtn} text-rose-600 dark:text-rose-400`}>
+              <span aria-hidden="true">🗑</span> Bỏ tô
+            </button>
+          )}
+          {enabled && sel.overlap.length === 0 && (
+            <>
+              <button disabled={busy} onClick={highlightSelection} className={`${barBtn} text-amber-800 dark:text-amber-300`}>
+                <span aria-hidden="true">🖍</span> Tô màu
+              </button>
+              <button disabled={busy} onClick={openNoteEditor} className={barBtn}>
+                <span aria-hidden="true">✎</span> Ghi chú
+              </button>
+            </>
+          )}
+          <button onClick={copySelection} className={barBtn}>
+            <span aria-hidden="true">📋</span> Copy
+          </button>
+          {onCreateExcerpt && (
+            <button onClick={createExcerpt} className={barBtn}>
+              <span aria-hidden="true">🖼</span> Tạo ảnh
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Menu chuột phải (desktop) tại con trỏ */}
+      {ctx && (
         <>
-          <div className="fixed inset-0 z-40" onClick={cancelPending} onContextMenu={(e) => { e.preventDefault(); cancelPending() }} />
+          <div className="fixed inset-0 z-40" onClick={() => setCtx(null)} onContextMenu={(e) => { e.preventDefault(); setCtx(null) }} />
           <div
             className="fixed z-50 min-w-[150px] p-1 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-lg animate-fade-in text-slate-700 dark:text-slate-200"
-            style={{ top: Math.min(pending.top, (typeof window !== 'undefined' ? window.innerHeight : 800) - 160), left: Math.min(pending.left, (typeof window !== 'undefined' ? window.innerWidth : 1000) - 170) }}
+            style={{
+              top: Math.min(ctx.top, (typeof window !== 'undefined' ? window.innerHeight : 800) - 160),
+              left: Math.min(ctx.left, (typeof window !== 'undefined' ? window.innerWidth : 1000) - 170),
+            }}
+            onMouseDown={(e) => e.preventDefault()}
             onClick={(e) => e.stopPropagation()}
           >
-            {pending.overlap.length > 0 ? (
-              <button disabled={busy} onClick={removeOverlapping} className={`${menuItemClass} text-rose-600 dark:text-rose-400`}>
+            {enabled && ctx.overlap.length > 0 && (
+              <button disabled={busy} onClick={() => { setCtx(null); removeOverlapping() }} className={`${barBtn} w-full text-rose-600 dark:text-rose-400`}>
                 <span aria-hidden="true">🗑</span> Bỏ tô
               </button>
-            ) : (
+            )}
+            {enabled && ctx.overlap.length === 0 && (
               <>
-                <button disabled={busy} onClick={savePending} className={`${menuItemClass} text-amber-800 dark:text-amber-300`}>
+                <button disabled={busy} onClick={() => { setCtx(null); highlightSelection() }} className={`${barBtn} w-full text-amber-800 dark:text-amber-300`}>
                   <span aria-hidden="true">🖍</span> Tô màu
                 </button>
-                <button onClick={() => setPendingMode('note')} className={menuItemClass}>
+                <button disabled={busy} onClick={() => { setCtx(null); openNoteEditor() }} className={`${barBtn} w-full`}>
                   <span aria-hidden="true">✎</span> Ghi chú
                 </button>
               </>
             )}
-            <button onClick={copyPending} className={menuItemClass}>
+            <button onClick={() => { setCtx(null); copySelection() }} className={`${barBtn} w-full`}>
               <span aria-hidden="true">📋</span> Copy
             </button>
+            {onCreateExcerpt && (
+              <button onClick={() => { setCtx(null); createExcerpt() }} className={`${barBtn} w-full`}>
+                <span aria-hidden="true">🖼</span> Tạo ảnh
+              </button>
+            )}
           </div>
         </>
       )}
 
-      {/* Chọn "Ghi chú" → ô nhập ghi chú (tô màu khi Lưu) */}
-      {pending && pendingMode === 'note' && (
+      {/* Ô nhập ghi chú (tô màu khi Lưu) */}
+      {pending && (
         <Popover pos={pending} onClose={cancelPending}>
           <p className="text-xs text-slate-500 dark:text-slate-400 mb-1.5 line-clamp-2 italic">“{pending.text}”</p>
           <textarea
@@ -260,12 +399,12 @@ export function HighlightableContent({ content, poemId, enabled, className }: Pr
           />
           <div className="flex justify-end gap-2 mt-2">
             <button onClick={cancelPending} className="px-2.5 py-1 text-xs rounded-md text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700">Huỷ</button>
-            <button disabled={busy} onClick={savePending} className="px-3 py-1 text-xs font-medium rounded-md bg-amber-700 hover:bg-amber-800 text-white disabled:opacity-60">Lưu</button>
+            <button disabled={busy} onClick={saveNoteHighlight} className="px-3 py-1 text-xs font-medium rounded-md bg-amber-700 hover:bg-amber-800 text-white disabled:opacity-60">Lưu</button>
           </div>
         </Popover>
       )}
 
-      {/* Click vào highlight có sẵn → xem/sửa/xoá ghi chú */}
+      {/* Chạm vào highlight có sẵn → xem/sửa/xoá ghi chú */}
       {active && (
         <Popover pos={active} onClose={() => setActive(null)}>
           <p className="text-xs text-slate-500 dark:text-slate-400 mb-1.5 line-clamp-2 italic">“{active.h.selectedText}”</p>
@@ -297,7 +436,7 @@ function Popover({ pos, onClose, children }: { pos: PopoverPos; onClose: () => v
     <>
       <div className="fixed inset-0 z-40" onClick={onClose} />
       <div
-        className="fixed z-50 w-72 p-3 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-lg animate-fade-in"
+        className="fixed z-50 w-72 max-w-[calc(100vw-16px)] p-3 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-lg animate-fade-in"
         style={{ top: pos.top, left: Math.max(8, left) }}
         onClick={(e) => e.stopPropagation()}
       >

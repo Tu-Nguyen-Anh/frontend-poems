@@ -167,7 +167,7 @@ export function CompositionCommentSection({ compositionId }: CompositionCommentS
           <Skeleton className="h-20 w-full rounded-xl" />
         </div>
       ) : comments.length === 0 ? (
-        <div className="text-center py-10 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200/60 dark:border-slate-800">
+        <div className="text-center py-10 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200/60 dark:border-slate-800">
           <p className="text-sm text-slate-500 dark:text-slate-400">
             Chưa có bình luận nào cho bài thơ này. Hãy là người đầu tiên chia sẻ cảm xúc của bạn!
           </p>

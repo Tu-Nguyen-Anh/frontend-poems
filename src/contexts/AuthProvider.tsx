@@ -1,7 +1,8 @@
-import { useState, type ReactNode } from 'react'
+import { useState, useEffect, type ReactNode } from 'react'
 import { STORAGE_KEYS } from '@/constants'
 import { authService } from '@/services/auth.service'
 import { tokenStorage } from '@/services/tokenStorage'
+import { resetSessionExpired } from '@/services/oplearnClient'
 import { decodeJwt } from '@/utils/jwt'
 import { storage } from '@/utils/storage'
 import { AuthContext, type AuthUser } from './auth-context'
@@ -10,7 +11,15 @@ import { UserRole } from '@/types'
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(() => storage.get<AuthUser>(STORAGE_KEYS.USER))
 
-  const processTokens = (tokensData: any, usernameFallback: string) => {
+  // Interceptor bắn 'poems-session-expired' khi refresh token hết hạn/không hợp lệ
+  // → gỡ user khỏi state để ProtectedRoute điều hướng SPA (không reload cứng).
+  useEffect(() => {
+    const onExpired = () => setUser(null)
+    window.addEventListener('poems-session-expired', onExpired)
+    return () => window.removeEventListener('poems-session-expired', onExpired)
+  }, [])
+
+  const processTokens = (tokensData: any, usernameFallback: string, displayName?: string) => {
     const accessToken = typeof tokensData === 'string'
       ? tokensData
       : tokensData?.accessToken || tokensData?.access_token || tokensData?.token || tokensData?.data?.accessToken
@@ -38,12 +47,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const nextUser: AuthUser = {
       id: userId !== undefined && userId !== null ? Number(userId) : undefined,
       username: claims?.sub ?? (claims as any)?.username ?? tokensData?.username ?? usernameFallback,
+      displayName: displayName || (claims as any)?.name || tokensData?.name || undefined,
       email: (claims as any)?.email ?? tokensData?.email ?? tokensData?.user?.email,
       phoneNumber: (claims as any)?.phoneNumber ?? (claims as any)?.phone ?? tokensData?.phoneNumber ?? tokensData?.phone ?? tokensData?.user?.phoneNumber,
       roles,
       role,
     }
     tokenStorage.saveUser(nextUser as any)
+    resetSessionExpired() // đăng nhập lại → gỡ cờ chặn refresh của phiên cũ
     setUser(nextUser)
   }
 
@@ -53,8 +64,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const loginWithGoogle = async (googleToken: string) => {
+    // Google credential (ID token) chứa name/email/picture — lấy tên thật để hiển thị
+    const gClaims = decodeJwt(googleToken)
     const tokens = await authService.loginWithGoogle(googleToken)
-    processTokens(tokens, 'Google User')
+    processTokens(tokens, gClaims?.name || gClaims?.email || 'Google User', gClaims?.name)
   }
 
   const register = async (username: string, email: string, password: string, phoneNumber?: string) => {

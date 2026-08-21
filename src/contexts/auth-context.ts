@@ -3,6 +3,8 @@ import { createContext } from 'react'
 export interface AuthUser {
   id?: number
   username: string
+  /** Tên hiển thị (vd tên thật từ Google) — ưu tiên hơn username khi hiển thị */
+  displayName?: string
   email?: string
   phoneNumber?: string
   role?: string

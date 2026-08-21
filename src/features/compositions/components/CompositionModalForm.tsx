@@ -3,6 +3,7 @@ import type { PoemCompositionRequest, PoemCompositionResponse, PoemCompositionSt
 import { genreService } from '@/services/genre.service'
 import { compositionService } from '@/services/composition.service'
 import { useToast } from '@/contexts/ToastContext'
+import { useAuth } from '@/hooks/useAuth'
 import { getErrorMessage } from '@/utils/error'
 
 interface CompositionModalFormProps {
@@ -22,6 +23,9 @@ export function CompositionModalForm({
   editComposition,
 }: CompositionModalFormProps) {
   const { toast } = useToast()
+  const { user } = useAuth()
+  // Tên người đang đăng nhập — dùng làm bút danh mặc định (vẫn cho sửa)
+  const currentUserName = (user?.displayName || user?.username || '').trim()
 
   const [title, setTitle] = useState('')
   const [penName, setPenName] = useState('')
@@ -60,13 +64,14 @@ export function CompositionModalForm({
       setStatus(editComposition.status || 'PUBLISHED')
     } else {
       setTitle('')
-      setPenName('')
+      // Bút danh tự điền tên người đang đăng nhập; người dùng có thể sửa lại
+      setPenName(currentUserName)
       setGenreId(undefined)
       setContent('')
       setStatus('PUBLISHED')
     }
     setErrorMsg('')
-  }, [editComposition, isOpen])
+  }, [editComposition, isOpen, currentUserName])
 
   if (!isOpen) return null
 
@@ -220,6 +225,9 @@ export function CompositionModalForm({
                 placeholder="VD: Hải Đăng, Ẩn Danh..."
                 className="w-full px-3.5 py-2.5 text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/40"
               />
+              <p className="mt-1 text-[11px] text-slate-400">
+                Mặc định là tên tài khoản của bạn — có thể sửa thành bút danh khác.
+              </p>
             </div>
 
             {/* Genre */}
@@ -264,7 +272,7 @@ export function CompositionModalForm({
                   onChange={() => setStatus('PUBLISHED')}
                   className="sr-only"
                 />
-                <span>🌐 Công khai</span>
+                <span>Công khai</span>
               </label>
 
               <label
@@ -282,7 +290,7 @@ export function CompositionModalForm({
                   onChange={() => setStatus('DRAFT')}
                   className="sr-only"
                 />
-                <span>📝 Bản nháp</span>
+                <span>Bản nháp</span>
               </label>
 
               <label
@@ -300,7 +308,7 @@ export function CompositionModalForm({
                   onChange={() => setStatus('PRIVATE')}
                   className="sr-only"
                 />
-                <span>🔒 Riêng tư</span>
+                <span>Riêng tư</span>
               </label>
             </div>
           </div>
@@ -330,9 +338,8 @@ export function CompositionModalForm({
           </div>
 
           {/* Note on Rate Limit */}
-          <div className="p-3 bg-amber-50/60 dark:bg-amber-950/30 border border-amber-200/50 dark:border-amber-900/40 rounded-xl text-[12px] text-amber-800 dark:text-amber-300 flex items-center gap-2">
-            <span>🛡️</span>
-            <span>Để bảo đảm chất lượng nội dung, mỗi tác giả có thể đăng tối đa 5 bài trong 24 giờ.</span>
+          <div className="p-3 bg-amber-50/60 dark:bg-amber-950/30 border border-amber-200/50 dark:border-amber-900/40 rounded-xl text-[12px] text-amber-800 dark:text-amber-300">
+            Để bảo đảm chất lượng nội dung, mỗi tác giả có thể đăng tối đa 5 bài trong 24 giờ.
           </div>
 
           {/* Footer Buttons */}

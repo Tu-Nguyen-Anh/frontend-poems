@@ -71,12 +71,12 @@ export function CompositionCard({
   }
 
   return (
-    <article className="group relative bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 sm:p-6 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col justify-between">
+    <article className="group relative bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-amber-300 dark:hover:border-amber-700/60 rounded-xl p-5 sm:p-6 shadow-sm transition-colors flex flex-col justify-between">
       <div>
         {/* Header: Author info, timestamp, status & options */}
         <div className="flex items-start justify-between gap-3 mb-4">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500 to-amber-700 text-white flex items-center justify-center font-bold text-sm flex-shrink-0 shadow-sm">
+            <div className="w-10 h-10 rounded-full bg-amber-600 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
               {authorName.charAt(0).toUpperCase()}
             </div>
             <div className="min-w-0">
