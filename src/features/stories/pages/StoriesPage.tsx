@@ -31,7 +31,7 @@ export default function StoriesPage() {
   const [stories, setStories] = useState<StoryResponse[]>([])
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
-  const [view, setView] = useLocalStorage<'list' | 'grid'>('stories_view', 'grid')
+  const [view, setView] = useLocalStorage<'list' | 'grid'>('stories_view', 'list')
 
   // Đồng bộ ô search khi URL đổi từ bên ngoài (vd bấm back).
   useEffect(() => setSearch(keyword), [keyword])

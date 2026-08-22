@@ -160,32 +160,33 @@ export default function PoemsPage() {
   )
 
   return (
-    <div className="flex gap-6 py-4">
-      {/* Cây điều hướng — bê từ trang Duyệt sang */}
-      <aside className="thin-scrollbar hidden lg:block w-60 flex-shrink-0 self-start sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900">
-        <BrowseContext.Provider value={browseValue}>
-          <BrowseTree />
-        </BrowseContext.Provider>
-      </aside>
+    <div className="py-4">
+      <Seo
+        title="Kho tàng bài thơ"
+        description="Duyệt toàn bộ bài thơ theo thể loại, tìm theo tên bài, tác giả hoặc một câu thơ."
+        path="/poems"
+      />
+      {/* Header full-width phía trên → cây điều hướng ngang hàng với thanh tìm kiếm */}
+      <div className="mb-6">
+        <h1 className="text-3xl md:text-4xl font-serif font-bold text-slate-900 dark:text-amber-100 mb-2">
+          Kho tàng bài thơ
+        </h1>
+        <p className="text-slate-500 dark:text-slate-400 text-sm">
+          Danh tác thi đàn Việt Nam và thế giới
+        </p>
+      </div>
 
-      {/* Nội dung kho thơ */}
-      <div className="flex-1 min-w-0 space-y-8">
-        <Seo
-          title="Kho tàng bài thơ"
-          description="Duyệt toàn bộ bài thơ theo thể loại, tìm theo tên bài, tác giả hoặc một câu thơ."
-          path="/poems"
-        />
-        {/* Header */}
-        <div>
-          <h1 className="text-3xl md:text-4xl font-serif font-bold text-slate-900 dark:text-amber-100 mb-2">
-            Kho tàng bài thơ
-          </h1>
-          <p className="text-slate-500 dark:text-slate-400 text-sm">
-            Danh tác thi đàn Việt Nam và thế giới
-          </p>
-        </div>
+      <div className="flex gap-6">
+        {/* Cây điều hướng — bê từ trang Duyệt sang */}
+        <aside className="hidden lg:block w-60 flex-shrink-0 self-start border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900">
+          <BrowseContext.Provider value={browseValue}>
+            <BrowseTree />
+          </BrowseContext.Provider>
+        </aside>
 
-        {/* Filter & Search Bar */}
+        {/* Nội dung kho thơ */}
+        <div className="flex-1 min-w-0 space-y-8">
+          {/* Filter & Search Bar */}
         <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
           <div className="relative w-full md:flex-1 md:min-w-0">
             <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">
@@ -198,6 +199,14 @@ export default function PoemsPage() {
               onChange={(e) => {
                 setKeyword(e.target.value)
                 setPage(0)
+              }}
+              onKeyDown={(e) => {
+                // Enter/Go trên mobile hay NHẢY focus sang ô lọc tác giả (tự bung dropdown).
+                // Tìm kiếm chạy realtime nên chặn Enter + đóng bàn phím, không nhảy focus.
+                if (e.key === 'Enter') {
+                  e.preventDefault()
+                  e.currentTarget.blur()
+                }
               }}
               className="w-full pl-10 pr-4 py-2 text-sm bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/30"
             />
@@ -375,6 +384,7 @@ export default function PoemsPage() {
           totalItems={totalAmount}
           itemLabel="bài thơ"
         />
+        </div>
       </div>
     </div>
   )

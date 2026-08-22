@@ -43,19 +43,41 @@ const HANDLE_FONT = '15px system-ui, -apple-system, "Segoe UI", sans-serif'
 const CAPTION_FONT = 'italic 15px Georgia, serif'
 const AVATAR_FONT = '700 26px Georgia, serif'
 
-/** Chia 1 dòng dài thành nhiều dòng hiển thị vừa maxWidth. */
+/** Bẻ 1 "từ" dài hơn maxWidth thành nhiều mẩu theo KÝ TỰ (chống tràn ngang khi
+ *  gặp chuỗi không có khoảng trắng: URL, tên dài, câu dính liền…). */
+function breakLongWord(ctx: CanvasRenderingContext2D, word: string, maxWidth: number): string[] {
+  if (ctx.measureText(word).width <= maxWidth) return [word]
+  const out: string[] = []
+  let cur = ''
+  for (const ch of word) {
+    if (cur && ctx.measureText(cur + ch).width > maxWidth) {
+      out.push(cur)
+      cur = ch
+    } else {
+      cur += ch
+    }
+  }
+  if (cur) out.push(cur)
+  return out
+}
+
+/** Chia 1 dòng dài thành nhiều dòng hiển thị vừa maxWidth (bẻ cả từ dài nếu cần). */
 function wrapLine(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] {
   if (!text) return ['']
   const words = text.split(/\s+/)
   const out: string[] = []
   let cur = ''
-  for (const w of words) {
-    const test = cur ? `${cur} ${w}` : w
-    if (ctx.measureText(test).width > maxWidth && cur) {
-      out.push(cur)
-      cur = w
-    } else {
-      cur = test
+  for (const raw of words) {
+    // Từ dài quá 1 dòng → bẻ theo ký tự trước, ghép các mẩu vào luồng wrap.
+    const pieces = breakLongWord(ctx, raw, maxWidth)
+    for (const w of pieces) {
+      const test = cur ? `${cur} ${w}` : w
+      if (ctx.measureText(test).width > maxWidth && cur) {
+        out.push(cur)
+        cur = w
+      } else {
+        cur = test
+      }
     }
   }
   if (cur) out.push(cur)
@@ -87,10 +109,13 @@ function roundedInitial(name: string): string {
 
 /** Vẽ toàn bộ card lên canvas (tự tính chiều cao theo số dòng). */
 export function drawExcerptCard(canvas: HTMLCanvasElement, opts: ExcerptCardOptions): void {
-  // Scale cố định 3x cho ảnh xuất RÕ NÉT (không phụ thuộc devicePixelRatio thấp).
-  const dpr = 3
+  // Scale cố định 4x (số CHẴN) cho ảnh xuất SẮC NÉT trên màn retina — không phụ
+  // thuộc devicePixelRatio thấp. 4x vẫn dưới trần canvas iOS Safari (~4096/cạnh).
+  const dpr = 4
   const ctx = canvas.getContext('2d')
   if (!ctx) return
+  ctx.imageSmoothingEnabled = true
+  ctx.imageSmoothingQuality = 'high'
 
   const contentW = W - PAD * 2
   const visualLines = computeVisualLines(ctx, opts.text, contentW)

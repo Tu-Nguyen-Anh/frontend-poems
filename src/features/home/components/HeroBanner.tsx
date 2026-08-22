@@ -111,7 +111,7 @@ export function HeroBanner({ totalPoems, totalStories, totalAuthors, storyAuthor
                   className="w-full pl-10 pr-4 py-3 rounded-md bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-slate-800 dark:text-slate-100 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/40"
                 />
               </div>
-              <button type="submit" className="px-6 py-3 bg-amber-700 hover:bg-amber-800 text-white font-medium text-sm rounded-md transition-colors whitespace-nowrap">
+              <button type="submit" className="min-w-[8.5rem] px-6 py-3 border border-transparent bg-amber-700 hover:bg-amber-800 text-white font-medium text-sm rounded-md transition-colors whitespace-nowrap">
                 Tìm thơ
               </button>
             </form>
@@ -142,7 +142,7 @@ export function HeroBanner({ totalPoems, totalStories, totalAuthors, storyAuthor
                   className="w-full pl-10 pr-4 py-3 rounded-md bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-slate-800 dark:text-slate-100 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/40"
                 />
               </div>
-              <button type="submit" className="px-6 py-3 bg-amber-700 hover:bg-amber-800 text-white font-medium text-sm rounded-md transition-colors whitespace-nowrap">
+              <button type="submit" className="min-w-[8.5rem] px-6 py-3 border border-transparent bg-amber-700 hover:bg-amber-800 text-white font-medium text-sm rounded-md transition-colors whitespace-nowrap">
                 Tìm truyện
               </button>
             </form>

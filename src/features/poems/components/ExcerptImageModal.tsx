@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { authorService } from '@/services/author.service'
 import { env } from '@/config/env'
 import { useToast } from '@/contexts/ToastContext'
 import { drawExcerptCard } from '@/features/poems/excerptImage'
+import { deliverImage, isIOSDevice } from '@/utils/imageExport'
 
 /** Giới hạn ký tự đoạn trích để ảnh không quá dài (đặc biệt với văn xuôi/truyện). */
 export const MAX_EXCERPT_CHARS = 500
@@ -111,20 +113,18 @@ export function ExcerptImageModal({
     if (!canvas) return
     try {
       // PNG (không mất dữ liệu) → chữ SẮC NÉT, không bị JPEG làm nhoè cạnh.
-      canvas.toBlob((blob) => {
+      canvas.toBlob(async (blob) => {
         if (!blob) {
           toast('Không tạo được ảnh, vui lòng thử lại.')
           return
         }
-        const url = URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = `${fileSlug(title)}.png`
-        document.body.appendChild(a)
-        a.click()
-        a.remove()
-        setTimeout(() => URL.revokeObjectURL(url), 1000)
-        toast('Đã tạo ảnh đoạn trích. Kiểm tra thư mục Tải về của bạn.', 'success')
+        // deliverImage xử lý iOS Safari (mở tab "Nhấn giữ → Lưu vào Ảnh") vs tải thẳng.
+        const openedTab = await deliverImage(blob, `${fileSlug(title)}.png`, () =>
+          toast('Ảnh đã tải về máy. Mở app Tệp → Tải về để xem nhé.', 'info'),
+        )
+        if (!openedTab && !isIOSDevice()) {
+          toast('Đã tạo ảnh đoạn trích. Kiểm tra thư mục Tải về của bạn.', 'success')
+        }
       }, 'image/png')
     } catch {
       setAvatar(null)
@@ -132,9 +132,9 @@ export function ExcerptImageModal({
     }
   }
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto bg-slate-900/60"
+      className="fixed inset-0 z-[60] flex items-center justify-center p-4 overflow-y-auto bg-slate-900/70 backdrop-blur-md"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
@@ -193,6 +193,7 @@ export function ExcerptImageModal({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
