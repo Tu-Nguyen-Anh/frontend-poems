@@ -63,66 +63,66 @@ export function AuthorModalForm({
       title={editingAuthor ? 'Chỉnh sửa tác giả' : 'Thêm tác giả mới'}
       maxWidth="md"
     >
-      <form onSubmit={handleSubmit} className="space-y-4 text-sm text-slate-200">
+      <form onSubmit={handleSubmit} className="space-y-4 text-sm text-[var(--c-text)]">
         {errorMsg && (
-          <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-300 text-xs font-semibold">
+          <div className="p-3 bg-[var(--c-danger-bg)] border border-[var(--c-border)] rounded-lg text-[var(--c-danger)] text-xs font-semibold">
             {errorMsg}
           </div>
         )}
         <div>
-          <label className="block text-xs font-bold uppercase text-slate-400 mb-1">Tên tác giả *</label>
+          <label className="block text-xs font-bold uppercase text-[var(--c-muted)] mb-1">Tên tác giả *</label>
           <input
             type="text"
             required
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
-            className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100"
+            className="w-full p-2.5 bg-[var(--c-bg)] border border-[var(--c-border)] rounded-xl text-[var(--c-heading)]"
           />
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-bold uppercase text-slate-400 mb-1">Năm sinh</label>
+            <label className="block text-xs font-bold uppercase text-[var(--c-muted)] mb-1">Năm sinh</label>
             <input
               type="number"
               value={form.birthYear || ''}
               onChange={(e) => setForm({ ...form, birthYear: Number(e.target.value) || undefined })}
-              className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100"
+              className="w-full p-2.5 bg-[var(--c-bg)] border border-[var(--c-border)] rounded-xl text-[var(--c-heading)]"
             />
           </div>
           <div>
-            <label className="block text-xs font-bold uppercase text-slate-400 mb-1">Quê quán</label>
+            <label className="block text-xs font-bold uppercase text-[var(--c-muted)] mb-1">Quê quán</label>
             <input
               type="text"
               value={form.hometown}
               onChange={(e) => setForm({ ...form, hometown: e.target.value })}
-              className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100"
+              className="w-full p-2.5 bg-[var(--c-bg)] border border-[var(--c-border)] rounded-xl text-[var(--c-heading)]"
             />
           </div>
         </div>
 
         <div>
-          <label className="block text-xs font-bold uppercase text-slate-400 mb-1">Thành tựu / Tiểu sử</label>
+          <label className="block text-xs font-bold uppercase text-[var(--c-muted)] mb-1">Thành tựu / Tiểu sử</label>
           <textarea
             rows={4}
             value={form.achievement}
             onChange={(e) => setForm({ ...form, achievement: e.target.value })}
-            className="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-slate-100"
+            className="w-full p-3 bg-[var(--c-bg)] border border-[var(--c-border)] rounded-xl text-[var(--c-heading)]"
           />
         </div>
 
-        <div className="flex justify-end gap-3 pt-4 border-t border-slate-800">
+        <div className="flex justify-end gap-3 pt-4 border-t border-[var(--c-border)]">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-medium transition-colors"
+            className="px-4 py-2 bg-[var(--c-surface-2)] hover:bg-[var(--c-surface-3)] text-[var(--c-text)] rounded-lg text-xs font-medium transition-colors"
           >
             Hủy
           </button>
           <button
             type="submit"
             disabled={submitting}
-            className="px-5 py-2 bg-amber-700 hover:bg-amber-800 text-white font-medium text-xs rounded-lg transition-colors"
+            className="px-5 py-2 bg-[var(--c-gold)] hover:opacity-90 text-white font-medium text-xs rounded-lg transition-colors"
           >
             {submitting ? 'Đang lưu...' : 'Lưu tác giả'}
           </button>

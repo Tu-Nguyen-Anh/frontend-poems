@@ -15,6 +15,8 @@ export interface UpdateUserPayload {
   email?: string
   phoneNumber?: string
   role?: UserRole | string
+  /** Chỉ gửi khi muốn đổi mật khẩu; bỏ trống = giữ nguyên. */
+  password?: string
 }
 
 export const userService = {

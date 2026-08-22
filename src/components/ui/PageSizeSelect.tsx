@@ -20,15 +20,15 @@ export function PageSizeSelect({
 }: PageSizeSelectProps) {
   if (variant === 'admin') {
     return (
-      <label className={`flex items-center gap-2 text-xs text-slate-400 ${className}`.trim()}>
+      <label className={`flex items-center gap-2 text-xs text-[var(--c-muted)] ${className}`.trim()}>
         <span className="whitespace-nowrap">Hiển thị</span>
         <select
           value={value}
           onChange={(e) => onChange(Number(e.target.value))}
-          className="bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/40 cursor-pointer"
+          className="bg-[var(--c-surface)] border border-[var(--c-border)] rounded-lg px-2.5 py-1.5 text-[var(--c-text)] text-xs focus:outline-none focus:ring-2 focus:ring-[var(--c-brand-tint-border)] cursor-pointer"
         >
           {options.map((o) => (
-            <option key={o} value={o} className="bg-slate-900 text-slate-200">
+            <option key={o} value={o} className="bg-[var(--c-surface)] text-[var(--c-text)]">
               {o} {unit}/trang
             </option>
           ))}
