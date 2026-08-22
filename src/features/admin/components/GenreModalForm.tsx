@@ -49,35 +49,35 @@ export function GenreModalForm({
       title={editingGenre ? 'Chỉnh sửa thể loại' : 'Thêm thể loại mới'}
       maxWidth="sm"
     >
-      <form onSubmit={handleSubmit} className="space-y-4 text-sm text-slate-200">
+      <form onSubmit={handleSubmit} className="space-y-4 text-sm text-[var(--c-text)]">
         {errorMsg && (
-          <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-300 text-xs font-semibold">
+          <div className="p-3 bg-[var(--c-danger-bg)] border border-[var(--c-border)] rounded-lg text-[var(--c-danger)] text-xs font-semibold">
             {errorMsg}
           </div>
         )}
         <div>
-          <label className="block text-xs font-bold uppercase text-slate-400 mb-1">Tên thể loại *</label>
+          <label className="block text-xs font-bold uppercase text-[var(--c-muted)] mb-1">Tên thể loại *</label>
           <input
             type="text"
             required
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100"
+            className="w-full p-2.5 bg-[var(--c-bg)] border border-[var(--c-border)] rounded-xl text-[var(--c-heading)]"
           />
         </div>
 
-        <div className="flex justify-end gap-3 pt-4 border-t border-slate-800">
+        <div className="flex justify-end gap-3 pt-4 border-t border-[var(--c-border)]">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-medium transition-colors"
+            className="px-4 py-2 bg-[var(--c-surface-2)] hover:bg-[var(--c-surface-3)] text-[var(--c-text)] rounded-lg text-xs font-medium transition-colors"
           >
             Hủy
           </button>
           <button
             type="submit"
             disabled={submitting}
-            className="px-5 py-2 bg-amber-700 hover:bg-amber-800 text-white font-medium text-xs rounded-lg transition-colors"
+            className="px-5 py-2 bg-[var(--c-gold)] hover:opacity-90 text-white font-medium text-xs rounded-lg transition-colors"
           >
             {submitting ? 'Đang lưu...' : 'Lưu thể loại'}
           </button>

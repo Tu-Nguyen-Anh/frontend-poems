@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react'
 import { poemService } from '@/services/poem.service'
-import { authorService } from '@/services/author.service'
 import { genreService } from '@/services/genre.service'
-import type { PoemResponse, AuthorResponse, GenreResponse, PoemRequest } from '@/types'
+import type { PoemResponse, GenreResponse, PoemRequest } from '@/types'
 import { PoemModalForm } from '../components/PoemModalForm'
+import { AuthorSelect } from '../components/AuthorSelect'
 import { getErrorMessage } from '@/utils/error'
 import { useToast } from '@/contexts/ToastContext'
 import { useDebounce } from '@/hooks/useDebounce'
@@ -15,13 +15,13 @@ import { Skeleton } from '@/components/ui/Skeleton'
 export default function AdminPoemsPage() {
   const { toast } = useToast()
   const [poems, setPoems] = useState<PoemResponse[]>([])
-  const [authors, setAuthors] = useState<AuthorResponse[]>([])
   const [genres, setGenres] = useState<GenreResponse[]>([])
   const [totalAmount, setTotalAmount] = useState(0)
 
   const [keyword, setKeyword] = useState('')
   const debouncedKeyword = useDebounce(keyword, 300)
   const [genreFilter, setGenreFilter] = useState<number | ''>('')
+  const [authorFilter, setAuthorFilter] = useState<number | ''>('')
 
   const [page, setPage] = useState(0)
   const [size, setSize] = useState(15)
@@ -30,18 +30,14 @@ export default function AdminPoemsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingPoem, setEditingPoem] = useState<PoemResponse | null>(null)
 
-  // Tải danh sách tác giả & thể loại dùng cho bộ lọc và modal
+  // Tải danh sách thể loại cho bộ lọc và modal (tác giả nạp riêng theo trang trong AuthorSelect)
   useEffect(() => {
     async function loadMeta() {
       try {
-        const [authorsRes, genresRes] = await Promise.all([
-          authorService.getAuthors({ isAll: true }),
-          genreService.getGenres({ isAll: true }),
-        ])
-        setAuthors(authorsRes.content || [])
+        const genresRes = await genreService.getGenres({ isAll: true })
         setGenres(genresRes.content || [])
       } catch (err) {
-        console.error('Lỗi tải danh mục tác giả / thể loại:', err)
+        console.error('Lỗi tải danh mục thể loại:', err)
       }
     }
     loadMeta()
@@ -51,12 +47,21 @@ export default function AdminPoemsPage() {
   const loadPoems = useCallback(async () => {
     setLoading(true)
     try {
-      const res = await poemService.getPoems({
-        keyword: debouncedKeyword.trim() || undefined,
-        genreId: genreFilter ? Number(genreFilter) : undefined,
-        page,
-        size,
-      })
+      // Có lọc tác giả → dùng /poems/browse (endpoint /poems không nhận authorId)
+      const res = authorFilter
+        ? await poemService.browsePoems({
+            authorId: Number(authorFilter),
+            keyword: debouncedKeyword.trim() || undefined,
+            genreId: genreFilter ? Number(genreFilter) : undefined,
+            page,
+            size,
+          })
+        : await poemService.getPoems({
+            keyword: debouncedKeyword.trim() || undefined,
+            genreId: genreFilter ? Number(genreFilter) : undefined,
+            page,
+            size,
+          })
       setPoems(res.content || [])
       setTotalAmount(res.amount ?? 0)
     } catch (err) {
@@ -65,7 +70,7 @@ export default function AdminPoemsPage() {
     } finally {
       setLoading(false)
     }
-  }, [debouncedKeyword, genreFilter, page, size, toast])
+  }, [debouncedKeyword, genreFilter, authorFilter, page, size, toast])
 
   useEffect(() => {
     loadPoems()
@@ -82,10 +87,10 @@ export default function AdminPoemsPage() {
     try {
       if (editingPoem) {
         await poemService.updatePoem(editingPoem.id, data)
-        toast('Cập nhật bài thơ thành công!')
+        toast('Cập nhật bài thơ thành công!', 'success')
       } else {
         await poemService.createPoem(data)
-        toast('Thêm bài thơ mới thành công!')
+        toast('Thêm bài thơ mới thành công!', 'success')
       }
       setIsModalOpen(false)
       await loadPoems()
@@ -99,7 +104,7 @@ export default function AdminPoemsPage() {
     if (!confirm('Bạn có chắc chắn muốn xóa bài thơ này?')) return
     try {
       await poemService.deletePoem(id)
-      toast('Đã xóa bài thơ!')
+      toast('Đã xóa bài thơ!', 'success')
       // Nếu xóa phần tử duy nhất ở trang > 0, lùi về trang trước
       if (poems.length === 1 && page > 0) {
         setPage((p) => p - 1)
@@ -114,10 +119,11 @@ export default function AdminPoemsPage() {
   const handleClearFilters = () => {
     setKeyword('')
     setGenreFilter('')
+    setAuthorFilter('')
     setPage(0)
   }
 
-  const isFiltering = Boolean(keyword.trim() || genreFilter !== '')
+  const isFiltering = Boolean(keyword.trim() || genreFilter !== '' || authorFilter !== '')
 
   return (
     <div className="space-y-6">
@@ -125,29 +131,29 @@ export default function AdminPoemsPage() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-serif font-bold text-amber-400">Quản lý bài thơ</h1>
+            <h1 className="text-3xl font-serif font-bold text-[var(--c-gold)]">Quản lý bài thơ</h1>
             {totalAmount > 0 && (
-              <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-300 border border-amber-500/20">
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[var(--c-brand-tint)] text-[var(--c-gold)] border border-[var(--c-brand-tint-border)]">
                 {totalAmount.toLocaleString('vi-VN')} tác phẩm
               </span>
             )}
           </div>
-          <p className="text-slate-400 text-sm mt-1">Thêm, sửa, xóa và tìm kiếm các tác phẩm bài thơ trong hệ thống</p>
+          <p className="text-[var(--c-muted)] text-sm mt-1">Thêm, sửa, xóa và tìm kiếm các tác phẩm bài thơ trong hệ thống</p>
         </div>
         <button
           onClick={() => handleOpenModal()}
-          className="px-5 py-2.5 bg-amber-700 hover:bg-amber-800 text-white font-medium text-sm rounded-lg transition-colors shadow-sm flex items-center gap-1.5 flex-shrink-0"
+          className="px-5 py-2.5 bg-[var(--c-gold)] hover:opacity-90 text-white font-medium text-sm rounded-lg transition-colors shadow-sm flex items-center gap-1.5 flex-shrink-0"
         >
           <span>+</span> Thêm bài thơ
         </button>
       </div>
 
       {/* Toolbar: Search, Filter & PageSize */}
-      <div className="bg-slate-900/90 p-4 rounded-xl border border-slate-800 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+      <div className="bg-[var(--c-surface)] p-4 rounded-xl border border-[var(--c-border)] flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-1">
           {/* Ô tìm kiếm */}
           <div className="relative flex-1 max-w-md">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--c-muted-2)] pointer-events-none">
               <IconSearch size={16} />
             </span>
             <input
@@ -158,7 +164,7 @@ export default function AdminPoemsPage() {
                 setKeyword(e.target.value)
                 setPage(0)
               }}
-              className="w-full pl-9 pr-8 py-2 bg-slate-950 border border-slate-800 rounded-lg text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500/40 focus:border-amber-500/50 transition-all"
+              className="w-full pl-9 pr-8 py-2 bg-[var(--c-bg)] border border-[var(--c-border)] rounded-lg text-sm text-[var(--c-heading)] placeholder-[var(--c-muted-2)] focus:outline-none focus:ring-2 focus:ring-[var(--c-brand-tint-border)] focus:border-[var(--c-gold)] transition-all"
             />
             {keyword && (
               <button
@@ -167,12 +173,27 @@ export default function AdminPoemsPage() {
                   setKeyword('')
                   setPage(0)
                 }}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 text-xs px-1"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--c-muted-2)] hover:text-[var(--c-text)] text-xs px-1"
                 title="Xóa tìm kiếm"
               >
                 ✕
               </button>
             )}
+          </div>
+
+          {/* Lọc theo Tác giả (tìm kiếm + tải dần) */}
+          <div className="w-full sm:w-56 flex-shrink-0">
+            <AuthorSelect
+              value={authorFilter || undefined}
+              allowClear
+              placeholder="Tất cả tác giả"
+              clearLabel="Tất cả tác giả"
+              sizeClass="px-3 py-2 rounded-lg"
+              onChange={(id) => {
+                setAuthorFilter(id ?? '')
+                setPage(0)
+              }}
+            />
           </div>
 
           {/* Lọc theo Thể loại */}
@@ -182,7 +203,7 @@ export default function AdminPoemsPage() {
               setGenreFilter(e.target.value ? Number(e.target.value) : '')
               setPage(0)
             }}
-            className="bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-500/40 cursor-pointer"
+            className="bg-[var(--c-bg)] border border-[var(--c-border)] rounded-lg px-3 py-2 text-sm text-[var(--c-text)] focus:outline-none focus:ring-2 focus:ring-[var(--c-brand-tint-border)] cursor-pointer"
           >
             <option value="">Tất cả thể loại</option>
             {genres.map((g) => (
@@ -196,7 +217,7 @@ export default function AdminPoemsPage() {
             <button
               type="button"
               onClick={handleClearFilters}
-              className="text-xs text-amber-400 hover:text-amber-300 underline underline-offset-2 py-1 px-2 whitespace-nowrap"
+              className="text-xs text-[var(--c-gold)] hover:text-[var(--c-gold)] underline underline-offset-2 py-1 px-2 whitespace-nowrap"
             >
               Xóa bộ lọc
             </button>
@@ -219,10 +240,10 @@ export default function AdminPoemsPage() {
       </div>
 
       {/* Table */}
-      <div className="bg-slate-900 rounded-xl border border-slate-800 overflow-hidden shadow-sm">
+      <div className="bg-[var(--c-surface)] rounded-xl border border-[var(--c-border)] overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm text-slate-300">
-            <thead className="bg-slate-950 text-slate-400 uppercase text-xs border-b border-slate-800 select-none">
+          <table className="w-full text-left text-sm text-[var(--c-text)]">
+            <thead className="bg-[var(--c-surface-3)] text-[var(--c-muted)] uppercase text-xs border-b border-[var(--c-border)] select-none">
               <tr>
                 <th className="px-6 py-3.5 w-20">ID</th>
                 <th className="px-6 py-3.5">Tên Bài Thơ</th>
@@ -232,23 +253,23 @@ export default function AdminPoemsPage() {
                 <th className="px-6 py-3.5 text-right w-36">Thao Tác</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/80">
+            <tbody className="divide-y divide-[var(--c-divider)]">
               {loading ? (
                 Array.from({ length: Math.min(size, 8) }).map((_, idx) => (
                   <tr key={`skel-${idx}`} className="animate-pulse">
-                    <td className="px-6 py-4"><Skeleton className="h-4 w-8 bg-slate-800" /></td>
-                    <td className="px-6 py-4"><Skeleton className="h-4 w-48 bg-slate-800" /></td>
-                    <td className="px-6 py-4"><Skeleton className="h-4 w-32 bg-slate-800" /></td>
-                    <td className="px-6 py-4"><Skeleton className="h-4 w-24 bg-slate-800" /></td>
-                    <td className="px-6 py-4"><Skeleton className="h-4 w-12 bg-slate-800" /></td>
-                    <td className="px-6 py-4 text-right"><Skeleton className="h-6 w-20 ml-auto bg-slate-800" /></td>
+                    <td className="px-6 py-4"><Skeleton className="h-4 w-8 bg-[var(--c-surface-3)]" /></td>
+                    <td className="px-6 py-4"><Skeleton className="h-4 w-48 bg-[var(--c-surface-3)]" /></td>
+                    <td className="px-6 py-4"><Skeleton className="h-4 w-32 bg-[var(--c-surface-3)]" /></td>
+                    <td className="px-6 py-4"><Skeleton className="h-4 w-24 bg-[var(--c-surface-3)]" /></td>
+                    <td className="px-6 py-4"><Skeleton className="h-4 w-12 bg-[var(--c-surface-3)]" /></td>
+                    <td className="px-6 py-4 text-right"><Skeleton className="h-6 w-20 ml-auto bg-[var(--c-surface-3)]" /></td>
                   </tr>
                 ))
               ) : poems.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-slate-400">
+                  <td colSpan={6} className="px-6 py-12 text-center text-[var(--c-muted)]">
                     <div className="flex flex-col items-center justify-center gap-2">
-                      <p className="text-base font-medium text-slate-300">
+                      <p className="text-base font-medium text-[var(--c-text)]">
                         {isFiltering
                           ? 'Không tìm thấy bài thơ nào phù hợp.'
                           : 'Chưa có bài thơ nào trong hệ thống.'}
@@ -257,7 +278,7 @@ export default function AdminPoemsPage() {
                         <button
                           type="button"
                           onClick={handleClearFilters}
-                          className="mt-1 text-xs text-amber-400 hover:underline"
+                          className="mt-1 text-xs text-[var(--c-gold)] hover:underline"
                         >
                           Xóa bộ lọc để xem toàn bộ danh sách
                         </button>
@@ -267,30 +288,30 @@ export default function AdminPoemsPage() {
                 </tr>
               ) : (
                 poems.map((poem) => (
-                  <tr key={poem.id} className="hover:bg-slate-800/50 transition-colors">
-                    <td className="px-6 py-4 font-mono text-xs text-slate-500">#{poem.id}</td>
-                    <td className="px-6 py-4 font-bold text-slate-100">{poem.name}</td>
-                    <td className="px-6 py-4 text-amber-400">{poem.authorName || poem.author_name || 'Vô danh'}</td>
+                  <tr key={poem.id} className="hover:bg-[var(--c-surface-2)] transition-colors">
+                    <td className="px-6 py-4 font-mono text-xs text-[var(--c-muted-2)]">#{poem.id}</td>
+                    <td className="px-6 py-4 font-bold text-[var(--c-heading)]">{poem.name}</td>
+                    <td className="px-6 py-4 text-[var(--c-gold)]">{poem.authorName || poem.author_name || 'Vô danh'}</td>
                     <td className="px-6 py-4">
                       {poem.genreName || poem.genre_name ? (
-                        <span className="px-2.5 py-1 rounded-md text-xs bg-slate-800 border border-slate-700 text-slate-300">
+                        <span className="px-2.5 py-1 rounded-md text-xs bg-[var(--c-surface-2)] border border-[var(--c-border)] text-[var(--c-text)]">
                           {poem.genreName || poem.genre_name}
                         </span>
                       ) : (
-                        <span className="text-slate-600">—</span>
+                        <span className="text-[var(--c-muted-2)]">—</span>
                       )}
                     </td>
-                    <td className="px-6 py-4 font-mono text-xs text-slate-400">{poem.year || '—'}</td>
+                    <td className="px-6 py-4 font-mono text-xs text-[var(--c-muted)]">{poem.year || '—'}</td>
                     <td className="px-6 py-4 text-right space-x-2 whitespace-nowrap">
                       <button
                         onClick={() => handleOpenModal(poem)}
-                        className="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-md text-xs font-medium transition-colors"
+                        className="px-3 py-1 bg-[var(--c-surface-2)] hover:bg-[var(--c-surface-3)] text-[var(--c-text)] rounded-md text-xs font-medium transition-colors"
                       >
                         Sửa
                       </button>
                       <button
                         onClick={() => handleDelete(poem.id)}
-                        className="px-3 py-1 bg-red-600/90 hover:bg-red-600 text-white rounded-md text-xs font-medium transition-colors"
+                        className="px-3 py-1 bg-[var(--c-gold)] hover:opacity-90 text-white rounded-md text-xs font-medium transition-colors"
                       >
                         Xóa
                       </button>
@@ -303,7 +324,7 @@ export default function AdminPoemsPage() {
         </div>
 
         {/* Phân trang Admin */}
-        <div className="p-4 border-t border-slate-800">
+        <div className="p-4 border-t border-[var(--c-border)]">
           <Pagination
             variant="admin"
             page={page}
@@ -321,7 +342,6 @@ export default function AdminPoemsPage() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         editingPoem={editingPoem}
-        authors={authors}
         genres={genres}
         onSubmit={handleSave}
       />
