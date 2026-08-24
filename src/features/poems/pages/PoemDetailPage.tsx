@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useLocation, useNavigate, Link } from 'react-router-dom'
 import { poemService } from '@/services/poem.service'
+import { statisticService } from '@/services/statistic.service'
 import { commentService } from '@/services/comment.service'
 import { replyService } from '@/services/reply.service'
 import { useToast } from '@/contexts/ToastContext'
@@ -16,6 +17,9 @@ import { poemDisplayTitle, poemAuthorName, poemGenreName } from '@/features/poem
 import { FavoriteButton } from '@/features/poems/components/FavoriteButton'
 import { HighlightableContent } from '@/features/poems/components/HighlightableContent'
 import { ExcerptImageModal } from '@/features/poems/components/ExcerptImageModal'
+import { PoemStatsPanel } from '@/features/poems/components/PoemStatsPanel'
+import { SharePoemModal } from '@/features/poems/components/SharePoemModal'
+import { IconShare } from '@/components/ui/icons'
 import { useAuth } from '@/hooks/useAuth'
 import { languageLabel } from '@/features/browse/labels'
 import { Seo } from '@/components/common/Seo'
@@ -46,6 +50,17 @@ export default function PoemDetailPage() {
   const [fontIdx, setFontIdx] = useLocalStorage('poems_reader_font', 1)
   const [leadingIdx, setLeadingIdx] = useLocalStorage('poems_reader_leading', 1)
   const [copied, setCopied] = useState<'' | 'poem' | 'link'>('')
+
+  // Thống kê bài thơ & modal chia sẻ
+  const [stats, setStats] = useState({
+    viewCount: 0,
+    favoriteCount: 0,
+    commentCount: 0,
+    shareCount: 0,
+  })
+  const [statsLoading, setStatsLoading] = useState(true)
+  const [shareModalOpen, setShareModalOpen] = useState(false)
+  const commentsSectionRef = useRef<HTMLElement>(null)
 
   // Tạo ảnh đoạn trích: giữ đoạn thơ đang bôi đen (trong khung bài) để tạo ảnh.
   const poemCardRef = useRef<HTMLDivElement>(null)
@@ -92,13 +107,16 @@ export default function PoemDetailPage() {
     async function loadPoemAndComments() {
       if (!poemId) {
         setLoading(false)
+        setStatsLoading(false)
         return
       }
       setLoading(true)
+      setStatsLoading(true)
       try {
-        const [poemData, commentData] = await Promise.all([
+        const [poemData, commentData, statData] = await Promise.all([
           poemService.getPoemById(poemId),
           commentService.getCommentsByPoem(poemId, { size: 10 }),
+          statisticService.getPoemStatistics(poemId).catch(() => null),
         ])
         setPoem(poemData)
         const commentList = commentData.content || []
@@ -106,7 +124,20 @@ export default function PoemDetailPage() {
         setNextCursor(commentData.next_cursor ?? commentData.nextCursor ?? null)
         setHasNext(Boolean(commentData.has_next ?? commentData.hasNext))
         const total = commentData.total_elements ?? commentData.totalElements
-        setTotalComments(total !== null && total !== undefined ? total : commentList.length)
+        const commentTotal = total !== null && total !== undefined ? total : commentList.length
+        setTotalComments(commentTotal)
+
+        const viewCount = statData?.view_count ?? statData?.viewCount ?? poemData.statistics?.view_count ?? poemData.statistics?.viewCount ?? 0
+        const favoriteCount = statData?.favorite_count ?? statData?.favoriteCount ?? poemData.statistics?.favorite_count ?? poemData.statistics?.favoriteCount ?? 0
+        const commentCount = statData?.comment_count ?? statData?.commentCount ?? poemData.statistics?.comment_count ?? poemData.statistics?.commentCount ?? commentTotal
+        const shareCount = statData?.share_count ?? statData?.shareCount ?? poemData.statistics?.share_count ?? poemData.statistics?.shareCount ?? 0
+
+        setStats({
+          viewCount,
+          favoriteCount,
+          commentCount,
+          shareCount,
+        })
 
         if (commentList.length > 0) {
           const map: Record<number, ReplyResponse[]> = {}
@@ -125,6 +156,7 @@ export default function PoemDetailPage() {
         console.error('Lỗi nạp bài thơ', err)
       } finally {
         setLoading(false)
+        setStatsLoading(false)
       }
     }
     loadPoemAndComments()
@@ -178,6 +210,7 @@ export default function PoemDetailPage() {
       const newComment = await commentService.createComment({ poemId, content })
       setComments((prev) => [newComment, ...prev])
       setTotalComments((prev) => (prev !== null ? prev + 1 : 1))
+      setStats((prev) => ({ ...prev, commentCount: prev.commentCount + 1 }))
     } catch (err) {
       toast(getErrorMessage(err))
     }
@@ -188,6 +221,7 @@ export default function PoemDetailPage() {
       await commentService.deleteComment(commentId)
       setComments((prev) => prev.filter((c) => c.id !== commentId))
       setTotalComments((prev) => (prev !== null ? Math.max(0, prev - 1) : 0))
+      setStats((prev) => ({ ...prev, commentCount: Math.max(0, prev.commentCount - 1) }))
     } catch (err) {
       toast(getErrorMessage(err))
     }
@@ -209,6 +243,7 @@ export default function PoemDetailPage() {
         ...prev,
         [commentId]: [...(prev[commentId] || []), newReply],
       }))
+      setStats((prev) => ({ ...prev, commentCount: prev.commentCount + 1 }))
     } catch (err) {
       toast(getErrorMessage(err))
     }
@@ -351,8 +386,16 @@ export default function PoemDetailPage() {
               <span className="font-semibold text-amber-800/90 dark:text-amber-400">{poemAuthorName(poem)}</span>
             )}
           </p>
-          <div className="flex items-center gap-2 pt-1">
-            <FavoriteButton poemId={poem.id} />
+          <div className="flex flex-wrap items-center gap-2 pt-1">
+            <FavoriteButton
+              poemId={poem.id}
+              onToggle={(fav) => {
+                setStats((s) => ({
+                  ...s,
+                  favoriteCount: Math.max(0, s.favoriteCount + (fav ? 1 : -1)),
+                }))
+              }}
+            />
             <button
               onClick={() =>
                 copyToClipboard(
@@ -365,11 +408,27 @@ export default function PoemDetailPage() {
               {copied === 'poem' ? 'Đã sao chép' : 'Sao chép bài thơ'}
             </button>
             <button
-              onClick={() => copyToClipboard(window.location.href, 'link')}
-              className="px-2.5 py-1 rounded-md border border-slate-200 dark:border-slate-700 text-xs text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              onClick={() => setShareModalOpen(true)}
+              className="px-2.5 py-1 rounded-md border border-slate-200 dark:border-slate-700 text-xs text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-1.5"
             >
-              {copied === 'link' ? 'Đã chép liên kết' : 'Chia sẻ'}
+              <IconShare size={14} />
+              <span>Chia sẻ</span>
             </button>
+          </div>
+
+          {/* Bảng thống kê bài thơ (Lượt xem, Yêu thích, Bình luận, Chia sẻ) */}
+          <div className="pt-2">
+            <PoemStatsPanel
+              viewCount={stats.viewCount}
+              favoriteCount={stats.favoriteCount}
+              commentCount={stats.commentCount}
+              shareCount={stats.shareCount}
+              loading={statsLoading}
+              onCommentClick={() => {
+                commentsSectionRef.current?.scrollIntoView({ behavior: 'smooth' })
+              }}
+              onShareClick={() => setShareModalOpen(true)}
+            />
           </div>
         </div>
 
@@ -474,7 +533,11 @@ export default function PoemDetailPage() {
       )}
 
       {/* Comments Section */}
-      <section className="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-xl border border-slate-200 dark:border-slate-700 space-y-6">
+      <section
+        ref={commentsSectionRef}
+        id="comments"
+        className="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-xl border border-slate-200 dark:border-slate-700 space-y-6"
+      >
         <h3 className="text-xl font-serif font-bold text-slate-900 dark:text-amber-100">
           Bình luận ({totalComments !== null ? totalComments : comments.length})
         </h3>
@@ -533,6 +596,17 @@ export default function PoemDetailPage() {
         authorId={poem.authorId ?? poem.author_id}
         translator={excerptTranslator}
         initialText={excerptText}
+      />
+
+      <SharePoemModal
+        isOpen={shareModalOpen}
+        onClose={() => setShareModalOpen(false)}
+        poemId={poem.id}
+        poemTitle={poemDisplayTitle(poem)}
+        authorName={poemAuthorName(poem)}
+        onShareSuccess={() => {
+          setStats((prev) => ({ ...prev, shareCount: prev.shareCount + 1 }))
+        }}
       />
     </div>
   )

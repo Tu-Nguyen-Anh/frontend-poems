@@ -115,6 +115,20 @@ export interface PoemResponse {
   author_id?: number
   genre_name?: string
   translations?: PoemTranslation[]
+  statistics?: PoemStatisticsResponse
+}
+
+export interface PoemStatisticsResponse {
+  poem_id?: number
+  poemId?: number
+  view_count?: number
+  viewCount?: number
+  favorite_count?: number
+  favoriteCount?: number
+  share_count?: number
+  shareCount?: number
+  comment_count?: number
+  commentCount?: number
 }
 
 /** Một nhánh trong cây duyệt phân cấp (Ngôn ngữ → Thời kỳ → Thể thơ → Tác giả). */

@@ -29,9 +29,9 @@ export function AuthorModalForm({
     if (editingAuthor) {
       setForm({
         name: editingAuthor.name || '',
-        birthYear: editingAuthor.birthYear,
-        hometown: editingAuthor.hometown || '',
-        achievement: editingAuthor.achievement || '',
+        birthYear: editingAuthor.birthYear ?? (editingAuthor as any).birth_year ?? undefined,
+        hometown: editingAuthor.hometown || (editingAuthor as any).home_town || '',
+        achievement: editingAuthor.achievement || editingAuthor.bio || (editingAuthor as any).biography || '',
       })
     } else {
       setForm({

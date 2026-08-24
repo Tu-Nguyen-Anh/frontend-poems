@@ -72,6 +72,15 @@ export const poemService = {
     return res.data.data
   },
 
+  async sharePoem(id: number): Promise<void> {
+    await oplearnClient.post(`/poems/${id}/share`)
+  },
+
+  async getPoemStatistics(id: number): Promise<import('@/types').PoemStatisticsResponse> {
+    const res = await oplearnClient.get<ResponseGeneral<import('@/types').PoemStatisticsResponse>>(`/statistics/${id}`)
+    return res.data.data
+  },
+
   async getLatestPoems(params?: { page?: number; size?: number }): Promise<PageResponse<PoemResponse>> {
     const res = await oplearnClient.get<ResponseGeneral<PageResponse<PoemResponse>>>('/poems/latest', {
       params: {

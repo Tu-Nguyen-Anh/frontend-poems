@@ -35,17 +35,62 @@ export function PoemModalForm({
   useEffect(() => {
     setErrorMsg('')
     if (editingPoem) {
-      const matchingGenre = genres.find((g) => g.name === editingPoem.genreName)
+      const rawGenreName =
+        editingPoem.genreName ||
+        (editingPoem as any).genre_name ||
+        (editingPoem as any).genre?.name ||
+        ''
+      const matchedGenre = rawGenreName
+        ? genres.find(
+            (g) =>
+              g.name.trim().toLowerCase() === rawGenreName.trim().toLowerCase() ||
+              g.id === Number(rawGenreName),
+          )
+        : undefined
+
+      const resolvedGenreId =
+        editingPoem.genreId ??
+        (editingPoem as any).genre_id ??
+        (editingPoem as any).genre?.id ??
+        matchedGenre?.id ??
+        undefined
+
+      const resolvedAuthorId =
+        editingPoem.authorId ??
+        (editingPoem as any).author_id ??
+        (editingPoem as any).author?.id ??
+        undefined
+
+      const resolvedTranslation =
+        editingPoem.translation ||
+        (editingPoem as any).meaning ||
+        (editingPoem.translations && editingPoem.translations.length > 0
+          ? editingPoem.translations
+              .map((t) => (t.translator ? `[${t.translator}]\n${t.content}` : t.content))
+              .join('\n\n')
+          : '') ||
+        ''
+
+      const resolvedTransliteration =
+        editingPoem.transliteration ||
+        (editingPoem as any).transcription ||
+        ''
+
+      const resolvedDescription =
+        editingPoem.description ||
+        (editingPoem as any).note ||
+        ''
+
       setForm({
-        name: editingPoem.name || '',
-        description: editingPoem.description || '',
-        year: editingPoem.year,
-        content: editingPoem.content || '',
-        transliteration: editingPoem.transliteration || '',
-        translation: editingPoem.translation || '',
+        name: editingPoem.name || (editingPoem as any).title || '',
+        description: resolvedDescription,
+        year: editingPoem.year ?? (editingPoem as any).created_year ?? undefined,
+        content: editingPoem.content || (editingPoem as any).body || '',
+        transliteration: resolvedTransliteration,
+        translation: resolvedTranslation,
         language: editingPoem.language || 'vi',
-        authorId: editingPoem.authorId ?? editingPoem.author_id ?? undefined,
-        genreId: matchingGenre?.id,
+        authorId: resolvedAuthorId,
+        genreId: resolvedGenreId,
       })
     } else {
       setForm({
@@ -61,6 +106,12 @@ export function PoemModalForm({
       })
     }
   }, [editingPoem, genres, isOpen])
+
+  const initialAuthorLabel =
+    editingPoem?.authorName ||
+    (editingPoem as any)?.author_name ||
+    (editingPoem as any)?.author?.name ||
+    ''
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -107,8 +158,8 @@ export function PoemModalForm({
             <AuthorSelect
               required
               value={form.authorId}
-              initialLabel={editingPoem?.authorName || editingPoem?.author_name}
-              onChange={(id) => setForm({ ...form, authorId: id })}
+              initialLabel={initialAuthorLabel}
+              onChange={(id) => setForm((prev) => ({ ...prev, authorId: id }))}
             />
           </div>
 
@@ -157,6 +208,7 @@ export function PoemModalForm({
             rows={3}
             value={form.transliteration || ''}
             onChange={(e) => setForm({ ...form, transliteration: e.target.value })}
+            placeholder="Phiên âm chữ Hán sang tiếng Việt..."
             className="w-full p-3 bg-[var(--c-bg)] border border-[var(--c-border)] rounded-xl font-serif text-[var(--c-heading)] focus:ring-2 focus:ring-[var(--c-brand-tint-border)] outline-none"
           />
         </div>
@@ -167,7 +219,19 @@ export function PoemModalForm({
             rows={3}
             value={form.translation || ''}
             onChange={(e) => setForm({ ...form, translation: e.target.value })}
+            placeholder="Bản dịch thơ hoặc giải nghĩa..."
             className="w-full p-3 bg-[var(--c-bg)] border border-[var(--c-border)] rounded-xl font-serif text-[var(--c-heading)] focus:ring-2 focus:ring-[var(--c-brand-tint-border)] outline-none"
+          />
+        </div>
+
+        <div>
+          <label className="block text-xs font-bold uppercase text-[var(--c-muted)] mb-1">Ghi chú / Hoàn cảnh sáng tác (tùy chọn)</label>
+          <textarea
+            rows={2}
+            value={form.description || ''}
+            onChange={(e) => setForm({ ...form, description: e.target.value })}
+            placeholder="Ghi chú thêm về bài thơ, hoàn cảnh sáng tác..."
+            className="w-full p-3 bg-[var(--c-bg)] border border-[var(--c-border)] rounded-xl text-[var(--c-heading)] focus:ring-2 focus:ring-[var(--c-brand-tint-border)] outline-none"
           />
         </div>
 

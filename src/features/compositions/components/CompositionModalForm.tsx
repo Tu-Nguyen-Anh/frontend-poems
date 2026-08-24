@@ -57,10 +57,22 @@ export function CompositionModalForm({
   // Populate data when editing
   useEffect(() => {
     if (editComposition) {
-      setTitle(editComposition.title || '')
-      setPenName(editComposition.penName || editComposition.pen_name || '')
-      setGenreId(editComposition.genreId ?? editComposition.genre_id)
-      setContent(editComposition.content || '')
+      const resolvedGenreId =
+        editComposition.genreId ??
+        editComposition.genre_id ??
+        (editComposition as any).genre?.id ??
+        (editComposition.genreName || (editComposition as any).genre_name
+          ? genres.find(
+              (g) =>
+                g.name.trim().toLowerCase() ===
+                (editComposition.genreName || (editComposition as any).genre_name)?.trim().toLowerCase(),
+            )?.id
+          : undefined)
+
+      setTitle(editComposition.title || (editComposition as any).name || '')
+      setPenName(editComposition.penName || editComposition.pen_name || (editComposition as any).author_name || (editComposition as any).authorName || '')
+      setGenreId(resolvedGenreId)
+      setContent(editComposition.content || (editComposition as any).body || '')
       setStatus(editComposition.status || 'PUBLISHED')
     } else {
       setTitle('')
@@ -71,7 +83,7 @@ export function CompositionModalForm({
       setStatus('PUBLISHED')
     }
     setErrorMsg('')
-  }, [editComposition, isOpen, currentUserName])
+  }, [editComposition, genres, isOpen, currentUserName])
 
   if (!isOpen) return null
 

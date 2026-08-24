@@ -78,9 +78,22 @@ export default function AdminPoemsPage() {
 
   const totalPages = Math.ceil(totalAmount / size) || 1
 
-  const handleOpenModal = (poem?: PoemResponse) => {
-    setEditingPoem(poem || null)
-    setIsModalOpen(true)
+  const handleOpenModal = async (poem?: PoemResponse) => {
+    if (poem) {
+      setEditingPoem(poem)
+      setIsModalOpen(true)
+      try {
+        const fullPoem = await poemService.getPoemById(poem.id)
+        if (fullPoem) {
+          setEditingPoem(fullPoem)
+        }
+      } catch (err) {
+        console.warn('Lỗi tải chi tiết bài thơ từ API, dùng dữ liệu danh sách:', err)
+      }
+    } else {
+      setEditingPoem(null)
+      setIsModalOpen(true)
+    }
   }
 
   const handleSave = async (data: PoemRequest) => {

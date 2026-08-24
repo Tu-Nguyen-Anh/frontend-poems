@@ -77,11 +77,36 @@ export function AuthorSelect({
     if (open) load(0, true)
   }, [open, debouncedQuery, load])
 
-  // Khi sửa bài thơ: hiển thị tên sẵn có, và nếu chưa có id thì khớp theo tên để lấy id
+  // Đồng bộ nhãn khi initialLabel thay đổi
   useEffect(() => {
-    if (!initialLabel) return
-    setSelectedLabel(initialLabel)
-    if (value) return
+    if (initialLabel) {
+      setSelectedLabel(initialLabel)
+    }
+  }, [initialLabel])
+
+  // Khi có value (id) nhưng chưa có tên hiển thị và không có initialLabel -> tải tên theo ID
+  useEffect(() => {
+    if (value && !initialLabel && !selectedLabel) {
+      let cancelled = false
+      ;(async () => {
+        try {
+          const author = await authorService.getAuthorById(value)
+          if (!cancelled && author?.name) {
+            setSelectedLabel(author.name)
+          }
+        } catch (err) {
+          console.error('Lỗi tải tác giả theo id:', err)
+        }
+      })()
+      return () => {
+        cancelled = true
+      }
+    }
+  }, [value, initialLabel, selectedLabel])
+
+  // Khi có tên (initialLabel) nhưng chưa có id (value) -> tìm theo tên để tự gán ID
+  useEffect(() => {
+    if (!initialLabel || value) return
     let cancelled = false
     ;(async () => {
       try {
@@ -97,8 +122,7 @@ export function AuthorSelect({
     return () => {
       cancelled = true
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialLabel, value])
+  }, [initialLabel, value, onChange])
 
   // Đồng bộ khi parent bỏ chọn (vd bấm "Xóa bộ lọc") → xoá tên hiển thị
   useEffect(() => {

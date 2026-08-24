@@ -6,7 +6,7 @@ import { favoriteService } from '@/services/favorite.service'
 import { PATHS } from '@/routes/paths'
 
 /** Nút ♥ lưu bài thơ vào yêu thích. Cần đăng nhập; chưa đăng nhập → nhắc + chuyển /login. */
-export function FavoriteButton({ poemId }: { poemId: number }) {
+export function FavoriteButton({ poemId, onToggle }: { poemId: number; onToggle?: (favorited: boolean) => void }) {
   const { isAuthenticated } = useAuth()
   const { toast } = useToast()
   const navigate = useNavigate()
@@ -39,6 +39,7 @@ export function FavoriteButton({ poemId }: { poemId: number }) {
     try {
       const next = fav ? await favoriteService.remove(poemId) : await favoriteService.add(poemId)
       setFav(next)
+      onToggle?.(next)
       toast(next ? 'Đã thêm vào yêu thích' : 'Đã bỏ khỏi yêu thích', 'success')
     } catch {
       toast('Không lưu được, thử lại sau')
