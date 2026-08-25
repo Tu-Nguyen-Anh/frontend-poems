@@ -66,7 +66,7 @@ export default function CompositionDetailPage() {
     const textToCopy = `${composition.title}\n\nTác giả: ${authorName}\n\n${composition.content}`
     navigator.clipboard?.writeText(textToCopy).then(() => {
       setCopied('poem')
-      toast('Đã sao chép nội dung bài thơ!')
+      toast('Đã sao chép nội dung bài thơ!', 'success')
       setTimeout(() => setCopied(''), 2000)
     })
   }
@@ -74,7 +74,7 @@ export default function CompositionDetailPage() {
   const handleCopyLink = () => {
     navigator.clipboard?.writeText(window.location.href).then(() => {
       setCopied('link')
-      toast('Đã sao chép liên kết bài thơ!')
+      toast('Đã sao chép liên kết bài thơ!', 'success')
       setTimeout(() => setCopied(''), 2000)
     })
   }
@@ -84,7 +84,7 @@ export default function CompositionDetailPage() {
     if (!window.confirm('Bạn có chắc chắn muốn xóa bài thơ sáng tác này không?')) return
     try {
       await compositionService.delete(composition.id)
-      toast('Đã xóa bài thơ thành công!')
+      toast('Đã xóa bài thơ thành công!', 'success')
       navigate(PATHS.COMPOSITIONS)
     } catch (err) {
       toast(`Không thể xóa bài thơ: ${getErrorMessage(err)}`)

@@ -153,7 +153,7 @@ export function UserPreferencesSection({ userId }: UserPreferencesSectionProps) 
     setSavingPreferences(true)
     try {
       saveUserPreferences(userId, preferences)
-      toast('Đã lưu sở thích cá nhân thành công!')
+      toast('Đã lưu sở thích cá nhân thành công!', 'success')
       fetchRecommendations(preferences)
     } finally {
       setSavingPreferences(false)
@@ -165,7 +165,7 @@ export function UserPreferencesSection({ userId }: UserPreferencesSectionProps) 
     const cleared: UserPreferences = { authorIds: [], genreIds: [], eras: [] }
     setPreferences(cleared)
     saveUserPreferences(userId, cleared)
-    toast('Đã đặt lại sở thích mặc định.')
+    toast('Đã đặt lại sở thích mặc định.', 'success')
     fetchRecommendations(cleared)
   }
 

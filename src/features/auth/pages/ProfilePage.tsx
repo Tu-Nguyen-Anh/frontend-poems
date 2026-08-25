@@ -333,7 +333,7 @@ export default function ProfilePage() {
       await compositionService.delete(id)
       setUserCompositions((prev) => prev.filter((c) => c.id !== id))
       setTotalCompositionsCount((prev) => (prev !== null ? Math.max(0, prev - 1) : 0))
-      toast('Đã xóa bài thơ thành công!')
+      toast('Đã xóa bài thơ thành công!', 'success')
     } catch (err) {
       toast(`Không thể xóa bài thơ: ${getErrorMessage(err)}`)
     }
