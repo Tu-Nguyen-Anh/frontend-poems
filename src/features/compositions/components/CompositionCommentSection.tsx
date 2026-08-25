@@ -100,7 +100,7 @@ export function CompositionCommentSection({ compositionId }: CompositionCommentS
       })
       setComments((prev) => [newComment, ...prev])
       setTotalComments((prev) => (prev !== null ? prev + 1 : 1))
-      toast('Đã đăng bình luận thành công!')
+      toast('Đã đăng bình luận thành công!', 'success')
     } catch (err) {
       toast(getErrorMessage(err))
     }
@@ -111,7 +111,7 @@ export function CompositionCommentSection({ compositionId }: CompositionCommentS
       await commentService.deleteComment(commentId)
       setComments((prev) => prev.filter((c) => c.id !== commentId))
       setTotalComments((prev) => (prev !== null ? Math.max(0, prev - 1) : 0))
-      toast('Đã xóa bình luận.')
+      toast('Đã xóa bình luận.', 'success')
     } catch (err) {
       toast(getErrorMessage(err))
     }
@@ -123,7 +123,7 @@ export function CompositionCommentSection({ compositionId }: CompositionCommentS
       setComments((prev) =>
         prev.map((c) => (c.id === commentId ? { ...c, content: updated.content } : c))
       )
-      toast('Đã cập nhật bình luận.')
+      toast('Đã cập nhật bình luận.', 'success')
     } catch (err) {
       toast(getErrorMessage(err))
     }
@@ -136,7 +136,7 @@ export function CompositionCommentSection({ compositionId }: CompositionCommentS
         ...prev,
         [commentId]: [...(prev[commentId] || []), newReply],
       }))
-      toast('Đã gửi câu trả lời!')
+      toast('Đã gửi câu trả lời!', 'success')
     } catch (err) {
       toast(getErrorMessage(err))
     }

@@ -46,7 +46,7 @@ export function CompositionCard({
     const textToCopy = `${composition.title}\n\nTác giả: ${authorName}\n\n${composition.content}`
     navigator.clipboard?.writeText(textToCopy).then(() => {
       setCopied(true)
-      toast('Đã sao chép bài thơ vào khay nhớ tạm!')
+      toast('Đã sao chép bài thơ vào khay nhớ tạm!', 'success')
       setTimeout(() => setCopied(false), 2000)
     })
   }
@@ -65,7 +65,7 @@ export function CompositionCard({
         .catch(() => {})
     } else {
       navigator.clipboard?.writeText(url).then(() => {
-        toast('Đã sao chép liên kết bài thơ!')
+        toast('Đã sao chép liên kết bài thơ!', 'success')
       })
     }
   }

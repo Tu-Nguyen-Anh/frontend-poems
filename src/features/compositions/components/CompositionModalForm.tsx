@@ -126,10 +126,10 @@ export function CompositionModalForm({
       let result: PoemCompositionResponse
       if (editComposition?.id) {
         result = await compositionService.update(editComposition.id, payload)
-        toast('Đã cập nhật bài thơ thành công!')
+        toast('Đã cập nhật bài thơ thành công!', 'success')
       } else {
         result = await compositionService.create(payload)
-        toast('Đã đăng bài thơ mới thành công!')
+        toast('Đã đăng bài thơ mới thành công!', 'success')
       }
       onSuccess(result)
       onClose()

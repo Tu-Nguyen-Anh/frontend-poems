@@ -219,7 +219,7 @@ export default function CompositionsPage() {
       setLatestList((prev) => prev.filter((p) => p.id !== id))
       setRandomList((prev) => prev.filter((p) => p.id !== id))
       setSearchList((prev) => prev.filter((p) => p.id !== id))
-      toast('Đã xóa bài thơ thành công!')
+      toast('Đã xóa bài thơ thành công!', 'success')
     } catch (err) {
       toast(`Không thể xóa bài thơ: ${getErrorMessage(err)}`)
     }
