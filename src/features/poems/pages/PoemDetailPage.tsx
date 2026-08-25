@@ -19,7 +19,8 @@ import { HighlightableContent } from '@/features/poems/components/HighlightableC
 import { ExcerptImageModal } from '@/features/poems/components/ExcerptImageModal'
 import { PoemStatsPanel } from '@/features/poems/components/PoemStatsPanel'
 import { SharePoemModal } from '@/features/poems/components/SharePoemModal'
-import { IconShare } from '@/components/ui/icons'
+import { IconShare, IconEye, IconHeart, IconComment } from '@/components/ui/icons'
+import { formatNumber } from '@/utils/format'
 import { useAuth } from '@/hooks/useAuth'
 import { languageLabel } from '@/features/browse/labels'
 import { Seo } from '@/components/common/Seo'
@@ -416,20 +417,15 @@ export default function PoemDetailPage() {
             </button>
           </div>
 
-          {/* Bảng thống kê bài thơ (Lượt xem, Yêu thích, Bình luận, Chia sẻ) */}
-          <div className="pt-2">
-            <PoemStatsPanel
-              viewCount={stats.viewCount}
-              favoriteCount={stats.favoriteCount}
-              commentCount={stats.commentCount}
-              shareCount={stats.shareCount}
-              loading={statsLoading}
-              onCommentClick={() => {
-                commentsSectionRef.current?.scrollIntoView({ behavior: 'smooth' })
-              }}
-              onShareClick={() => setShareModalOpen(true)}
-            />
-          </div>
+          {/* Dòng thống kê mảnh, muted — chỉ để liếc nhanh; panel đầy đủ ở cuối bài. */}
+          {!statsLoading && (
+            <div className="pt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500 dark:text-slate-400">
+              <span className="inline-flex items-center gap-1.5"><IconEye size={13} /> {formatNumber(stats.viewCount)} lượt xem</span>
+              <span className="inline-flex items-center gap-1.5"><IconHeart size={13} /> {formatNumber(stats.favoriteCount)}</span>
+              <span className="inline-flex items-center gap-1.5"><IconComment size={13} /> {formatNumber(stats.commentCount)}</span>
+              <span className="inline-flex items-center gap-1.5"><IconShare size={13} /> {formatNumber(stats.shareCount)}</span>
+            </div>
+          )}
         </div>
 
         {/* Tabs: Nguyên tác / Phiên âm / Dịch nghĩa (chỉ hiện khi có phần tương ứng) */}
@@ -531,6 +527,20 @@ export default function PoemDetailPage() {
           </div>
         </section>
       )}
+
+      {/* Bảng thống kê bài thơ (Lượt xem, Yêu thích, Bình luận, Chia sẻ) — đặt cuối
+          bài, sau khi đọc xong, làm cầu nối xuống phần bình luận/chia sẻ. */}
+      <PoemStatsPanel
+        viewCount={stats.viewCount}
+        favoriteCount={stats.favoriteCount}
+        commentCount={stats.commentCount}
+        shareCount={stats.shareCount}
+        loading={statsLoading}
+        onCommentClick={() => {
+          commentsSectionRef.current?.scrollIntoView({ behavior: 'smooth' })
+        }}
+        onShareClick={() => setShareModalOpen(true)}
+      />
 
       {/* Comments Section */}
       <section
