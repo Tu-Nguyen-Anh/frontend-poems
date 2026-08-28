@@ -55,6 +55,9 @@ const router = createBrowserRouter([
       { path: PATHS.GENRE_DETAIL, element: <GenreDetailPage /> },
       { path: PATHS.LOGIN, element: <LoginPage /> },
       { path: PATHS.REGISTER, element: <LoginPage /> },
+      { path: PATHS.FORGOT_PASSWORD, element: <LoginPage /> },
+      { path: PATHS.RESET_PASSWORD, element: <LoginPage /> },
+      { path: PATHS.VERIFY_EMAIL, element: <LoginPage /> },
       {
         path: PATHS.PROFILE,
         element: (

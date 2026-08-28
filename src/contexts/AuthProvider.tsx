@@ -71,13 +71,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const register = async (username: string, email: string, password: string, phoneNumber?: string) => {
-    const tokens = await authService.register({
+    await authService.register({
       username,
       email,
       password,
       phoneNumber,
     })
-    processTokens(tokens, username)
+  }
+
+  const verifyOtp = async (email: string, otp: string, usernameFallback?: string) => {
+    const tokens = await authService.verifyOtp({ email, otp })
+    processTokens(tokens, usernameFallback || email)
+  }
+
+  const forgotPassword = async (email: string) => {
+    await authService.forgotPassword({ email })
+  }
+
+  const resetPassword = async (email: string, otp: string, newPassword: string) => {
+    await authService.resetPassword({ email, otp, newPassword })
   }
 
   const logout = async () => {
@@ -94,7 +106,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   )
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated: user !== null, isAdmin, login, loginWithGoogle, register, logout }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        isAuthenticated: user !== null,
+        isAdmin,
+        login,
+        loginWithGoogle,
+        register,
+        verifyOtp,
+        forgotPassword,
+        resetPassword,
+        logout,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   )

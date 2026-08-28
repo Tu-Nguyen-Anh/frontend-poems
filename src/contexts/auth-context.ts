@@ -18,6 +18,9 @@ export interface AuthContextType {
   login: (u: string, p: string) => Promise<void>
   loginWithGoogle: (token: string) => Promise<void>
   register: (u: string, e: string, p: string, phone?: string) => Promise<void>
+  verifyOtp: (email: string, otp: string, usernameFallback?: string) => Promise<void>
+  forgotPassword: (email: string) => Promise<void>
+  resetPassword: (email: string, otp: string, newPassword: string) => Promise<void>
   logout: () => Promise<void>
 }
 
