@@ -174,6 +174,7 @@ export interface PoemRequest {
   transliteration?: string
   translation?: string
   language?: string
+  era?: string
   genreId?: number
   authorId?: number
 }

@@ -16,12 +16,14 @@ export default function AdminPoemsPage() {
   const { toast } = useToast()
   const [poems, setPoems] = useState<PoemResponse[]>([])
   const [genres, setGenres] = useState<GenreResponse[]>([])
+  const [eras, setEras] = useState<string[]>([])
   const [totalAmount, setTotalAmount] = useState(0)
 
   const [keyword, setKeyword] = useState('')
   const debouncedKeyword = useDebounce(keyword, 300)
   const [genreFilter, setGenreFilter] = useState<number | ''>('')
   const [authorFilter, setAuthorFilter] = useState<number | ''>('')
+  const [eraFilter, setEraFilter] = useState<string>('')
 
   const [page, setPage] = useState(0)
   const [size, setSize] = useState(15)
@@ -30,14 +32,18 @@ export default function AdminPoemsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingPoem, setEditingPoem] = useState<PoemResponse | null>(null)
 
-  // Tải danh sách thể loại cho bộ lọc và modal (tác giả nạp riêng theo trang trong AuthorSelect)
+  // Tải danh sách thể loại và thời kỳ cho bộ lọc và modal (tác giả nạp riêng theo trang trong AuthorSelect)
   useEffect(() => {
     async function loadMeta() {
       try {
-        const genresRes = await genreService.getGenres({ isAll: true })
+        const [genresRes, erasRes] = await Promise.all([
+          genreService.getGenres({ isAll: true }),
+          poemService.getEras(),
+        ])
         setGenres(genresRes.content || [])
+        setEras(erasRes || [])
       } catch (err) {
-        console.error('Lỗi tải danh mục thể loại:', err)
+        console.error('Lỗi tải danh mục thể loại/thời kỳ:', err)
       }
     }
     loadMeta()
@@ -51,12 +57,14 @@ export default function AdminPoemsPage() {
       const res = authorFilter
         ? await poemService.browsePoems({
             authorId: Number(authorFilter),
+            era: eraFilter || undefined,
             keyword: debouncedKeyword.trim() || undefined,
             genreId: genreFilter ? Number(genreFilter) : undefined,
             page,
             size,
           })
         : await poemService.getPoems({
+            era: eraFilter || undefined,
             keyword: debouncedKeyword.trim() || undefined,
             genreId: genreFilter ? Number(genreFilter) : undefined,
             page,
@@ -70,7 +78,7 @@ export default function AdminPoemsPage() {
     } finally {
       setLoading(false)
     }
-  }, [debouncedKeyword, genreFilter, authorFilter, page, size, toast])
+  }, [debouncedKeyword, genreFilter, authorFilter, eraFilter, page, size, toast])
 
   useEffect(() => {
     loadPoems()
@@ -133,10 +141,11 @@ export default function AdminPoemsPage() {
     setKeyword('')
     setGenreFilter('')
     setAuthorFilter('')
+    setEraFilter('')
     setPage(0)
   }
 
-  const isFiltering = Boolean(keyword.trim() || genreFilter !== '' || authorFilter !== '')
+  const isFiltering = Boolean(keyword.trim() || genreFilter !== '' || authorFilter !== '' || eraFilter !== '')
 
   return (
     <div className="space-y-6">
@@ -226,6 +235,23 @@ export default function AdminPoemsPage() {
             ))}
           </select>
 
+          {/* Lọc theo Thời kỳ */}
+          <select
+            value={eraFilter}
+            onChange={(e) => {
+              setEraFilter(e.target.value)
+              setPage(0)
+            }}
+            className="bg-[var(--c-bg)] border border-[var(--c-border)] rounded-lg px-3 py-2 text-sm text-[var(--c-text)] focus:outline-none focus:ring-2 focus:ring-[var(--c-brand-tint-border)] cursor-pointer"
+          >
+            <option value="">Tất cả thời kỳ</option>
+            {eras.map((era) => (
+              <option key={era} value={era}>
+                {era}
+              </option>
+            ))}
+          </select>
+
           {isFiltering && (
             <button
               type="button"
@@ -262,6 +288,7 @@ export default function AdminPoemsPage() {
                 <th className="px-6 py-3.5">Tên Bài Thơ</th>
                 <th className="px-6 py-3.5">Tác Giả</th>
                 <th className="px-6 py-3.5">Thể Loại</th>
+                <th className="px-6 py-3.5">Thời Kỳ</th>
                 <th className="px-6 py-3.5 w-24">Năm</th>
                 <th className="px-6 py-3.5 text-right w-36">Thao Tác</th>
               </tr>
@@ -274,13 +301,14 @@ export default function AdminPoemsPage() {
                     <td className="px-6 py-4"><Skeleton className="h-4 w-48 bg-[var(--c-surface-3)]" /></td>
                     <td className="px-6 py-4"><Skeleton className="h-4 w-32 bg-[var(--c-surface-3)]" /></td>
                     <td className="px-6 py-4"><Skeleton className="h-4 w-24 bg-[var(--c-surface-3)]" /></td>
+                    <td className="px-6 py-4"><Skeleton className="h-4 w-20 bg-[var(--c-surface-3)]" /></td>
                     <td className="px-6 py-4"><Skeleton className="h-4 w-12 bg-[var(--c-surface-3)]" /></td>
                     <td className="px-6 py-4 text-right"><Skeleton className="h-6 w-20 ml-auto bg-[var(--c-surface-3)]" /></td>
                   </tr>
                 ))
               ) : poems.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-[var(--c-muted)]">
+                  <td colSpan={7} className="px-6 py-12 text-center text-[var(--c-muted)]">
                     <div className="flex flex-col items-center justify-center gap-2">
                       <p className="text-base font-medium text-[var(--c-text)]">
                         {isFiltering
@@ -312,6 +340,15 @@ export default function AdminPoemsPage() {
                         </span>
                       ) : (
                         <span className="text-[var(--c-muted-2)]">—</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4">
+                      {poem.era ? (
+                        <span className="px-2.5 py-1 rounded-md text-xs bg-[var(--c-surface-2)] border border-[var(--c-border)] text-[var(--c-text)]">
+                          {poem.era}
+                        </span>
+                      ) : (
+                        <span className="text-[var(--c-muted-2)] text-xs italic">Chưa phân loại</span>
                       )}
                     </td>
                     <td className="px-6 py-4 font-mono text-xs text-[var(--c-muted)]">{poem.year || '—'}</td>
@@ -356,6 +393,7 @@ export default function AdminPoemsPage() {
         onClose={() => setIsModalOpen(false)}
         editingPoem={editingPoem}
         genres={genres}
+        eras={eras}
         onSubmit={handleSave}
       />
     </div>
