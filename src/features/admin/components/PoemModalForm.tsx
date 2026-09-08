@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Modal } from '@/components/ui/Modal'
 import { AuthorSelect } from './AuthorSelect'
+import { poemService } from '@/services/poem.service'
 import type { PoemResponse, GenreResponse, PoemRequest } from '@/types'
 
 interface PoemModalFormProps {
@@ -8,6 +9,7 @@ interface PoemModalFormProps {
   onClose: () => void
   editingPoem: PoemResponse | null
   genres: GenreResponse[]
+  eras?: string[]
   onSubmit: (data: PoemRequest) => Promise<void>
 }
 
@@ -16,8 +18,13 @@ export function PoemModalForm({
   onClose,
   editingPoem,
   genres,
+  eras = [],
   onSubmit,
 }: PoemModalFormProps) {
+  const [availableEras, setAvailableEras] = useState<string[]>(eras)
+  const [isCustomEra, setIsCustomEra] = useState(false)
+  const [customEraInput, setCustomEraInput] = useState('')
+
   const [form, setForm] = useState<PoemRequest>({
     name: '',
     description: '',
@@ -25,15 +32,33 @@ export function PoemModalForm({
     content: '',
     transliteration: '',
     translation: '',
-    language: 'vi',
+    language: 'Việt',
+    era: '',
     authorId: undefined,
     genreId: undefined,
   })
   const [errorMsg, setErrorMsg] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
+  // Nạp danh sách thời kỳ nếu chưa có
+  useEffect(() => {
+    if (eras && eras.length > 0) {
+      setAvailableEras(eras)
+    } else if (isOpen) {
+      poemService
+        .getEras()
+        .then((res) => {
+          if (res && res.length > 0) setAvailableEras(res)
+        })
+        .catch((err) => console.warn('Lỗi tải danh sách thời kỳ:', err))
+    }
+  }, [eras, isOpen])
+
   useEffect(() => {
     setErrorMsg('')
+    setIsCustomEra(false)
+    setCustomEraInput('')
+
     if (editingPoem) {
       const rawGenreName =
         editingPoem.genreName ||
@@ -81,6 +106,15 @@ export function PoemModalForm({
         (editingPoem as any).note ||
         ''
 
+      const resolvedEra =
+        editingPoem.era ||
+        (editingPoem as any).era ||
+        ''
+
+      if (resolvedEra) {
+        setAvailableEras((prev) => (prev.includes(resolvedEra) ? prev : [resolvedEra, ...prev]))
+      }
+
       setForm({
         name: editingPoem.name || (editingPoem as any).title || '',
         description: resolvedDescription,
@@ -88,7 +122,8 @@ export function PoemModalForm({
         content: editingPoem.content || (editingPoem as any).body || '',
         transliteration: resolvedTransliteration,
         translation: resolvedTranslation,
-        language: editingPoem.language || 'vi',
+        language: editingPoem.language || 'Việt',
+        era: resolvedEra,
         authorId: resolvedAuthorId,
         genreId: resolvedGenreId,
       })
@@ -100,7 +135,8 @@ export function PoemModalForm({
         content: '',
         transliteration: '',
         translation: '',
-        language: 'vi',
+        language: 'Việt',
+        era: '',
         authorId: undefined,
         genreId: genres[0]?.id,
       })
@@ -118,7 +154,11 @@ export function PoemModalForm({
     setErrorMsg('')
     setSubmitting(true)
     try {
-      await onSubmit(form)
+      const eraValue = isCustomEra ? customEraInput.trim() : form.era?.trim()
+      await onSubmit({
+        ...form,
+        era: eraValue || undefined,
+      })
     } catch (err: any) {
       console.error('Lỗi lưu bài thơ:', err)
       setErrorMsg(err?.response?.data?.message || err?.message || 'Không thể lưu bài thơ. Vui lòng kiểm tra lại dữ liệu.')
@@ -152,7 +192,7 @@ export function PoemModalForm({
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-xs font-bold uppercase text-[var(--c-muted)] mb-1">Tác giả *</label>
             <AuthorSelect
@@ -181,9 +221,62 @@ export function PoemModalForm({
           </div>
 
           <div>
+            <label className="block text-xs font-bold uppercase text-[var(--c-muted)] mb-1">Thời kỳ (Era)</label>
+            {!isCustomEra ? (
+              <select
+                value={form.era || ''}
+                onChange={(e) => {
+                  if (e.target.value === '__custom__') {
+                    setIsCustomEra(true)
+                    setCustomEraInput('')
+                    setForm((prev) => ({ ...prev, era: '' }))
+                  } else {
+                    setForm((prev) => ({ ...prev, era: e.target.value }))
+                  }
+                }}
+                className="w-full p-2.5 bg-[var(--c-bg)] border border-[var(--c-border)] rounded-xl text-[var(--c-heading)] focus:ring-2 focus:ring-[var(--c-brand-tint-border)] outline-none"
+              >
+                <option value="">Chọn thời kỳ</option>
+                {availableEras.map((era) => (
+                  <option key={era} value={era}>
+                    {era}
+                  </option>
+                ))}
+                <option value="__custom__">+ Nhập thời kỳ mới...</option>
+              </select>
+            ) : (
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  placeholder="Nhập tên thời kỳ mới..."
+                  value={customEraInput}
+                  onChange={(e) => {
+                    setCustomEraInput(e.target.value)
+                    setForm((prev) => ({ ...prev, era: e.target.value }))
+                  }}
+                  className="flex-1 p-2.5 bg-[var(--c-bg)] border border-[var(--c-border)] rounded-xl text-[var(--c-heading)] focus:ring-2 focus:ring-[var(--c-brand-tint-border)] outline-none"
+                  autoFocus
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsCustomEra(false)
+                    setForm((prev) => ({ ...prev, era: '' }))
+                  }}
+                  className="px-3 py-2 text-xs bg-[var(--c-surface-2)] hover:bg-[var(--c-surface-3)] text-[var(--c-text)] rounded-xl transition-colors whitespace-nowrap"
+                  title="Chọn lại từ danh sách có sẵn"
+                >
+                  Chọn có sẵn
+                </button>
+              </div>
+            )}
+          </div>
+
+          <div>
             <label className="block text-xs font-bold uppercase text-[var(--c-muted)] mb-1">Năm sáng tác</label>
             <input
               type="number"
+              placeholder="VD: 1938"
               value={form.year || ''}
               onChange={(e) => setForm({ ...form, year: Number(e.target.value) || undefined })}
               className="w-full p-2.5 bg-[var(--c-bg)] border border-[var(--c-border)] rounded-xl text-[var(--c-heading)] focus:ring-2 focus:ring-[var(--c-brand-tint-border)] outline-none"
