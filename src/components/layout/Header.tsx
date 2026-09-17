@@ -4,7 +4,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useWebSocket } from '@/contexts/WebSocketContext'
 import { PATHS } from '@/routes/paths'
 import { useDebounce } from '@/hooks/useDebounce'
-import { IconSearch, IconChat } from '@/components/ui/icons'
+import { IconSearch } from '@/components/ui/icons'
 import { UserDropdown } from './UserDropdown'
 import { ReaderModeToggle } from './ReaderModeToggle'
 import { NotificationDropdown } from './NotificationDropdown'
@@ -27,7 +27,7 @@ const navLinkClass = ({ isActive }: { isActive: boolean }) =>
 
 export function Header() {
   const { isAuthenticated } = useAuth()
-  const { onlineCount, isConnected, unreadChatCount, isChatOpen, setIsChatOpen } = useWebSocket()
+  const { onlineCount, isConnected } = useWebSocket()
   const [searchQuery, setSearchQuery] = useState('')
   const debouncedQuery = useDebounce(searchQuery, 300)
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -115,30 +115,6 @@ export function Header() {
 
           {/* Nút quả chuông thông báo realtime */}
           <NotificationDropdown />
-
-          {/* Nút Kênh Chat Toàn Server */}
-          <button
-            type="button"
-            onClick={() => setIsChatOpen((o) => !o)}
-            aria-label="Kênh chat toàn server"
-            aria-expanded={isChatOpen}
-            title="Trò chuyện toàn server"
-            className={`relative p-2 rounded-md transition-colors ${
-              isChatOpen
-                ? 'text-amber-700 bg-amber-100/70 dark:text-amber-300 dark:bg-amber-950/50'
-                : 'text-slate-600 hover:text-amber-700 hover:bg-amber-100/60 dark:text-slate-300 dark:hover:bg-slate-800'
-            }`}
-          >
-            <IconChat size={18} />
-            {unreadChatCount > 0 && (
-              <>
-                <span className="animate-ping absolute top-1 right-1 h-3 w-3 rounded-full bg-rose-400 opacity-75" />
-                <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-[16px] px-1 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white shadow-sm ring-2 ring-white dark:ring-slate-900">
-                  {unreadChatCount > 9 ? '9+' : unreadChatCount}
-                </span>
-              </>
-            )}
-          </button>
 
           <button
             type="button"

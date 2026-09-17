@@ -6,7 +6,6 @@ import { Footer } from './Footer'
 import { BackToTop } from './BackToTop'
 import { useReaderMode } from '@/contexts/ReaderModeContext'
 import { GuestCTAModal } from '@/components/common/GuestCTAModal'
-import { GlobalChatWidget } from '@/components/chat/GlobalChatWidget'
 
 /** Đổi trang (URL path đổi) → tự cuộn lên đầu (SPA không tự reset scroll). */
 function ScrollToTop() {
@@ -53,7 +52,6 @@ export function MainLayout() {
       </main>
       <Footer />
       <BackToTop />
-      <GlobalChatWidget />
       <GuestCTAModal />
     </div>
   )

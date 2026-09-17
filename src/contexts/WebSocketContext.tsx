@@ -7,7 +7,7 @@ import { useToast } from './ToastContext'
 import { toPoemDetail } from '@/routes/paths'
 import { navigateApp } from '@/utils/navigation'
 
-export type WebSocketAction = 'ONLINE_COUNT' | 'POEM_CREATED' | 'POEM_UPDATED' | 'POEM_DELETED' | 'COMMENT_REPLY' | 'GLOBAL_CHAT' | 'ERROR' | string
+export type WebSocketAction = 'ONLINE_COUNT' | 'POEM_CREATED' | 'POEM_UPDATED' | 'POEM_DELETED' | 'COMMENT_REPLY' | 'ERROR' | string
 
 export interface WebSocketBaseEvent {
   action: WebSocketAction
@@ -38,28 +38,11 @@ export interface WebSocketReplyEvent extends WebSocketBaseEvent {
   message?: string
 }
 
-export interface WebSocketGlobalChatEvent extends WebSocketBaseEvent {
-  action: 'GLOBAL_CHAT'
-  senderId: number
-  senderName: string
-  content: string
-  timestamp?: number
-}
-
 export type WebSocketIncomingEvent =
   | WebSocketOnlineCountEvent
   | WebSocketPoemEvent
   | WebSocketReplyEvent
-  | WebSocketGlobalChatEvent
   | any
-
-export interface GlobalChatMessage {
-  id: string
-  senderId: number
-  senderName: string
-  content: string
-  timestamp: number
-}
 
 export interface NotificationItem {
   id: string
@@ -88,13 +71,6 @@ export interface WebSocketContextType {
   fetchNotifications: () => Promise<void>
   /** Đăng ký nhận sự kiện realtime của bài thơ (create/update/delete) */
   onPoemEvent: (callback: (event: WebSocketPoemEvent) => void) => () => void
-  /** Kênh chat nhắn tin toàn server */
-  chatMessages: GlobalChatMessage[]
-  unreadChatCount: number
-  isChatOpen: boolean
-  setIsChatOpen: React.Dispatch<React.SetStateAction<boolean>>
-  sendChatMessage: (content: string) => boolean
-  clearChatMessages: () => void
 }
 
 const NOTIFICATIONS_STORAGE_KEY = 'poems_notifications'
@@ -127,9 +103,6 @@ function addDismissedId(id: string) {
   saveDismissedIds(set)
 }
 
-const CHAT_STORAGE_KEY = 'poems_global_chat_history'
-const MAX_CHAT_HISTORY = 100
-
 function loadStoredNotifications(): NotificationItem[] {
   try {
     const raw = localStorage.getItem(NOTIFICATIONS_STORAGE_KEY)
@@ -149,25 +122,6 @@ function saveStoredNotifications(items: NotificationItem[]) {
   }
 }
 
-function loadStoredChatMessages(): GlobalChatMessage[] {
-  try {
-    const raw = localStorage.getItem(CHAT_STORAGE_KEY)
-    if (!raw) return []
-    const parsed = JSON.parse(raw)
-    return Array.isArray(parsed) ? parsed : []
-  } catch {
-    return []
-  }
-}
-
-function saveStoredChatMessages(items: GlobalChatMessage[]) {
-  try {
-    localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(items.slice(-MAX_CHAT_HISTORY)))
-  } catch {
-    // Ignore storage quota error
-  }
-}
-
 export const DEFAULT_WEBSOCKET_CONTEXT: WebSocketContextType = {
   onlineCount: 1,
   isConnected: false,
@@ -181,12 +135,6 @@ export const DEFAULT_WEBSOCKET_CONTEXT: WebSocketContextType = {
   removeNotification: () => {},
   fetchNotifications: async () => {},
   onPoemEvent: () => () => {},
-  chatMessages: [],
-  unreadChatCount: 0,
-  isChatOpen: false,
-  setIsChatOpen: () => {},
-  sendChatMessage: () => false,
-  clearChatMessages: () => {},
 }
 
 const WebSocketContext = createContext<WebSocketContextType>(DEFAULT_WEBSOCKET_CONTEXT)
@@ -201,24 +149,6 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
   const [lastEvent, setLastEvent] = useState<WebSocketIncomingEvent | null>(null)
   const [notifications, setNotifications] = useState<NotificationItem[]>(loadStoredNotifications)
   const [unreadCount, setUnreadCount] = useState<number>(0)
-
-  // Quản lý kênh chat toàn server
-  const [chatMessages, setChatMessages] = useState<GlobalChatMessage[]>(loadStoredChatMessages)
-  const [unreadChatCount, setUnreadChatCount] = useState<number>(0)
-  const [isChatOpen, setIsChatOpen] = useState<boolean>(false)
-
-  const isChatOpenRef = useRef(isChatOpen)
-  useEffect(() => {
-    isChatOpenRef.current = isChatOpen
-    if (isChatOpen) {
-      setUnreadChatCount(0)
-    }
-  }, [isChatOpen])
-
-  const userRef = useRef(user)
-  useEffect(() => {
-    userRef.current = user
-  }, [user])
 
   const wsRef = useRef<WebSocket | null>(null)
 
@@ -357,40 +287,6 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  /** Gửi tin nhắn tới toàn bộ server qua WebSocket */
-  const sendChatMessage = useCallback((content: string): boolean => {
-    const trimmed = content.trim()
-    if (!trimmed) return false
-
-    if (!isAuthenticated) {
-      toast('Bạn cần đăng nhập tài khoản để gửi tin nhắn toàn server!', 'error')
-      return false
-    }
-
-    if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
-      toast('Chưa kết nối tới máy chủ chat. Vui lòng đợi trong giây lát!', 'error')
-      return false
-    }
-
-    try {
-      wsRef.current.send(trimmed)
-      return true
-    } catch (err) {
-      console.error('[WebSocketContext] Lỗi gửi tin nhắn chat:', err)
-      toast('Không thể gửi tin nhắn. Vui lòng thử lại!', 'error')
-      return false
-    }
-  }, [isAuthenticated, toast])
-
-  /** Xoá lịch sử chat hiển thị tại máy client */
-  const clearChatMessages = useCallback(() => {
-    setChatMessages([])
-    try {
-      localStorage.removeItem(CHAT_STORAGE_KEY)
-    } catch {
-      // Ignore
-    }
-  }, [])
 
   /** Kết nối WebSocket realtime */
   useEffect(() => {
@@ -524,25 +420,6 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
                 return next
               })
               setUnreadCount((c) => c + 1)
-            } else if (data.action === 'GLOBAL_CHAT') {
-              const chatData = data as unknown as WebSocketGlobalChatEvent
-              const chatMsg: GlobalChatMessage = {
-                id: `${chatData.senderId}-${chatData.timestamp || Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-                senderId: chatData.senderId,
-                senderName: chatData.senderName || 'Thành viên',
-                content: chatData.content,
-                timestamp: chatData.timestamp || Date.now(),
-              }
-
-              setChatMessages((prev) => {
-                const next = [...prev, chatMsg].slice(-MAX_CHAT_HISTORY)
-                saveStoredChatMessages(next)
-                return next
-              })
-
-              if (!isChatOpenRef.current && chatData.senderId !== userRef.current?.id) {
-                setUnreadChatCount((c) => c + 1)
-              }
             } else if (data.action === 'ERROR') {
               toast(data.message || 'Có lỗi từ máy chủ', 'error')
             }
@@ -607,12 +484,6 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
         removeNotification,
         fetchNotifications,
         onPoemEvent,
-        chatMessages,
-        unreadChatCount,
-        isChatOpen,
-        setIsChatOpen,
-        sendChatMessage,
-        clearChatMessages,
       }}
     >
       {children}

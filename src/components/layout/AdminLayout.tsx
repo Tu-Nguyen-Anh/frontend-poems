@@ -6,7 +6,6 @@ import { useWebSocket } from '@/contexts/WebSocketContext'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { ReaderModeToggle } from '@/components/layout/ReaderModeToggle'
 import { NotificationDropdown } from '@/components/layout/NotificationDropdown'
-import { GlobalChatWidget } from '@/components/chat/GlobalChatWidget'
 
 const ADMIN_NAV = [
   { to: PATHS.ADMIN, label: 'Tổng quan', exact: true },
@@ -102,7 +101,6 @@ export function AdminLayout() {
           <Outlet />
         </Suspense>
       </main>
-      <GlobalChatWidget />
     </div>
   )
 }
