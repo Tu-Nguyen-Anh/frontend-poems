@@ -1,5 +1,5 @@
 import { Suspense, useEffect } from 'react'
-import { Outlet, useLocation } from 'react-router-dom'
+import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { Header } from './Header'
 import { Footer } from './Footer'
@@ -18,6 +18,20 @@ function ScrollToTop() {
 
 export function MainLayout() {
   const { mode } = useReaderMode()
+  const navigate = useNavigate()
+
+  // Lắng nghe sự kiện điều hướng SPA toàn cục (từ WebSocket / Toast / Axios)
+  useEffect(() => {
+    const handleGlobalNav = (e: Event) => {
+      const customEvent = e as CustomEvent<string>
+      if (customEvent.detail) {
+        window.dispatchEvent(new CustomEvent('poems-navigate-ack'))
+        navigate(customEvent.detail)
+      }
+    }
+    window.addEventListener('poems-navigate', handleGlobalNav)
+    return () => window.removeEventListener('poems-navigate', handleGlobalNav)
+  }, [navigate])
 
   return (
     <div className={`min-h-screen flex flex-col overflow-x-hidden transition-colors duration-300 mode-${mode}`}>

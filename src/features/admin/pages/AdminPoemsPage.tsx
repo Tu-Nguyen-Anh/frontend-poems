@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { useNavigate, Link } from 'react-router-dom'
 import { poemService } from '@/services/poem.service'
 import { genreService } from '@/services/genre.service'
 import type { PoemResponse, GenreResponse, PoemRequest } from '@/types'
@@ -6,14 +7,18 @@ import { PoemModalForm } from '../components/PoemModalForm'
 import { AuthorSelect } from '../components/AuthorSelect'
 import { getErrorMessage } from '@/utils/error'
 import { useToast } from '@/contexts/ToastContext'
+import { useWebSocket } from '@/contexts/WebSocketContext'
 import { useDebounce } from '@/hooks/useDebounce'
 import { IconSearch } from '@/components/ui/icons'
 import { Pagination } from '@/components/ui/Pagination'
 import { PageSizeSelect } from '@/components/ui/PageSizeSelect'
 import { Skeleton } from '@/components/ui/Skeleton'
+import { toPoemDetail } from '@/routes/paths'
 
 export default function AdminPoemsPage() {
+  const navigate = useNavigate()
   const { toast } = useToast()
+  const { onPoemEvent } = useWebSocket()
   const [poems, setPoems] = useState<PoemResponse[]>([])
   const [genres, setGenres] = useState<GenreResponse[]>([])
   const [eras, setEras] = useState<string[]>([])
@@ -84,6 +89,13 @@ export default function AdminPoemsPage() {
     loadPoems()
   }, [loadPoems])
 
+  // Lắng nghe sự kiện realtime qua WebSocket (thêm/sửa/xóa bài thơ) để tự động làm mới danh sách
+  useEffect(() => {
+    return onPoemEvent(() => {
+      loadPoems()
+    })
+  }, [onPoemEvent, loadPoems])
+
   const totalPages = Math.ceil(totalAmount / size) || 1
 
   const handleOpenModal = async (poem?: PoemResponse) => {
@@ -107,11 +119,23 @@ export default function AdminPoemsPage() {
   const handleSave = async (data: PoemRequest) => {
     try {
       if (editingPoem) {
-        await poemService.updatePoem(editingPoem.id, data)
-        toast('Cập nhật bài thơ thành công!', 'success')
+        const updated = await poemService.updatePoem(editingPoem.id, data)
+        const targetId = updated?.id || editingPoem.id
+        toast('Cập nhật bài thơ thành công!', 'success', 'Thành công', {
+          onClick: () => navigate(toPoemDetail(targetId)),
+          actionLabel: 'Xem bài thơ vừa sửa →',
+        })
       } else {
-        await poemService.createPoem(data)
-        toast('Thêm bài thơ mới thành công!', 'success')
+        const created = await poemService.createPoem(data)
+        const targetId = created?.id
+        if (targetId) {
+          toast('Thêm bài thơ mới thành công!', 'success', 'Thành công', {
+            onClick: () => navigate(toPoemDetail(targetId)),
+            actionLabel: 'Xem bài thơ vừa tạo →',
+          })
+        } else {
+          toast('Thêm bài thơ mới thành công!', 'success')
+        }
       }
       setIsModalOpen(false)
       await loadPoems()
@@ -331,7 +355,18 @@ export default function AdminPoemsPage() {
                 poems.map((poem) => (
                   <tr key={poem.id} className="hover:bg-[var(--c-surface-2)] transition-colors">
                     <td className="px-6 py-4 font-mono text-xs text-[var(--c-muted-2)]">#{poem.id}</td>
-                    <td className="px-6 py-4 font-bold text-[var(--c-heading)]">{poem.name}</td>
+                    <td className="px-6 py-4 font-bold text-[var(--c-heading)]">
+                      <Link
+                        to={toPoemDetail(poem.id)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="hover:text-[var(--c-gold)] hover:underline inline-flex items-center gap-1.5 transition-colors"
+                        title="Xem bài thơ trực tiếp"
+                      >
+                        {poem.name}
+                        <span className="text-xs opacity-60">↗</span>
+                      </Link>
+                    </td>
                     <td className="px-6 py-4 text-[var(--c-gold)]">{poem.authorName || poem.author_name || 'Vô danh'}</td>
                     <td className="px-6 py-4">
                       {poem.genreName || poem.genre_name ? (
@@ -353,6 +388,15 @@ export default function AdminPoemsPage() {
                     </td>
                     <td className="px-6 py-4 font-mono text-xs text-[var(--c-muted)]">{poem.year || '—'}</td>
                     <td className="px-6 py-4 text-right space-x-2 whitespace-nowrap">
+                      <Link
+                        to={toPoemDetail(poem.id)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-block px-3 py-1 bg-[var(--c-brand-tint)] text-[var(--c-gold)] hover:bg-[var(--c-surface-3)] rounded-md text-xs font-medium transition-colors"
+                        title="Xem bài thơ trên giao diện người đọc"
+                      >
+                        Xem
+                      </Link>
                       <button
                         onClick={() => handleOpenModal(poem)}
                         className="px-3 py-1 bg-[var(--c-surface-2)] hover:bg-[var(--c-surface-3)] text-[var(--c-text)] rounded-md text-xs font-medium transition-colors"

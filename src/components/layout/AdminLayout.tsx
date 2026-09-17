@@ -1,9 +1,11 @@
-import { Suspense } from 'react'
-import { Outlet, NavLink, Link } from 'react-router-dom'
+import { Suspense, useEffect } from 'react'
+import { Outlet, NavLink, Link, useNavigate } from 'react-router-dom'
 import { PATHS } from '@/routes/paths'
 import { useAuth } from '@/hooks/useAuth'
+import { useWebSocket } from '@/contexts/WebSocketContext'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { ReaderModeToggle } from '@/components/layout/ReaderModeToggle'
+import { NotificationDropdown } from '@/components/layout/NotificationDropdown'
 
 const ADMIN_NAV = [
   { to: PATHS.ADMIN, label: 'Tổng quan', exact: true },
@@ -16,6 +18,21 @@ const ADMIN_NAV = [
 
 export function AdminLayout() {
   const { user } = useAuth()
+  const { onlineCount, isConnected } = useWebSocket()
+  const navigate = useNavigate()
+
+  // Lắng nghe sự kiện điều hướng SPA toàn cục
+  useEffect(() => {
+    const handleGlobalNav = (e: Event) => {
+      const customEvent = e as CustomEvent<string>
+      if (customEvent.detail) {
+        window.dispatchEvent(new CustomEvent('poems-navigate-ack'))
+        navigate(customEvent.detail)
+      }
+    }
+    window.addEventListener('poems-navigate', handleGlobalNav)
+    return () => window.removeEventListener('poems-navigate', handleGlobalNav)
+  }, [navigate])
 
   return (
     <div className="min-h-screen bg-[var(--c-bg)] text-[var(--c-text)] flex flex-col md:flex-row">
@@ -26,6 +43,7 @@ export function AdminLayout() {
             <Link to={PATHS.HOME} className="flex items-center gap-2">
               <span className="font-serif font-bold text-[var(--c-gold)] text-lg">Trang quản trị</span>
             </Link>
+            <NotificationDropdown />
           </div>
 
           <nav className="space-y-1">
@@ -49,6 +67,18 @@ export function AdminLayout() {
         </div>
 
         <div className="pt-6 border-t border-[var(--c-border)] mt-6 space-y-4">
+          <div className="flex items-center justify-between text-xs text-[var(--c-muted)]">
+            <span>Máy chủ realtime</span>
+            <span className="inline-flex items-center gap-1.5 font-medium text-emerald-600 dark:text-emerald-400">
+              <span className="relative flex h-2 w-2">
+                {isConnected && (
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                )}
+                <span className={`relative inline-flex rounded-full h-2 w-2 ${isConnected ? 'bg-emerald-500' : 'bg-slate-400'}`} />
+              </span>
+              <span className="tabular-nums font-semibold">{onlineCount}</span> online
+            </span>
+          </div>
           <div className="flex items-center justify-between">
             <span className="text-xs text-[var(--c-muted)]">Giao diện</span>
             <ReaderModeToggle />
