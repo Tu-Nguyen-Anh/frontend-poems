@@ -386,3 +386,27 @@ export interface StoryCollection {
   count: number
 }
 
+// --- Notification ---
+
+export interface NotificationResponse {
+  id: number
+  recipientId?: number | null
+  senderId?: number | null
+  senderName?: string | null
+  type: string
+  title: string
+  content: string
+  referenceType?: string | null
+  referenceId?: number | null
+  createdAt?: string
+  isRead?: boolean
+
+  recipient_id?: number | null
+  sender_id?: number | null
+  sender_name?: string | null
+  reference_type?: string | null
+  reference_id?: number | null
+  created_at?: string
+  is_read?: boolean
+}
+

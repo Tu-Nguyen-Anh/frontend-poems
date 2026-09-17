@@ -2,16 +2,29 @@ import { createContext, useCallback, useContext, useRef, useState, type ReactNod
 
 type ToastType = 'error' | 'success' | 'info'
 
+export interface ToastOptions {
+  onClick?: () => void
+  actionLabel?: string
+  duration?: number
+}
+
 interface ToastItem {
   id: number
   title?: string
   message: string
   type: ToastType
+  onClick?: () => void
+  actionLabel?: string
 }
 
 interface ToastContextType {
   /** Hiện thông báo nổi góc phải, tự ẩn sau 4 giây. Mặc định type 'error'. */
-  toast: (message: string, type?: ToastType, title?: string) => void
+  toast: (
+    message: string,
+    type?: ToastType,
+    title?: string,
+    options?: ToastOptions | (() => void)
+  ) => void
 }
 
 const ToastContext = createContext<ToastContextType | null>(null)
@@ -47,7 +60,15 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const toast = useCallback(
-    (message: string, type: ToastType = 'error', title?: string) => {
+    (
+      message: string,
+      type: ToastType = 'error',
+      title?: string,
+      options?: ToastOptions | (() => void)
+    ) => {
+      const opts: ToastOptions =
+        typeof options === 'function' ? { onClick: options } : options || {}
+
       const key = `${type}|${title ?? ''}|${message}`
       const now = Date.now()
       const prev = lastShown.current.get(key)
@@ -55,8 +76,20 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       lastShown.current.set(key, now)
 
       const id = nextId.current++
-      setToasts((curr) => [...curr, { id, title, message, type }].slice(-MAX_TOASTS))
-      setTimeout(() => dismiss(id), DURATION_MS)
+      const duration = opts.duration ?? DURATION_MS
+
+      setToasts((curr) => [
+        ...curr,
+        {
+          id,
+          title,
+          message,
+          type,
+          onClick: opts.onClick,
+          actionLabel: opts.actionLabel,
+        },
+      ].slice(-MAX_TOASTS))
+      setTimeout(() => dismiss(id), duration)
     },
     [dismiss],
   )
@@ -69,14 +102,35 @@ export function ToastProvider({ children }: { children: ReactNode }) {
           {toasts.map((t) => (
             <div
               key={t.id}
-              className={`toast toast--${t.type}`}
-              role="status"
-              onClick={() => dismiss(t.id)}
+              className={`toast toast--${t.type} ${
+                t.onClick
+                  ? 'cursor-pointer hover:shadow-xl hover:scale-[1.01] active:scale-[0.99] transition-all'
+                  : ''
+              }`}
+              role={t.onClick ? 'button' : 'status'}
+              tabIndex={t.onClick ? 0 : undefined}
+              onClick={() => {
+                if (t.onClick) {
+                  t.onClick()
+                }
+                dismiss(t.id)
+              }}
+              onKeyDown={(e) => {
+                if (t.onClick && (e.key === 'Enter' || e.key === ' ')) {
+                  t.onClick()
+                  dismiss(t.id)
+                }
+              }}
             >
               <span className="toast-ico" aria-hidden="true">{iconFor(t.type)}</span>
               <div className="toast-body">
                 <div className="toast-title">{t.title ?? DEFAULT_TITLES[t.type]}</div>
                 <div className="toast-desc">{t.message}</div>
+                {t.onClick && (
+                  <div className="text-[11px] font-semibold text-amber-700 dark:text-amber-300 mt-1 inline-flex items-center gap-1 hover:underline">
+                    {t.actionLabel || 'Bấm để xem trực tiếp →'}
+                  </div>
+                )}
               </div>
               <button
                 type="button"

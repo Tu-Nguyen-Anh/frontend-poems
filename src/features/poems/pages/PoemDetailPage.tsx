@@ -84,6 +84,16 @@ export default function PoemDetailPage() {
     return () => document.removeEventListener('selectionchange', onSelectionChange)
   }, [])
 
+  // Khi URL có hash #comments (vd từ thông báo phản hồi bình luận) → tự cuộn tới bình luận
+  useEffect(() => {
+    if (location.hash === '#comments' && !loading) {
+      const timer = setTimeout(() => {
+        commentsSectionRef.current?.scrollIntoView({ behavior: 'smooth' })
+      }, 350)
+      return () => clearTimeout(timer)
+    }
+  }, [location.hash, loading])
+
   // Mở modal tạo ảnh với đoạn text + (tuỳ chọn) dịch giả nếu trích từ bản dịch.
   const openExcerpt = (text: string, translator?: string) => {
     setExcerptText(text || (poem?.content ?? ''))

@@ -135,6 +135,8 @@ export function GoogleLoginButton({
       // Clear previous rendered button if any
       buttonRef.current.innerHTML = ''
 
+      const buttonWidth = typeof width === 'number' ? width : 380
+
       window.google.accounts.id.renderButton(buttonRef.current, {
         type: 'standard',
         theme: isDark ? 'filled_black' : 'outline',
@@ -142,11 +144,40 @@ export function GoogleLoginButton({
         text,
         shape,
         logo_alignment: 'left',
-        width: width ?? '100%',
+        width: buttonWidth,
         locale: 'vi',
       })
 
-      setIsRendered(true)
+      // Theo dõi khi Google render iframe vào container
+      const checkAndSetRendered = () => {
+        if (buttonRef.current && buttonRef.current.children.length > 0) {
+          setIsRendered(true)
+          return true
+        }
+        return false
+      }
+
+      if (!checkAndSetRendered()) {
+        const observer = new MutationObserver(() => {
+          if (checkAndSetRendered()) {
+            observer.disconnect()
+          }
+        })
+        observer.observe(buttonRef.current, { childList: true, subtree: true })
+        const timer = setTimeout(() => {
+          checkAndSetRendered()
+          observer.disconnect()
+        }, 2000)
+
+        if (enableOneTap) {
+          window.google.accounts.id.prompt?.()
+        }
+
+        return () => {
+          observer.disconnect()
+          clearTimeout(timer)
+        }
+      }
 
       if (enableOneTap) {
         window.google.accounts.id.prompt?.()
@@ -155,6 +186,38 @@ export function GoogleLoginButton({
       console.error('Lỗi khi render nút Google Sign-In:', e)
     }
   }, [scriptLoaded, handleCredentialResponse, size, text, shape, width, enableOneTap])
+
+  const handleFallbackClick = () => {
+    const clientId = env.GOOGLE_CLIENT_ID
+    if (!clientId) {
+      toast('Chưa cấu hình Google Client ID trong tệp .env', 'error')
+      return
+    }
+
+    if (!window.google?.accounts?.id) {
+      toast('Đang tải dịch vụ Google Sign-In, vui lòng thử lại sau giây lát...', 'info')
+      return
+    }
+
+    try {
+      window.google.accounts.id.initialize({
+        client_id: clientId,
+        callback: handleCredentialResponse,
+        auto_select: false,
+        cancel_on_tap_outside: true,
+      })
+
+      window.google.accounts.id.prompt?.((notification: any) => {
+        if (notification?.isNotDisplayed?.()) {
+          console.warn('Google prompt not displayed:', notification.getNotDisplayedReason())
+          toast('Không thể mở đăng nhập Google. Trình duyệt có thể đã chặn popup hoặc quyền truy cập.', 'error')
+        }
+      })
+    } catch (err) {
+      console.error('Lỗi khi kích hoạt Google Sign-In:', err)
+      toast('Lỗi khi mở đăng nhập Google.', 'error')
+    }
+  }
 
   return (
     <div className={`relative flex flex-col items-center justify-center w-full ${className}`}>
@@ -168,7 +231,9 @@ export function GoogleLoginButton({
       {/* Container where Google renders official button */}
       <div
         ref={buttonRef}
-        className="w-full flex justify-center min-h-[40px] [&>div]:!w-full [&>div>iframe]:!w-full"
+        className={`w-full flex justify-center min-h-[40px] [&>div]:!w-full [&>div>iframe]:!w-full ${
+          !isRendered ? 'absolute opacity-0 pointer-events-none' : ''
+        }`}
       />
 
       {/* Fallback button if GIS script blocked or taking time */}
@@ -176,13 +241,7 @@ export function GoogleLoginButton({
         <button
           type="button"
           disabled={loading}
-          onClick={() => {
-            if (window.google?.accounts?.id) {
-              window.google.accounts.id.prompt?.()
-            } else {
-              toast('Đang tải dịch vụ Google Sign-In, vui lòng thử lại sau giây lát...', 'info')
-            }
-          }}
+          onClick={handleFallbackClick}
           className="w-full flex items-center justify-center gap-3 px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-200 text-sm font-medium transition-colors shadow-sm"
         >
           <svg className="w-4 h-4" viewBox="0 0 24 24">

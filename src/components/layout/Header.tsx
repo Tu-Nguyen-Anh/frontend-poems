@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react'
 import { NavLink, Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
+import { useWebSocket } from '@/contexts/WebSocketContext'
 import { PATHS } from '@/routes/paths'
 import { useDebounce } from '@/hooks/useDebounce'
-import { IconSearch } from '@/components/ui/icons'
+import { IconSearch, IconChat } from '@/components/ui/icons'
 import { UserDropdown } from './UserDropdown'
 import { ReaderModeToggle } from './ReaderModeToggle'
+import { NotificationDropdown } from './NotificationDropdown'
 
 const NAV_LINKS = [
   { to: PATHS.HOME, label: 'Trang chủ', end: true },
@@ -25,6 +27,7 @@ const navLinkClass = ({ isActive }: { isActive: boolean }) =>
 
 export function Header() {
   const { isAuthenticated } = useAuth()
+  const { onlineCount, isConnected, unreadChatCount, isChatOpen, setIsChatOpen } = useWebSocket()
   const [searchQuery, setSearchQuery] = useState('')
   const debouncedQuery = useDebounce(searchQuery, 300)
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -86,7 +89,57 @@ export function Header() {
           ))}
         </nav>
 
-        <div className="flex items-center gap-1 sm:gap-3 flex-shrink-0">
+        <div className="flex items-center gap-1.5 sm:gap-2.5 flex-shrink-0">
+          {/* Badge số người online realtime */}
+          <div
+            className={`inline-flex items-center gap-1.5 px-2 sm:px-2.5 py-1 rounded-full text-xs font-medium transition-all ${
+              isConnected
+                ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/60'
+                : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700'
+            }`}
+            title={isConnected ? `Có ${onlineCount} người đang trực tuyến` : 'Đang kết nối lại máy chủ...'}
+          >
+            <span className="relative flex h-2 w-2">
+              {isConnected && (
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+              )}
+              <span
+                className={`relative inline-flex rounded-full h-2 w-2 ${
+                  isConnected ? 'bg-emerald-500' : 'bg-slate-400'
+                }`}
+              />
+            </span>
+            <span className="font-semibold tabular-nums">{onlineCount}</span>
+            <span className="hidden sm:inline">online</span>
+          </div>
+
+          {/* Nút quả chuông thông báo realtime */}
+          <NotificationDropdown />
+
+          {/* Nút Kênh Chat Toàn Server */}
+          <button
+            type="button"
+            onClick={() => setIsChatOpen((o) => !o)}
+            aria-label="Kênh chat toàn server"
+            aria-expanded={isChatOpen}
+            title="Trò chuyện toàn server"
+            className={`relative p-2 rounded-md transition-colors ${
+              isChatOpen
+                ? 'text-amber-700 bg-amber-100/70 dark:text-amber-300 dark:bg-amber-950/50'
+                : 'text-slate-600 hover:text-amber-700 hover:bg-amber-100/60 dark:text-slate-300 dark:hover:bg-slate-800'
+            }`}
+          >
+            <IconChat size={18} />
+            {unreadChatCount > 0 && (
+              <>
+                <span className="animate-ping absolute top-1 right-1 h-3 w-3 rounded-full bg-rose-400 opacity-75" />
+                <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-[16px] px-1 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white shadow-sm ring-2 ring-white dark:ring-slate-900">
+                  {unreadChatCount > 9 ? '9+' : unreadChatCount}
+                </span>
+              </>
+            )}
+          </button>
+
           <button
             type="button"
             onClick={toggleFocus}
